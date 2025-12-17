@@ -107,7 +107,7 @@ export async function adminSetupAction(
     const recoveryKey = generateRecoveryKey()
     const recoveryKeyHash = hashRecoveryKey(recoveryKey)
     
-    // Create super admin user
+    // Create super admin user (automatically active)
     const result = await createAdminUser(email, password, 'super_admin', '')
     
     if (!result.success) {
@@ -115,11 +115,6 @@ export async function adminSetupAction(
         success: false, 
         error: result.error || 'Failed to create super admin.' 
       }
-    }
-    
-    // Approve super admin immediately
-    if (result.userId) {
-      await approveAdminUserUtil(result.userId, result.userId)
     }
     
     // Update admin settings
