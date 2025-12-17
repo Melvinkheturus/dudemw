@@ -1,6 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter, usePathname } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 import { Sidebar } from "@/components/common/sidebar"
 import { Header } from "@/components/common/header"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
@@ -10,8 +12,36 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const supabase = createClient()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+
+  // Client-side auth verification (backup to middleware)
+  useEffect(() => {
+    const checkAuth = async () => {
+      const publicRoutes = ['/admin/login', '/admin/setup', '/admin/recover', '/admin/pending', '/admin/logout']
+      const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
+      
+      if (isPublicRoute) {
+        setIsCheckingAuth(false)
+        return
+      }
+
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        router.push('/admin/login')
+        return
+      }
+
+      setIsCheckingAuth(false)
+    }
+
+    checkAuth()
+  }, [pathname, router, supabase])
 
   return (
     <div className="flex h-screen bg-gray-50">
