@@ -25,6 +25,7 @@ import { revalidatePath } from 'next/cache'
  */
 export async function adminLoginAction(email: string, password: string) {
   try {
+    console.log('[Admin Login] Starting login for:', email)
     const supabase = await createServerSupabase()
     
     // Sign in with Supabase Auth
@@ -34,26 +35,32 @@ export async function adminLoginAction(email: string, password: string) {
     })
     
     if (signInError || !data.user) {
+      console.log('[Admin Login] Sign in failed:', signInError?.message)
       return { 
         success: false, 
         error: 'Invalid credentials' 
       }
     }
     
+    console.log('[Admin Login] Sign in successful, user ID:', data.user.id)
+    
     // Check if user has admin profile
     const adminProfile = await getAdminProfile(data.user.id)
+    console.log('[Admin Login] Admin profile:', adminProfile)
     
     if (!adminProfile) {
+      console.log('[Admin Login] No admin profile found')
       // Sign out the user
       await supabase.auth.signOut()
       return { 
         success: false, 
-        error: 'Unauthorized' 
+        error: 'Unauthorized - No admin profile' 
       }
     }
     
     // Check if admin is active
     if (!adminProfile.is_active) {
+      console.log('[Admin Login] Admin not active')
       // Don't sign out - allow them to see pending page
       return { 
         success: false, 
@@ -62,16 +69,18 @@ export async function adminLoginAction(email: string, password: string) {
       }
     }
     
+    console.log('[Admin Login] Login successful, role:', adminProfile.role)
     return { 
       success: true,
       role: adminProfile.role,
       userId: data.user.id
     }
   } catch (error: any) {
-    console.error('Admin login error:', error)
+    console.error('[Admin Login] Exception caught:', error)
+    console.error('[Admin Login] Error stack:', error.stack)
     return { 
       success: false, 
-      error: 'Unauthorized' 
+      error: 'Login failed: ' + error.message 
     }
   }
 }
