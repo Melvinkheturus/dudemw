@@ -186,6 +186,7 @@ export default function VerifyOtpPage() {
           type="submit"
           disabled={isLoading}
           className="w-full bg-black text-white py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          data-testid="verify-otp-submit"
         >
           {isLoading ? 'Verifying...' : 'Verify & Continue'}
           <ArrowRight className="w-5 h-5" />
