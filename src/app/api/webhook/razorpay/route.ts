@@ -85,7 +85,7 @@ async function handlePaymentSuccess(payment: any) {
 async function handlePaymentFailed(payment: any) {
   try {
     // Update order payment status in database
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('orders')
       .update({
         payment_status: 'failed',
