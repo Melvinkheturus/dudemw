@@ -82,6 +82,7 @@ export default function LoginPage() {
               placeholder="your@email.com"
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-red-600 transition-colors"
               required
+              data-testid="store-login-email"
             />
           </div>
         </div>
