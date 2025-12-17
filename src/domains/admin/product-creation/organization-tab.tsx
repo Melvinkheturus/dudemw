@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { X, Plus } from "lucide-react"
+import { useEffect, useState } from "react"
+import { getCategories, getCollections } from "@/lib/actions/products"
 
 interface OrganizationData {
   categories: string[]
@@ -18,15 +20,50 @@ interface OrganizationTabProps {
   onOrganizationDataChange: (updates: Partial<OrganizationData>) => void
 }
 
-const availableCategories = [
-  "Shirts", "Hoodies", "Pants", "Jackets", "Accessories", "Shoes", "Bags", "Watches"
-]
+interface Category {
+  id: string
+  name: string
+  slug: string
+  parent_id: string | null
+}
 
-const availableCollections = [
-  "New Drops", "Winter Sale", "Best Sellers", "Featured", "Limited Edition", "Trending Now"
-]
+interface Collection {
+  id: string
+  title: string
+  slug: string
+  type: string
+}
 
 export function OrganizationTab({ organizationData, onOrganizationDataChange }: OrganizationTabProps) {
+  const [availableCategories, setAvailableCategories] = useState<Category[]>([])
+  const [availableCollections, setAvailableCollections] = useState<Collection[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true)
+      try {
+        const [categoriesResult, collectionsResult] = await Promise.all([
+          getCategories(),
+          getCollections()
+        ])
+
+        if (categoriesResult.success && categoriesResult.data) {
+          setAvailableCategories(categoriesResult.data)
+        }
+
+        if (collectionsResult.success && collectionsResult.data) {
+          setAvailableCollections(collectionsResult.data)
+        }
+      } catch (error) {
+        console.error('Error loading categories and collections:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
   const toggleCategory = (category: string) => {
     const isSelected = organizationData.categories.includes(category)
     const newCategories = isSelected
