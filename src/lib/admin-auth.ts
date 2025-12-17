@@ -87,13 +87,29 @@ export async function isSetupCompleted(): Promise<boolean> {
 
 /**
  * Get admin profile for a user
+ * Uses service role to bypass RLS for reliable profile fetching
  */
 export async function getAdminProfile(userId: string): Promise<AdminProfile | null> {
   try {
     console.log('[getAdminProfile] Fetching profile for user:', userId)
-    const supabase = await createServerSupabase()
     
-    const { data, error } = await supabase
+    // Use service role client to bypass RLS policies
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    
+    if (!serviceRoleKey) {
+      console.error('[getAdminProfile] Service role key not configured')
+      return null
+    }
+    
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+    
+    const { data, error } = await supabaseAdmin
       .from('admin_profiles')
       .select('*')
       .eq('user_id', userId)
