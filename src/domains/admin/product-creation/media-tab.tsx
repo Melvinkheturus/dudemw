@@ -101,24 +101,38 @@ export function MediaTab({ images, onImagesChange }: MediaTabProps) {
         <CardContent className="space-y-4">
           {/* Upload Area */}
           <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
-            <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <div className="space-y-2">
-              <Button variant="outline" onClick={() => document.getElementById('image-upload')?.click()}>
-                Upload Images
-              </Button>
-              <input
-                id="image-upload"
-                type="file"
-                multiple
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageUpload}
-              />
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Drag & drop or click to upload
-              </p>
-              <p className="text-xs text-gray-400">PNG, JPG, GIF up to 10MB each</p>
-            </div>
+            {isUploading ? (
+              <div className="space-y-4">
+                <Loader2 className="mx-auto h-12 w-12 text-red-600 animate-spin" />
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{uploadProgress}</p>
+                <p className="text-xs text-gray-500">Please wait...</p>
+              </div>
+            ) : (
+              <>
+                <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <div className="space-y-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => document.getElementById('image-upload')?.click()}
+                    disabled={isUploading}
+                  >
+                    Upload Images
+                  </Button>
+                  <input
+                    id="image-upload"
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Drag & drop or click to upload
+                  </p>
+                  <p className="text-xs text-gray-400">PNG, JPG, GIF up to 10MB each</p>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Image Grid */}
