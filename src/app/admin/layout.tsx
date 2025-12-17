@@ -43,6 +43,18 @@ export default function AdminLayout({
     checkAuth()
   }, [pathname, router, supabase])
 
+  // Show loading state while checking auth
+  if (isCheckingAuth) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Verifying authentication...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Desktop Sidebar */}
