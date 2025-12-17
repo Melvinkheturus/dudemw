@@ -120,11 +120,12 @@ ORDER BY tablename, indexname;
 
 ---
 
-### Step 4: Create RLS Policies
+### Step 4: Create RLS Policies ✨ FIXED
 ```bash
 # File: 04-create-rls-policies.sql
-# Purpose: Sets up Row Level Security policies
+# Purpose: Creates admin functions + sets up Row Level Security policies
 # Estimated time: 3-5 minutes
+# ✅ NOW INCLUDES: is_admin_user() and is_owner_user() functions
 ```
 
 **Execute in Supabase SQL Editor:**
@@ -132,6 +133,11 @@ ORDER BY tablename, indexname;
 2. Copy contents of `04-create-rls-policies.sql`
 3. Click **Run**
 4. ✅ Verify: Should see "Successfully created RLS policies!"
+
+**What's Created:**
+- ✅ `is_admin_user()` function (required for admin policies)
+- ✅ `is_owner_user()` function (required for owner policies)
+- ✅ 80+ RLS policies
 
 **Verification Query:**
 ```sql
@@ -152,8 +158,9 @@ ORDER BY tablename, policyname;
 - ✅ Admin policies (full access)
 
 **Troubleshooting:**
+- ✅ "function is_admin_user() does not exist" → **FIXED!** This error should no longer occur
 - If policy creation fails: Ensure Step 2 completed successfully
-- If "function does not exist": Continue to Step 5, then re-run this step
+- If other errors: Check Supabase logs for details
 
 ---
 
