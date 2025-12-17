@@ -143,22 +143,15 @@ export async function createProduct(productData: {
       const imageInserts = []
       
       for (const [index, img] of productData.images.entries()) {
-        let imageUrl = img.url
-        
-        // If it's a blob URL, convert it to a proper uploaded image
+        // Skip blob URLs - images should be uploaded before calling this function
         if (img.url.startsWith('blob:')) {
-          const uploadResult = await convertBlobToUploadedImage(img.url, img.alt || `image-${index}.png`)
-          if (uploadResult.success && uploadResult.url) {
-            imageUrl = uploadResult.url
-          } else {
-            console.warn('Failed to upload image:', uploadResult.error)
-            continue // Skip this image if upload failed
-          }
+          console.warn('Blob URL detected, skipping:', img.url)
+          continue
         }
         
         imageInserts.push({
           product_id: productId,
-          image_url: imageUrl,
+          image_url: img.url,
           alt_text: img.alt,
           is_primary: img.isPrimary,
           sort_order: index,
