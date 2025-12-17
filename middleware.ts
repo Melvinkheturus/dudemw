@@ -64,9 +64,14 @@ export async function middleware(request: NextRequest) {
       .eq('user_id', user.id)
       .single()
 
-    // Redirect if not an admin or not active
-    if (!adminProfile || !adminProfile.is_active) {
+    // Redirect if not an admin
+    if (!adminProfile) {
       return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
+
+    // Redirect to pending page if not active
+    if (!adminProfile.is_active) {
+      return NextResponse.redirect(new URL('/admin/pending', request.url))
     }
 
     // Admin is authenticated and active - allow access
@@ -80,8 +85,12 @@ export async function middleware(request: NextRequest) {
       .eq('user_id', user.id)
       .single()
 
-    if (adminProfile?.is_active) {
-      return NextResponse.redirect(new URL('/admin', request.url))
+    if (adminProfile) {
+      if (adminProfile.is_active) {
+        return NextResponse.redirect(new URL('/admin', request.url))
+      } else {
+        return NextResponse.redirect(new URL('/admin/pending', request.url))
+      }
     }
   }
 
