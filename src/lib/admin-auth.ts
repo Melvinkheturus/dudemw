@@ -22,6 +22,7 @@ export interface AdminSettings {
   recovery_key_hash: string | null
   created_at: string
   updated_at: string
+  singleton_guard: boolean
 }
 
 /**
