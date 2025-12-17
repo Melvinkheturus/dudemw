@@ -325,7 +325,7 @@ CREATE POLICY "Users can read their payments"
 -- ================================================
 -- ADMIN POLICIES (Admins have full access)
 -- ================================================
--- Note: Requires is_admin_user() function to be created first
+-- Note: is_admin_user() function was created at the beginning of this script
 
 -- Store Configuration (Admin full access)
 CREATE POLICY "Admins have full access to store settings"
