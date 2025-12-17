@@ -1,0 +1,205 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import Image from 'next/image'
+import { Heart, Upload } from 'lucide-react'
+import { motion } from 'framer-motion'
+import ProductOptions from './ProductOptions'
+import AddToCartButton from './AddToCartButton'
+import FloatingBottomBar from './FloatingBottomBar'
+
+import { Product } from '@/domains/product'
+
+interface DesktopProductViewProps {
+  product: Product
+}
+
+export default function DesktopProductView({ product }: DesktopProductViewProps) {
+  const [selectedColor, setSelectedColor] = useState((product.colors && product.colors[0]) || 'Black')
+  const [selectedSize, setSelectedSize] = useState('')
+  const [selectedImage, setSelectedImage] = useState(0)
+  const [isWishlisted, setIsWishlisted] = useState(false)
+  const [showFloatingBar, setShowFloatingBar] = useState(false)
+  const [currentImage, setCurrentImage] = useState((product.images && product.images[0]) || '')
+
+  useEffect(() => {
+    // Show floating bar when size is selected
+    setShowFloatingBar(!!selectedSize)
+  }, [selectedSize])
+
+  // Update main image when color changes
+  useEffect(() => {
+    setCurrentImage((product.images && product.images[selectedImage]) || '')
+  }, [selectedColor, selectedImage, product.images])
+
+  const handleColorSelect = (color: string) => {
+    setSelectedColor(color)
+  }
+
+  const handleBuyNow = () => {
+    // Add your buy now logic here
+    // TODO: Implement buy now functionality
+  }
+
+  // Get variant ID based on selected options
+  const getVariantId = () => {
+    // TODO: Implement variant selection logic based on size/color
+    return undefined
+  }
+
+  return (
+    <>
+      <motion.div
+        className="hidden lg:block bg-gray-50"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      >
+        {/* Main Product Card with Image Background */}
+        <div className="container mx-auto px-4 py-6 md:py-8 max-w-[1400px]">
+          <div className="relative bg-white rounded-2xl shadow-sm overflow-hidden">
+            {/* Full Width Background Image */}
+            <div className="relative w-full h-[450px] md:h-[520px] lg:h-[580px]">
+              <Image
+                src={currentImage || '/images/placeholder-product.jpg'}
+                fill
+                alt={product.title}
+                className="object-cover"
+                priority
+              />
+
+              {/* Overlay Content */}
+              <div className="absolute inset-0 p-6 md:p-8 lg:p-12">
+                <div className="h-full flex flex-col lg:flex-row justify-between items-center gap-8">
+                  {/* Left Side - Product Info */}
+                  <div className="flex-1 flex flex-col justify-between max-w-xl h-full">
+                    <div className="space-y-3">
+                      {/* Category - can be looked up from category_id if needed */}
+
+                      {/* Title */}
+                      <h1 className="text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-gray-900 leading-tight">
+                        {product.title}
+                      </h1>
+
+                      {/* Description */}
+                      {product.description && (
+                        <p className="text-sm text-gray-700 leading-relaxed max-w-md">
+                          {product.description}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Thumbnail Images */}
+                    <div className="flex gap-3 mt-auto">
+                      {(product.images || []).slice(0, 4).map((img, idx) => (
+                        <button
+                          key={idx}
+                          onMouseEnter={() => setSelectedImage(idx)}
+                          onClick={() => setSelectedImage(idx)}
+                          className={`relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all bg-white hover:scale-105 ${selectedImage === idx
+                              ? 'border-black'
+                              : 'border-gray-300 hover:border-gray-500'
+                            }`}
+                        >
+                          <Image
+                            src={img}
+                            fill
+                            alt={`View ${idx + 1}`}
+                            className="object-cover"
+                          />
+                        </button>
+                      ))}
+                      {(product.images || []).length > 4 && (
+                        <div className="flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg bg-gray-900 flex items-center justify-center text-xs font-medium text-white">
+                          +{(product.images || []).length - 4}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right Side - Product Options & CTA - Centered */}
+                  <div className="w-full lg:w-72 bg-white/95 backdrop-blur-sm rounded-xl p-5 space-y-4 self-center relative">
+                    {/* Share Button - Top Right of Card */}
+                    <button
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator.share({
+                            title: product.title,
+                            text: `Check out ${product.title}`,
+                            url: window.location.href,
+                          })
+                        } else {
+                          navigator.clipboard.writeText(window.location.href)
+                          alert('Link copied to clipboard!')
+                        }
+                      }}
+                      className="absolute -top-2 -right-2 w-7 h-7 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-all shadow-sm"
+                      title="Share"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-gray-700" />
+                    </button>
+
+                    <ProductOptions
+                      sizes={product.sizes || []}
+                      colors={(product.colors || []).map(color => ({ name: color, hex: '#000000', image: (product.images && product.images[0]) || '' }))}
+                      rating={4.5}
+                      reviews={128}
+                      selectedSize={selectedSize}
+                      selectedColor={{ name: selectedColor, hex: '#000000', image: (product.images && product.images[0]) || '' }}
+                      onSizeSelect={setSelectedSize}
+                      onColorSelect={(color) => handleColorSelect(color.name)}
+                      variant="desktop"
+                    />
+
+                    {/* Price */}
+                    <div>
+                      <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider mb-1">
+                        PRICE
+                      </h3>
+                      <p className="text-2xl font-bold text-gray-900">
+                        ₹{product.price.toLocaleString('en-IN')}
+                      </p>
+                    </div>
+
+                    {/* Add to Cart & Wishlist */}
+                    <div className="flex gap-2 pt-2">
+                      <AddToCartButton
+                        productId={product.id}
+                        productTitle={product.title}
+                        productPrice={product.price}
+                        productImage={(product.images && product.images[0]) || ''}
+                        selectedSize={selectedSize}
+                        selectedColor={{ name: selectedColor, hex: '#000000', image: (product.images && product.images[0]) || '' }}
+                        variant="desktop"
+                        variantId={getVariantId()}
+                      />
+                      <button
+                        onClick={() => setIsWishlisted(!isWishlisted)}
+                        className="w-11 h-11 rounded-lg border-2 border-gray-300 bg-white flex items-center justify-center hover:border-red-500 hover:bg-red-50 transition-all"
+                        title="Add to Wishlist"
+                      >
+                        <Heart
+                          className={`w-5 h-5 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-600'
+                            }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Floating Bottom Bar */}
+      <FloatingBottomBar
+        isVisible={showFloatingBar}
+        selectedColor={{ name: selectedColor, hex: '#000000', image: (product.images && product.images[0]) || '' }}
+        price={product.price}
+        onBuyNow={handleBuyNow}
+        isMobile={false}
+      />
+    </>
+  )
+}

@@ -1,0 +1,186 @@
+"use client"
+
+import { useState } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Heart, ShoppingCart } from "lucide-react"
+import { useCart, useCartSound, type CartItem } from "@/domains/cart"
+import { useWishlist } from "@/domains/wishlist"
+import { Product } from "@/domains/product"
+
+interface ProductCardProps {
+  product: Product
+  badge?: "NEW" | "BESTSELLER" | "SALE" | string
+  badgeColor?: "red" | "black"
+}
+
+export default function ProductCard({ product, badge, badgeColor = "red" }: ProductCardProps) {
+  const [imageError, setImageError] = useState(false)
+  const [isCartHovered, setIsCartHovered] = useState(false)
+  const playCartSound = useCartSound()
+  const { isInWishlist, toggleWishlist } = useWishlist()
+  const { cartItems, addToCart, getItemByVariant } = useCart()
+
+  // Generate variant key for this product (basic version without size/color selection)
+  const variantKey = `${product.id}-default`
+
+  // Check if product is in cart
+  const isInCart = getItemByVariant(variantKey) !== undefined
+
+  // Check if product is in wishlist
+  const isWishlisted = isInWishlist(product.id)
+
+  // Price calculations
+  const currentPrice = product.price
+  const originalPrice = product.original_price || product.price
+  const discountPercent = product.original_price ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100) : 0
+  const displayPrice = currentPrice
+  const displayOriginalPrice = originalPrice
+
+  // Short description
+  const shortDesc = product.description?.slice(0, 50) || "Premium quality • Multiple sizes available"
+
+  // Use product images or placeholder
+  const imageUrl = product.images?.[0] || '/images/placeholder-product.jpg'
+
+  // Handle add to cart
+  const handleAddToCart = () => {
+    playCartSound()
+    addToCart({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      image: imageUrl,
+      variantKey: variantKey,
+    })
+  }
+
+  return (
+    <div className="group relative">
+      <Link
+        href={`/products/${product.slug}`}
+        className="block transition-transform duration-300 ease-out active:scale-95"
+      >
+        {/* Image Container - Portrait aspect ratio */}
+        <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-gray-50 transition-shadow duration-300 group-hover:shadow-xl">
+          {!imageError ? (
+            <Image
+              src={imageUrl}
+              alt={product.title}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              sizes="(max-width: 768px) 50vw, 25vw"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center bg-gray-200 text-gray-400">
+              No Image
+            </div>
+          )}
+
+          {/* Badge - Top Left */}
+          {badge && (
+            <span className={`absolute left-2 top-2 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white md:left-3 md:top-3 md:px-2.5 md:py-1 md:text-xs ${badgeColor === "red" ? "bg-red-600" : "bg-black"
+              }`}>
+              {badge}
+            </span>
+          )}
+
+          {/* Favorite Icon - Top Right */}
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              toggleWishlist({
+                id: product.id,
+                name: product.title,
+                price: displayPrice,
+                image: imageUrl,
+                slug: product.id
+              })
+            }}
+            className={`absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur transition-all ${isWishlisted
+              ? "bg-red-600 text-white"
+              : "bg-white/90 text-gray-700 hover:bg-red-600 hover:text-white"
+              }`}
+            aria-label="Add to wishlist"
+          >
+            <Heart className={`h-4 w-4 ${isWishlisted ? "fill-current" : ""}`} />
+          </button>
+        </div>
+
+        {/* Content - Separated from image */}
+        <div className="mt-3">
+          {/* Product Title - 18px bold - Truncate to 1 line */}
+          <h3 className="truncate font-body !text-[18px] !font-bold !leading-tight !text-black transition-colors duration-200 group-hover:!text-red-600">
+            {product.title}
+          </h3>
+
+          {/* Description - Truncate to 1 line */}
+          <p className="mt-1 truncate text-xs text-gray-600">
+            {shortDesc}
+          </p>
+
+          {/* Star Rating */}
+          <div className="mt-1.5 flex items-center gap-0.5">
+            {[...Array(5)].map((_, i) => (
+              <svg
+                key={i}
+                className="h-3 w-3 fill-yellow-400 text-yellow-400"
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            ))}
+            <span className="ml-1 text-xs text-gray-500">(4.5)</span>
+          </div>
+
+          {/* Price with Cart Button */}
+          <div className="mt-2 flex items-center justify-between gap-1">
+            <div className="flex flex-wrap items-center gap-1 md:gap-2">
+              <span className="text-base font-bold text-black md:text-lg">
+                ₹{displayPrice.toLocaleString()}
+              </span>
+              {product.original_price && (
+                <>
+                  <span className="text-xs text-gray-500 line-through md:text-sm">
+                    ₹{displayOriginalPrice.toLocaleString()}
+                  </span>
+                  <span className="text-[10px] font-semibold text-red-600 md:text-xs">
+                    ({discountPercent}% OFF)
+                  </span>
+                </>
+              )}
+            </div>
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                if (isInCart) {
+                  // Navigate to cart
+                  window.location.href = '/cart'
+                } else {
+                  handleAddToCart()
+                }
+              }}
+              onMouseEnter={() => setIsCartHovered(true)}
+              onMouseLeave={() => setIsCartHovered(false)}
+              className={`flex h-8 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-full transition-all ${isInCart
+                ? "bg-green-600 hover:bg-green-700"
+                : "bg-gray-200 hover:bg-red-600"
+                } ${isCartHovered ? "w-auto px-3 md:w-auto md:px-3" : "w-8"}`}
+              aria-label={isInCart ? "View in cart" : "Add to cart"}
+            >
+              <ShoppingCart className={`h-4 w-4 flex-shrink-0 transition-colors ${isInCart ? "text-white" : isCartHovered ? "text-white" : "text-red-600"
+                }`} />
+              {isCartHovered && (
+                <span className={`hidden whitespace-nowrap text-xs font-medium transition-colors md:inline ${isInCart ? "text-white" : "text-white"
+                  }`}>
+                  {isInCart ? "View in Cart" : "Add to Cart"}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+      </Link>
+    </div>
+  )
+}
