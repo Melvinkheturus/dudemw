@@ -34,7 +34,7 @@ export async function middleware(request: NextRequest) {
 
   // Protected store routes
   const protectedStoreRoutes = ['/account', '/orders', '/profile']
-  const authRoutes = ['/login', '/signup', '/forgot-password', '/reset-password', '/verify-otp', '/callback']
+  const authRoutes = ['/auth/login', '/auth/signup', '/auth/forgot-password', '/auth/reset-password', '/auth/verify-otp', '/auth/callback', '/login', '/signup', '/forgot-password', '/reset-password', '/verify-otp', '/callback']
   
   const isProtectedStoreRoute = protectedStoreRoutes.some(route => pathname.startsWith(route))
   const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
