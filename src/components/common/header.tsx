@@ -127,9 +127,14 @@ export function Header({ sidebarCollapsed, onToggleSidebar, mobileMenuOpen, onTo
                   <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-gray-200" />
-                <DropdownMenuItem className="p-3 rounded-lg text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer">
+                <DropdownMenuItem 
+                  className="p-3 rounded-lg text-red-600 hover:bg-red-50 focus:bg-red-50 cursor-pointer"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  data-testid="admin-header-logout-button"
+                >
                   <LogOut className="mr-3 h-4 w-4" />
-                  <span>Log out</span>
+                  <span>{isLoggingOut ? 'Logging out...' : 'Log out'}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
