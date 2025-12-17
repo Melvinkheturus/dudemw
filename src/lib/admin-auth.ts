@@ -90,6 +90,7 @@ export async function isSetupCompleted(): Promise<boolean> {
  */
 export async function getAdminProfile(userId: string): Promise<AdminProfile | null> {
   try {
+    console.log('[getAdminProfile] Fetching profile for user:', userId)
     const supabase = await createServerSupabase()
     
     const { data, error } = await supabase
@@ -98,13 +99,20 @@ export async function getAdminProfile(userId: string): Promise<AdminProfile | nu
       .eq('user_id', userId)
       .single()
     
-    if (error || !data) {
+    if (error) {
+      console.error('[getAdminProfile] Query error:', error)
       return null
     }
     
+    if (!data) {
+      console.log('[getAdminProfile] No data returned')
+      return null
+    }
+    
+    console.log('[getAdminProfile] Profile found:', data)
     return data as AdminProfile
   } catch (error) {
-    console.error('Error getting admin profile:', error)
+    console.error('[getAdminProfile] Exception:', error)
     return null
   }
 }
