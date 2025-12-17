@@ -36,7 +36,7 @@ export async function adminLoginAction(email: string, password: string) {
     if (signInError || !data.user) {
       return { 
         success: false, 
-        error: 'Invalid email or password' 
+        error: 'Invalid credentials' 
       }
     }
     
@@ -48,16 +48,17 @@ export async function adminLoginAction(email: string, password: string) {
       await supabase.auth.signOut()
       return { 
         success: false, 
-        error: 'Access denied. Not an admin user.' 
+        error: 'Unauthorized' 
       }
     }
     
     // Check if admin is active
     if (!adminProfile.is_active) {
-      await supabase.auth.signOut()
+      // Don't sign out - allow them to see pending page
       return { 
         success: false, 
-        error: 'Your admin account is awaiting approval. Please contact the super admin.' 
+        error: 'Access not approved',
+        pending: true
       }
     }
     
@@ -70,7 +71,7 @@ export async function adminLoginAction(email: string, password: string) {
     console.error('Admin login error:', error)
     return { 
       success: false, 
-      error: 'An unexpected error occurred. Please try again.' 
+      error: 'Unauthorized' 
     }
   }
 }
