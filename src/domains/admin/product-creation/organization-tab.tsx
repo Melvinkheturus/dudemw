@@ -64,20 +64,20 @@ export function OrganizationTab({ organizationData, onOrganizationDataChange }: 
 
     loadData()
   }, [])
-  const toggleCategory = (category: string) => {
-    const isSelected = organizationData.categories.includes(category)
+  const toggleCategory = (categoryId: string) => {
+    const isSelected = organizationData.categories.includes(categoryId)
     const newCategories = isSelected
-      ? organizationData.categories.filter(c => c !== category)
-      : [...organizationData.categories, category]
+      ? organizationData.categories.filter(c => c !== categoryId)
+      : [...organizationData.categories, categoryId]
     
     onOrganizationDataChange({ categories: newCategories })
   }
 
-  const toggleCollection = (collection: string) => {
-    const isSelected = organizationData.collections.includes(collection)
+  const toggleCollection = (collectionId: string) => {
+    const isSelected = organizationData.collections.includes(collectionId)
     const newCollections = isSelected
-      ? organizationData.collections.filter(c => c !== collection)
-      : [...organizationData.collections, collection]
+      ? organizationData.collections.filter(c => c !== collectionId)
+      : [...organizationData.collections, collectionId]
     
     onOrganizationDataChange({ collections: newCollections })
   }
