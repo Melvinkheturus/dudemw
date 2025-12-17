@@ -2,7 +2,9 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Upload, Image, Star, X, Move } from "lucide-react"
+import { Upload, Image, Star, X, Move, Loader2 } from "lucide-react"
+import { useState } from "react"
+import { uploadProductImage } from "@/lib/actions/products"
 
 interface ProductImage {
   id: string
@@ -17,22 +19,46 @@ interface MediaTabProps {
 }
 
 export function MediaTab({ images, onImagesChange }: MediaTabProps) {
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<string>('')
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files) return
 
-    // TODO: Implement actual image upload
-    console.log("Uploading images:", files)
+    setIsUploading(true)
+    const newImages: ProductImage[] = []
     
-    // Mock image addition
-    const newImages = Array.from(files).map((file, index) => ({
-      id: `img-${Date.now()}-${index}`,
-      url: URL.createObjectURL(file),
-      alt: file.name,
-      isPrimary: images.length === 0 && index === 0 // First image is primary if no images exist
-    }))
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        setUploadProgress(`Uploading ${i + 1} of ${files.length}...`)
+        
+        const result = await uploadProductImage(file)
+        
+        if (result.success && result.url) {
+          newImages.push({
+            id: `img-${Date.now()}-${i}`,
+            url: result.url,
+            alt: file.name.replace(/\.[^/.]+$/, ''),
+            isPrimary: images.length === 0 && i === 0 // First image is primary if no images exist
+          })
+        } else {
+          console.error('Failed to upload image:', file.name, result.error)
+        }
+      }
 
-    onImagesChange([...images, ...newImages])
+      if (newImages.length > 0) {
+        onImagesChange([...images, ...newImages])
+      }
+    } catch (error) {
+      console.error('Error uploading images:', error)
+    } finally {
+      setIsUploading(false)
+      setUploadProgress('')
+      // Reset the input so the same file can be uploaded again if needed
+      e.target.value = ''
+    }
   }
 
   const setPrimaryImage = (imageId: string) => {
