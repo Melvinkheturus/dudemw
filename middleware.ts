@@ -29,7 +29,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Admin routes that don't require authentication
-  const publicAdminRoutes = ['/admin/login', '/admin/setup', '/admin/recover']
+  const publicAdminRoutes = ['/admin/login', '/admin/setup', '/admin/recover', '/admin/pending', '/admin/logout']
   const isPublicAdminRoute = publicAdminRoutes.some(route => pathname.startsWith(route))
 
   // Protected store routes
