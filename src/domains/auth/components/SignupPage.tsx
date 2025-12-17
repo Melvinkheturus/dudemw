@@ -230,6 +230,7 @@ export default function SignupPage() {
           type="submit"
           disabled={isLoading}
           className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          data-testid="store-signup-submit"
         >
           {isLoading ? 'Creating Account...' : 'Create Account'}
         </button>
