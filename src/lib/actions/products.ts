@@ -31,24 +31,6 @@ export async function uploadProductImage(file: File): Promise<{ success: boolean
   }
 }
 
-// Convert blob URL to uploaded image
-export async function convertBlobToUploadedImage(blobUrl: string, fileName: string): Promise<{ success: boolean; url?: string; error?: string }> {
-  try {
-    // Fetch the blob data
-    const response = await fetch(blobUrl)
-    const blob = await response.blob()
-    
-    // Create a File object
-    const file = new File([blob], fileName, { type: blob.type })
-    
-    // Upload to Supabase storage
-    return await uploadProductImage(file)
-  } catch (error) {
-    console.error('Error converting blob to uploaded image:', error)
-    return { success: false, error: 'Failed to convert image' }
-  }
-}
-
 type Product = Database['public']['Tables']['products']['Row']
 type ProductInsert = Database['public']['Tables']['products']['Insert']
 type ProductUpdate = Database['public']['Tables']['products']['Update']
