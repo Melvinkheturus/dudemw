@@ -74,7 +74,10 @@ export default function ForgotPasswordPage() {
     >
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2 mb-6">
+        <div 
+          className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2 mb-6"
+          data-testid="forgot-password-error"
+        >
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-red-800">{error}</p>
         </div>
