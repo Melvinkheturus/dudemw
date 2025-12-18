@@ -308,18 +308,26 @@ export default function BannersPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredBanners.map((banner) => (
+                {banners.map((banner) => (
                   <div
                     key={banner.id}
                     className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-4 rounded-xl bg-white/60 border border-gray-200/50 hover:shadow-md transition-all duration-200 gap-4"
                   >
                     {/* Banner Info */}
                     <div className="flex items-center space-x-4 min-w-0 flex-1">
-                      <div className="w-16 h-12 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Image className="h-6 w-6 text-gray-400" />
+                      <div className="w-16 h-12 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {banner.image_url ? (
+                          <img 
+                            src={banner.image_url} 
+                            alt={banner.internal_title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Image className="h-6 w-6 text-gray-400" />
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-gray-900 truncate">{banner.internalTitle}</h3>
+                        <h3 className="font-semibold text-gray-900 truncate">{banner.internal_title}</h3>
                         <div className="flex flex-wrap items-center gap-2 mt-1">
                           <span className="text-sm text-gray-600">{getPlacementLabel(banner.placement)}</span>
                           {banner.category && (
@@ -336,10 +344,10 @@ export default function BannersPage() {
                           )}
                         </div>
                         <div className="flex items-center space-x-2 mt-1">
-                          <span className="text-sm text-gray-500">→ {banner.target.name}</span>
-                          {banner.ctaText && (
+                          <span className="text-sm text-gray-500">→ {banner.action_name}</span>
+                          {banner.cta_text && (
                             <Badge variant="outline" className="text-xs">
-                              {banner.ctaText}
+                              {banner.cta_text}
                             </Badge>
                           )}
                         </div>
@@ -351,8 +359,9 @@ export default function BannersPage() {
                       <div className="flex items-center space-x-1">
                         <Calendar className="h-4 w-4" />
                         <span>
-                          {banner.schedule.startDate && new Date(banner.schedule.startDate).toLocaleDateString()}
-                          {banner.schedule.endDate && ` → ${new Date(banner.schedule.endDate).toLocaleDateString()}`}
+                          {banner.start_date && new Date(banner.start_date).toLocaleDateString()}
+                          {banner.end_date && ` → ${new Date(banner.end_date).toLocaleDateString()}`}
+                          {!banner.start_date && !banner.end_date && 'No schedule'}
                         </span>
                       </div>
                     </div>
@@ -365,7 +374,7 @@ export default function BannersPage() {
                           <p className="text-xs text-gray-500">Clicks</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm font-medium text-gray-900">{banner.ctr}</p>
+                          <p className="text-sm font-medium text-gray-900">{banner.ctr}%</p>
                           <p className="text-xs text-gray-500">CTR</p>
                         </div>
                         <Badge variant="outline" className={getStatusColor(banner.status)}>
