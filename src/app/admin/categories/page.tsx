@@ -1,52 +1,36 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { CategoryService, CategoryWithChildren, CategoryStats } from '@/lib/services/categories'
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-import { Plus, FolderTree, Package, Eye, Edit, Trash2, ChevronRight, Loader2 } from "lucide-react"
+import { Plus, FolderTree, Package, Eye, Edit, Trash2, ChevronRight, Loader2, RefreshCw } from "lucide-react"
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { useCategories, useCategoryStats } from '@/hooks/queries/useCategories'
+import { CategoryService, CategoryWithChildren } from '@/lib/services/categories'
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<CategoryWithChildren[]>([])
-  const [stats, setStats] = useState<CategoryStats | null>(null)
-  const [loading, setLoading] = useState(true)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
-  useEffect(() => {
-    fetchCategories()
-    fetchStats()
-  }, [])
 
-  const fetchCategories = async () => {
-    setLoading(true)
-    try {
-      const result = await CategoryService.getCategoryTree()
-      if (result.success && result.data) {
-        setCategories(result.data)
-      } else {
-        toast.error(result.error || 'Failed to fetch categories')
-      }
-    } catch (error) {
-      console.error('Error fetching categories:', error)
-      toast.error('Failed to fetch categories')
-    } finally {
-      setLoading(false)
-    }
-  }
+  // React Query hooks
+  const { 
+    data: categories = [], 
+    isLoading,
+    refetch: refetchCategories 
+  } = useCategories()
+  
+  const { 
+    data: stats,
+    isLoading: isLoadingStats,
+    refetch: refetchStats 
+  } = useCategoryStats()
 
-  const fetchStats = async () => {
-    try {
-      const result = await CategoryService.getCategoryStats()
-      if (result.success && result.data) {
-        setStats(result.data)
-      }
-    } catch (error) {
-      console.error('Error fetching stats:', error)
-    }
+  const handleRefresh = async () => {
+    await Promise.all([refetchCategories(), refetchStats()])
+    toast.success('Categories refreshed')
   }
 
   const handleDelete = async () => {
@@ -57,8 +41,8 @@ export default function CategoriesPage() {
       const result = await CategoryService.deleteCategory(deleteId)
       if (result.success) {
         toast.success('Category deleted successfully')
-        fetchCategories()
-        fetchStats()
+        refetchCategories()
+        refetchStats()
       } else {
         toast.error(result.error || 'Failed to delete category')
       }
@@ -70,16 +54,16 @@ export default function CategoriesPage() {
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className=\"flex items-center justify-center h-96\">
-        <Loader2 className=\"h-8 w-8 animate-spin text-gray-400\" />
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
       </div>
     )
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" data-testid="categories-page">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold tracking-tight text-gray-900">Categories</h1>
@@ -87,12 +71,23 @@ export default function CategoriesPage() {
             Organize your products with categories and subcategories
           </p>
         </div>
-        <Link href="/admin/categories/create">
-          <Button className="bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/25">
-            <Plus className="mr-2 h-4 w-4" />
-            Create Category
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={isLoading || isLoadingStats}
+            data-testid="refresh-categories-button"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${(isLoading || isLoadingStats) ? 'animate-spin' : ''}`} />
+            Refresh
           </Button>
-        </Link>
+          <Link href="/admin/categories/create">
+            <Button className="bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/25">
+              <Plus className="mr-2 h-4 w-4" />
+              Create Category
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -163,7 +158,7 @@ export default function CategoriesPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {categories.map((category) => (
+              {categories.map((category: CategoryWithChildren) => (
                 <div key={category.id} className="space-y-2">
                   <div className="flex items-center justify-between p-4 rounded-xl bg-white/60 border border-gray-200/50 hover:shadow-md transition-all duration-200">
                     <div className="flex items-center space-x-4">
