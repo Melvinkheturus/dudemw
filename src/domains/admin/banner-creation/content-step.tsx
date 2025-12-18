@@ -171,6 +171,42 @@ export function ContentStep({ placement, formData, onFormDataChange }: ContentSt
           </CardContent>
         </Card>
       )}
+
+      {/* Scheduling Section */}
+      <Card className="border-0 shadow-sm bg-gradient-to-b from-white to-red-50 border-red-100/50 hover:shadow-md transition-all duration-200">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold text-gray-900">Schedule (Optional)</CardTitle>
+          <CardDescription className="text-gray-600">
+            Set when this banner should be active
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 w-full">
+            <div className="space-y-2 min-w-0">
+              <Label htmlFor="startDate">Start Date</Label>
+              <Input
+                id="startDate"
+                type="datetime-local"
+                value={formData.startDate || ""}
+                onChange={(e) => onFormDataChange({ startDate: e.target.value })}
+                className="w-full"
+              />
+              <p className="text-xs text-gray-500">Leave empty to start immediately</p>
+            </div>
+            <div className="space-y-2 min-w-0">
+              <Label htmlFor="endDate">End Date</Label>
+              <Input
+                id="endDate"
+                type="datetime-local"
+                value={formData.endDate || ""}
+                onChange={(e) => onFormDataChange({ endDate: e.target.value })}
+                className="w-full"
+              />
+              <p className="text-xs text-gray-500">Leave empty for no expiration</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
