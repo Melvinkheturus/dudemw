@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { CustomerService } from '@/lib/services/customers'
-import { CustomerFilters, CustomerStats } from '@/lib/types/customers'
+import { CustomerFilters } from '@/lib/types/customers'
 import { CustomersTable } from '@/domains/admin/customers/customers-table'
 import { CustomersFilters } from '@/domains/admin/customers/customers-filters'
 import { CustomersStats } from '@/domains/admin/customers/customers-stats'
@@ -10,66 +10,31 @@ import { CustomersEmptyState } from '@/components/common/empty-states'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { RefreshCw } from 'lucide-react'
+import { useCustomers, useCustomerStats } from '@/hooks/queries/useCustomers'
+import { useExportCustomers } from '@/hooks/mutations/useCustomerMutations'
 
 export default function CustomersPage() {
-  const [customers, setCustomers] = useState<any[]>([])
-  const [stats, setStats] = useState<CustomerStats>({
-    total: 0,
-    active: 0,
-    inactive: 0,
-    vip: 0,
-    newThisMonth: 0,
-    totalRevenue: 0,
-    averageLifetimeValue: 0,
-  })
   const [filters, setFilters] = useState<CustomerFilters>({
     status: 'all',
   })
   const [page, setPage] = useState(1)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isExporting, setIsExporting] = useState(false)
-  const [isRefreshing, setIsRefreshing] = useState(false)
 
-  // Fetch customers
-  useEffect(() => {
-    fetchCustomers()
-  }, [filters, page])
+  // React Query hooks
+  const { 
+    data: customers = [], 
+    isLoading: isLoadingCustomers,
+    refetch: refetchCustomers 
+  } = useCustomers(filters, page, 20)
+  
+  const { 
+    data: stats,
+    isLoading: isLoadingStats,
+    refetch: refetchStats 
+  } = useCustomerStats()
 
-  // Fetch stats on mount
-  useEffect(() => {
-    fetchStats()
-  }, [])
-
-  const fetchCustomers = async () => {
-    setIsLoading(true)
-    try {
-      const result = await CustomerService.getCustomers(filters, page, 20)
-      if (result.success && result.data) {
-        setCustomers(result.data)
-      } else {
-        toast.error(result.error || 'Failed to fetch customers')
-      }
-    } catch (error) {
-      console.error('Error fetching customers:', error)
-      toast.error('Failed to fetch customers')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const fetchStats = async () => {
-    try {
-      const result = await CustomerService.getCustomerStats()
-      if (result.success && result.data) {
-        setStats(result.data)
-      }
-    } catch (error) {
-      console.error('Error fetching stats:', error)
-    }
-  }
+  const exportMutation = useExportCustomers()
 
   const handleExport = async () => {
-    setIsExporting(true)
     try {
       const result = await CustomerService.exportCustomers(filters)
       if (result.success && result.data) {
@@ -83,22 +48,14 @@ export default function CustomersPage() {
         a.click()
         document.body.removeChild(a)
         window.URL.revokeObjectURL(url)
-        toast.success('Customers exported successfully')
-      } else {
-        toast.error(result.error || 'Failed to export customers')
       }
     } catch (error) {
       console.error('Error exporting customers:', error)
-      toast.error('Failed to export customers')
-    } finally {
-      setIsExporting(false)
     }
   }
 
   const handleRefresh = async () => {
-    setIsRefreshing(true)
-    await Promise.all([fetchCustomers(), fetchStats()])
-    setIsRefreshing(false)
+    await Promise.all([refetchCustomers(), refetchStats()])
     toast.success('Data refreshed')
   }
 
@@ -107,7 +64,7 @@ export default function CustomersPage() {
     setPage(1)
   }
 
-  const hasCustomers = customers.length > 0 || isLoading
+  const hasCustomers = customers.length > 0 || isLoadingCustomers
 
   return (
     <div className="space-y-8" data-testid="customers-page">
