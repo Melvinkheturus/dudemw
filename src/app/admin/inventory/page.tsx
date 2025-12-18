@@ -197,7 +197,7 @@ export default function InventoryPage() {
       </div>
 
       {/* Low Stock Alerts */}
-      <LowStockAlerts />
+      <LowStockAlerts items={lowStockItems} isLoading={isLoadingLowStock} />
 
       {/* Filters */}
       <InventoryFiltersComponent
