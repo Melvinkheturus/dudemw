@@ -4,14 +4,7 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { TableCell } from "@/components/ui/table"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,27 +43,12 @@ import {
 import { formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 import Link from "next/link"
+import { VirtualizedTable } from "@/components/common/virtualized-table"
 
 interface OrdersTableProps {
   orders: OrderWithDetails[]
   onRefresh: () => void
 }
-
-const statusColors = {
-  pending: "destructive",
-  processing: "secondary",
-  shipped: "default",
-  delivered: "outline",
-  cancelled: "destructive",
-  completed: "outline",
-} as const
-
-const paymentStatusColors = {
-  paid: "outline",
-  pending: "secondary",
-  failed: "destructive",
-  refunded: "secondary",
-} as const
 
 export function OrdersTable({ orders, onRefresh }: OrdersTableProps) {
   const [selectedOrders, setSelectedOrders] = useState<string[]>([])
@@ -198,12 +176,176 @@ export function OrdersTable({ orders, onRefresh }: OrdersTableProps) {
     }
   }
 
+  // Define columns for virtualized table
+  const columns = [
+    {
+      key: 'checkbox',
+      header: '',
+      render: (order: OrderWithDetails) => (
+        <TableCell className="w-12">
+          <Checkbox
+            checked={selectedOrders.includes(order.id)}
+            onCheckedChange={() => toggleOrder(order.id)}
+          />
+        </TableCell>
+      ),
+    },
+    {
+      key: 'orderId',
+      header: 'Order ID',
+      render: (order: OrderWithDetails) => (
+        <TableCell className="font-mono font-semibold text-gray-900">
+          {getOrderNumber(order)}
+        </TableCell>
+      ),
+    },
+    {
+      key: 'customer',
+      header: 'Customer',
+      render: (order: OrderWithDetails) => (
+        <TableCell>
+          <div>
+            <div className="font-semibold text-gray-900">{getCustomerName(order)}</div>
+            <div className="text-sm text-gray-600">{order.guest_email}</div>
+          </div>
+        </TableCell>
+      ),
+    },
+    {
+      key: 'items',
+      header: 'Items',
+      render: (order: OrderWithDetails) => (
+        <TableCell className="text-gray-700">{getItemsCount(order)}</TableCell>
+      ),
+    },
+    {
+      key: 'total',
+      header: 'Total',
+      render: (order: OrderWithDetails) => (
+        <TableCell className="font-semibold text-gray-900">
+          ₹{(order.total_amount || 0).toLocaleString()}
+        </TableCell>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (order: OrderWithDetails) => (
+        <TableCell>
+          <Badge className={`font-medium ${getStatusColor(order.order_status)}`}>
+            {order.order_status || 'pending'}
+          </Badge>
+        </TableCell>
+      ),
+    },
+    {
+      key: 'payment',
+      header: 'Payment',
+      render: (order: OrderWithDetails) => (
+        <TableCell>
+          <Badge className={`font-medium ${getPaymentStatusColor(order.payment_status)}`}>
+            {order.payment_status || 'pending'}
+          </Badge>
+        </TableCell>
+      ),
+    },
+    {
+      key: 'date',
+      header: 'Date',
+      render: (order: OrderWithDetails) => (
+        <TableCell className="text-gray-600">
+          {order.created_at
+            ? formatDistanceToNow(new Date(order.created_at), { addSuffix: true })
+            : 'N/A'}
+        </TableCell>
+      ),
+    },
+    {
+      key: 'address',
+      header: 'Address',
+      render: (order: OrderWithDetails) => (
+        <TableCell className="text-gray-600 max-w-32 truncate">
+          {formatAddress(order.shipping_address)}
+        </TableCell>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      render: (order: OrderWithDetails) => (
+        <TableCell className="text-right">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-8 w-8 p-0 hover:bg-gray-100"
+                disabled={isUpdating}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem asChild>
+                <Link href={`/admin/orders/${order.id}`}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Details
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {order.order_status === 'pending' && (
+                <DropdownMenuItem
+                  onClick={() => handleStatusUpdate(order.id, 'processing')}
+                >
+                  <Package className="mr-2 h-4 w-4" />
+                  Mark as Processing
+                </DropdownMenuItem>
+              )}
+              {(order.order_status === 'pending' || order.order_status === 'processing') && (
+                <DropdownMenuItem
+                  onClick={() => setTrackingDialog({ open: true, orderId: order.id })}
+                >
+                  <Truck className="mr-2 h-4 w-4" />
+                  Add Tracking & Ship
+                </DropdownMenuItem>
+              )}
+              {order.order_status === 'shipped' && (
+                <DropdownMenuItem
+                  onClick={() => handleStatusUpdate(order.id, 'delivered')}
+                >
+                  <Package className="mr-2 h-4 w-4" />
+                  Mark as Delivered
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem
+                onClick={() => setTrackingDialog({ open: true, orderId: order.id })}
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Tracking
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {order.order_status !== 'cancelled' && order.order_status !== 'delivered' && (
+                <DropdownMenuItem
+                  className="text-red-600"
+                  onClick={() => setCancelDialog({ open: true, orderId: order.id })}
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Cancel Order
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </TableCell>
+      ),
+    },
+  ]
+
   if (orders.length === 0) {
     return null
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="orders-table">
       {selectedOrders.length > 0 && (
         <div className="flex items-center justify-between p-4 bg-red-50/50 rounded-xl border border-red-200/50">
           <span className="text-sm font-semibold text-gray-900">
@@ -242,136 +384,12 @@ export function OrdersTable({ orders, onRefresh }: OrdersTableProps) {
       )}
 
       <div className="rounded-xl border-0 shadow-sm bg-gradient-to-br from-white to-gray-50/50 overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-50/50 hover:bg-gray-50/80 border-b border-gray-200/60">
-              <TableHead className="w-12 font-semibold text-gray-700">
-                <Checkbox
-                  checked={selectedOrders.length === orders.length}
-                  onCheckedChange={toggleAll}
-                />
-              </TableHead>
-              <TableHead className="font-semibold text-gray-700">Order ID</TableHead>
-              <TableHead className="font-semibold text-gray-700">Customer</TableHead>
-              <TableHead className="font-semibold text-gray-700">Items</TableHead>
-              <TableHead className="font-semibold text-gray-700">Total</TableHead>
-              <TableHead className="font-semibold text-gray-700">Status</TableHead>
-              <TableHead className="font-semibold text-gray-700">Payment</TableHead>
-              <TableHead className="font-semibold text-gray-700">Date</TableHead>
-              <TableHead className="font-semibold text-gray-700">Address</TableHead>
-              <TableHead className="text-right font-semibold text-gray-700">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {orders.map((order) => (
-              <TableRow
-                key={order.id}
-                className="hover:bg-gray-50/50 transition-colors border-b border-gray-100"
-              >
-                <TableCell>
-                  <Checkbox
-                    checked={selectedOrders.includes(order.id)}
-                    onCheckedChange={() => toggleOrder(order.id)}
-                  />
-                </TableCell>
-                <TableCell className="font-mono font-semibold text-gray-900">
-                  {getOrderNumber(order)}
-                </TableCell>
-                <TableCell>
-                  <div>
-                    <div className="font-semibold text-gray-900">{getCustomerName(order)}</div>
-                    <div className="text-sm text-gray-600">{order.guest_email}</div>
-                  </div>
-                </TableCell>
-                <TableCell className="text-gray-700">{getItemsCount(order)}</TableCell>
-                <TableCell className="font-semibold text-gray-900">
-                  ₹{(order.total_amount || 0).toLocaleString()}
-                </TableCell>
-                <TableCell>
-                  <Badge className={`font-medium ${getStatusColor(order.order_status)}`}>
-                    {order.order_status || 'pending'}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge className={`font-medium ${getPaymentStatusColor(order.payment_status)}`}>
-                    {order.payment_status || 'pending'}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-gray-600">
-                  {order.created_at
-                    ? formatDistanceToNow(new Date(order.created_at), { addSuffix: true })
-                    : 'N/A'}
-                </TableCell>
-                <TableCell className="text-gray-600 max-w-32 truncate">
-                  {formatAddress(order.shipping_address)}
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="h-8 w-8 p-0 hover:bg-gray-100"
-                        disabled={isUpdating}
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem asChild>
-                        <Link href={`/admin/orders/${order.id}`}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      {order.order_status === 'pending' && (
-                        <DropdownMenuItem
-                          onClick={() => handleStatusUpdate(order.id, 'processing')}
-                        >
-                          <Package className="mr-2 h-4 w-4" />
-                          Mark as Processing
-                        </DropdownMenuItem>
-                      )}
-                      {(order.order_status === 'pending' || order.order_status === 'processing') && (
-                        <DropdownMenuItem
-                          onClick={() => setTrackingDialog({ open: true, orderId: order.id })}
-                        >
-                          <Truck className="mr-2 h-4 w-4" />
-                          Add Tracking & Ship
-                        </DropdownMenuItem>
-                      )}
-                      {order.order_status === 'shipped' && (
-                        <DropdownMenuItem
-                          onClick={() => handleStatusUpdate(order.id, 'delivered')}
-                        >
-                          <Package className="mr-2 h-4 w-4" />
-                          Mark as Delivered
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem
-                        onClick={() => setTrackingDialog({ open: true, orderId: order.id })}
-                      >
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit Tracking
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      {order.order_status !== 'cancelled' && order.order_status !== 'delivered' && (
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => setCancelDialog({ open: true, orderId: order.id })}
-                        >
-                          <X className="mr-2 h-4 w-4" />
-                          Cancel Order
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <VirtualizedTable
+          data={orders}
+          columns={columns}
+          estimatedRowHeight={90}
+          emptyMessage="No orders found. Try adjusting your filters or check back later."
+        />
       </div>
 
       {/* Add Tracking Dialog */}
