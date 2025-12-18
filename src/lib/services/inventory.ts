@@ -16,6 +16,7 @@ export class InventoryService {
    */
   static async getInventoryItems(filters?: InventoryFilters, page: number = 1, limit: number = 50) {
     try {
+      // Fetch all inventory items without complex filtering in SQL
       let query = supabaseAdmin
         .from('inventory_items')
         .select(`
@@ -32,32 +33,12 @@ export class InventoryService {
           )
         `)
 
-      // Apply filters
-      if (filters?.search) {
-        // We'll filter after fetching since we need to search in nested data
-      }
-
-      if (filters?.stockStatus && filters.stockStatus !== 'all') {
-        if (filters.stockStatus === 'out_of_stock') {
-          query = query.lte('quantity', 0)
-        } else if (filters.stockStatus === 'low_stock') {
-          query = query.gt('quantity', 0).filter('quantity', 'lte', 'low_stock_threshold')
-        } else if (filters.stockStatus === 'in_stock') {
-          query = query.gt('quantity', 'low_stock_threshold')
-        }
-      }
-
-      const from = (page - 1) * limit
-      const to = from + limit - 1
-
-      const { data, error, count } = await query
-        .order('quantity', { ascending: true })
-        .range(from, to)
+      const { data, error } = await query.order('quantity', { ascending: true })
 
       if (error) throw error
 
       // Transform data
-      const inventoryItems: InventoryItem[] = (data || []).map((item: any) => ({
+      let inventoryItems: InventoryItem[] = (data || []).map((item: any) => ({
         id: item.id,
         variant_id: item.variant_id,
         sku: item.product_variants?.sku || null,
@@ -72,11 +53,27 @@ export class InventoryService {
         product_id: item.product_variants?.product_id || '',
       }))
 
-      // Apply search filter if needed
-      let filteredItems = inventoryItems
+      // Apply stock status filter in JavaScript
+      if (filters?.stockStatus && filters.stockStatus !== 'all') {
+        inventoryItems = inventoryItems.filter(item => {
+          const quantity = item.quantity || 0
+          const threshold = item.low_stock_threshold || 5
+
+          if (filters.stockStatus === 'out_of_stock') {
+            return quantity <= 0
+          } else if (filters.stockStatus === 'low_stock') {
+            return quantity > 0 && quantity <= threshold
+          } else if (filters.stockStatus === 'in_stock') {
+            return quantity > threshold
+          }
+          return true
+        })
+      }
+
+      // Apply search filter
       if (filters?.search) {
         const searchLower = filters.search.toLowerCase()
-        filteredItems = inventoryItems.filter(
+        inventoryItems = inventoryItems.filter(
           item =>
             item.product_name.toLowerCase().includes(searchLower) ||
             item.variant_name?.toLowerCase().includes(searchLower) ||
@@ -84,15 +81,21 @@ export class InventoryService {
         )
       }
 
+      // Apply pagination
+      const total = inventoryItems.length
+      const from = (page - 1) * limit
+      const to = from + limit
+      const paginatedItems = inventoryItems.slice(from, to)
+
       return {
         success: true,
-        data: filteredItems,
-        total: filteredItems.length,
+        data: paginatedItems,
+        total,
         pagination: {
           page,
           limit,
-          total: filteredItems.length,
-          totalPages: Math.ceil(filteredItems.length / limit),
+          total,
+          totalPages: Math.ceil(total / limit),
         },
       }
     } catch (error: any) {
