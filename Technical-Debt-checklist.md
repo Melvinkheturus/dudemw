@@ -27,15 +27,15 @@ This checklist tracks technical debt resolution to improve performance, code qua
 - [x] Add QueryClientProvider to root layout
 - [x] Setup React Query DevTools (development only)
 
-#### 1.2 Create Query Hooks (0/8)
-- [ ] Create `src/hooks/queries/useCustomers.ts` - Customer queries
-- [ ] Create `src/hooks/queries/useInventory.ts` - Inventory queries
-- [ ] Create `src/hooks/queries/useProducts.ts` - Product queries
-- [ ] Create `src/hooks/queries/useOrders.ts` - Order queries
-- [ ] Create `src/hooks/queries/useBanners.ts` - Banner queries
-- [ ] Create `src/hooks/queries/useCategories.ts` - Category queries
-- [ ] Create `src/hooks/queries/useSettings.ts` - Settings queries
-- [ ] Create `src/hooks/queries/useAnalytics.ts` - Analytics queries
+#### 1.2 Create Query Hooks (8/8) ✅
+- [x] Create `src/hooks/queries/useCustomers.ts` - Customer queries
+- [x] Create `src/hooks/queries/useInventory.ts` - Inventory queries
+- [x] Create `src/hooks/queries/useProducts.ts` - Product queries
+- [x] Create `src/hooks/queries/useOrders.ts` - Order queries
+- [x] Create `src/hooks/queries/useBanners.ts` - Banner queries
+- [x] Create `src/hooks/queries/useCategories.ts` - Category queries
+- [x] Create `src/hooks/queries/useSettings.ts` - Settings queries
+- [x] Create `src/hooks/queries/useAnalytics.ts` - Analytics queries
 
 #### 1.3 Create Mutation Hooks (0/5)
 - [ ] Create `src/hooks/mutations/useCustomerMutations.ts`
