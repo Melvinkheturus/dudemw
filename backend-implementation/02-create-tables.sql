@@ -163,11 +163,13 @@ CREATE TABLE products (
     
     -- Pricing
     price NUMERIC(10, 2) DEFAULT 0,
+    original_price NUMERIC(10, 2),
     compare_price NUMERIC(10, 2),
     cost NUMERIC(10, 2),
     
     -- Inventory
     in_stock BOOLEAN DEFAULT TRUE,
+    global_stock INTEGER,
     track_inventory BOOLEAN DEFAULT TRUE,
     allow_backorders BOOLEAN DEFAULT FALSE,
     low_stock_threshold INTEGER,
