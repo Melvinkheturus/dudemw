@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { Product } from '@/domains/product/types'
-import { supabase } from '@/lib/supabase/supabase'
+import { ProductService } from '@/lib/services/products'
 import { generateProductSchema, generateBreadcrumbSchema } from '@/lib/utils/seo'
 import { ProductDetailPage } from '@/domains/product'
 
@@ -11,27 +11,34 @@ export default async function ProductPage({
 }) {
   const { slug } = await params
 
-  // Fetch product from Supabase
-  const { data: product } = await supabase
-    .from('products')
-    .select('*')
-    .eq('slug', slug)
-    .single()
+  // Fetch product using ProductService
+  const productResult = await ProductService.getProduct(slug, true)
 
   // Handle product not found
-  if (!product) {
+  if (!productResult.success || !productResult.data) {
     notFound()
   }
 
-  // Get related products from same category
-  const { data: allProducts } = await supabase
-    .from('products')
-    .select('*')
-    .eq('in_stock', true)
-    .limit(20)
-  const relatedProducts = (allProducts || [])
-    .filter((p: any) => p.category_id === product.category_id && p.id !== product.id)
-    .slice(0, 8)
+  const product = productResult.data
+
+  // Get related products from same category using ProductService
+  const categoryId = product.product_categories?.[0]?.categories?.id
+  let relatedProducts: any[] = []
+  
+  if (categoryId) {
+    const relatedResult = await ProductService.getProducts({
+      categoryId,
+      status: 'active',
+      limit: 9
+    })
+    
+    if (relatedResult.success) {
+      // Filter out current product and limit to 8
+      relatedProducts = (relatedResult.data || [])
+        .filter((p: any) => p.id !== product.id)
+        .slice(0, 8)
+    }
+  }
 
   // Generate structured data for SEO
   const productSchema = generateProductSchema({
