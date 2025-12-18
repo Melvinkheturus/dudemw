@@ -228,27 +228,27 @@ export function StoreSettingsForm() {
           <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 w-full">
             <div className="space-y-2 min-w-0">
               <Label htmlFor="currency">Currency</Label>
-              <Select defaultValue="inr">
+              <Select value={formData.currency} onValueChange={(value) => handleChange('currency', value)}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="inr">Indian Rupee (₹)</SelectItem>
-                  <SelectItem value="usd">US Dollar ($)</SelectItem>
-                  <SelectItem value="eur">Euro (€)</SelectItem>
+                  <SelectItem value="INR">Indian Rupee (₹)</SelectItem>
+                  <SelectItem value="USD">US Dollar ($)</SelectItem>
+                  <SelectItem value="EUR">Euro (€)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2 min-w-0">
               <Label htmlFor="timezone">Timezone</Label>
-              <Select defaultValue="asia/kolkata">
+              <Select value={formData.timezone} onValueChange={(value) => handleChange('timezone', value)}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="asia/kolkata">Asia/Kolkata (IST)</SelectItem>
-                  <SelectItem value="utc">UTC</SelectItem>
-                  <SelectItem value="america/new_york">America/New_York (EST)</SelectItem>
+                  <SelectItem value="Asia/Kolkata">Asia/Kolkata (IST)</SelectItem>
+                  <SelectItem value="UTC">UTC</SelectItem>
+                  <SelectItem value="America/New_York">America/New_York (EST)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
