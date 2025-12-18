@@ -1,65 +1,21 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { CategoryService, CategoryWithChildren, CategoryStats } from '@/lib/services/categories'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Plus, FolderTree, Package, Eye, Edit, Trash2, ChevronRight } from "lucide-react"
-
-const categories = [
-  {
-    id: 1,
-    name: "Shirts",
-    slug: "shirts",
-    description: "Formal and casual shirts for men",
-    productCount: 45,
-    status: "active",
-    parent: null,
-    image: "/categories/shirts.jpg",
-    children: [
-      { id: 11, name: "Formal Shirts", productCount: 25 },
-      { id: 12, name: "Casual Shirts", productCount: 20 },
-    ]
-  },
-  {
-    id: 2,
-    name: "T-Shirts",
-    slug: "t-shirts",
-    description: "Comfortable cotton t-shirts",
-    productCount: 67,
-    status: "active",
-    parent: null,
-    image: "/categories/tshirts.jpg",
-    children: [
-      { id: 21, name: "Graphic Tees", productCount: 35 },
-      { id: 22, name: "Plain Tees", productCount: 32 },
-    ]
-  },
-  {
-    id: 3,
-    name: "Hoodies",
-    slug: "hoodies",
-    description: "Warm and stylish hoodies",
-    productCount: 23,
-    status: "active",
-    parent: null,
-    image: "/categories/hoodies.jpg",
-    children: []
-  },
-  {
-    id: 4,
-    name: "Jeans",
-    slug: "jeans",
-    description: "Premium denim jeans",
-    productCount: 34,
-    status: "inactive",
-    parent: null,
-    image: "/categories/jeans.jpg",
-    children: [
-      { id: 41, name: "Slim Fit", productCount: 18 },
-      { id: 42, name: "Regular Fit", productCount: 16 },
-    ]
-  },
-]
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { Plus, FolderTree, Package, Eye, Edit, Trash2, ChevronRight, Loader2 } from "lucide-react"
+import { toast } from 'sonner'
+import Link from 'next/link'
 
 export default function CategoriesPage() {
+  const [categories, setCategories] = useState<CategoryWithChildren[]>([])
+  const [stats, setStats] = useState<CategoryStats | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
