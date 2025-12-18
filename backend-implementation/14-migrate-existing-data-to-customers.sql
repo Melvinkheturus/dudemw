@@ -20,6 +20,7 @@ END $$;
 DO $$
 DECLARE
     v_admin_orders_count INTEGER;
+    rec RECORD;
 BEGIN
     -- Count orders placed by admins
     SELECT COUNT(*) INTO v_admin_orders_count
