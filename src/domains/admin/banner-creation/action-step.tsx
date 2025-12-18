@@ -17,8 +17,10 @@ type ActionType = "collection" | "category" | "product" | "external"
 interface ActionStepProps {
   actionType?: ActionType
   actionTarget: string
+  actionName?: string
   onActionTypeChange: (type: ActionType) => void
   onActionTargetChange: (target: string) => void
+  onActionNameChange?: (name: string) => void
 }
 
 const actionOptions = [
