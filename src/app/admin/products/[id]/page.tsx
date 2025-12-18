@@ -18,7 +18,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     }
 
     if (!result.data) {
-      console.log('Product data is null for ID:', params.id)
+      console.log('Product data is null for ID:', id)
       notFound()
     }
 
