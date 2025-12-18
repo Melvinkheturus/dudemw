@@ -95,9 +95,10 @@ export class InventoryService {
           totalPages: Math.ceil(filteredItems.length / limit),
         },
       }
-    } catch (error) {
-      console.error('Error fetching inventory items:', error)
-      return { success: false, error: 'Failed to fetch inventory items' }
+    } catch (error: any) {
+      const errorMessage = error?.message || error?.error_description || JSON.stringify(error) || 'Unknown error'
+      console.error('Error fetching inventory items:', errorMessage, error)
+      return { success: false, error: `Failed to fetch inventory items: ${errorMessage}` }
     }
   }
 
