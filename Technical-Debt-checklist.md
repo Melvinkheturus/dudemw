@@ -44,22 +44,22 @@ This checklist tracks technical debt resolution to improve performance, code qua
 - [x] Create `src/hooks/mutations/useOrderMutations.ts`
 - [x] Create `src/hooks/mutations/useSettingsMutations.ts`
 
-#### 1.4 Migrate Admin Pages to React Query (1/8)
+#### 1.4 Migrate Admin Pages to React Query (8/8) ✅
 - [x] Migrate `src/app/admin/customers/page.tsx`
-- [ ] Migrate `src/app/admin/customers/[id]/page.tsx`
-- [ ] Migrate `src/app/admin/inventory/page.tsx`
-- [ ] Migrate `src/app/admin/products/page.tsx`
-- [ ] Migrate `src/app/admin/orders/page.tsx`
-- [ ] Migrate `src/app/admin/banners/page.tsx`
-- [ ] Migrate `src/app/admin/categories/page.tsx`
-- [ ] Migrate `src/app/admin/page.tsx` (dashboard)
+- [x] Migrate `src/app/admin/customers/[id]/page.tsx`
+- [x] Migrate `src/app/admin/inventory/page.tsx`
+- [x] Migrate `src/app/admin/products/page.tsx`
+- [x] Migrate `src/app/admin/orders/page.tsx`
+- [x] Migrate `src/app/admin/banners/page.tsx`
+- [x] Migrate `src/app/admin/categories/page.tsx`
+- [x] Migrate `src/app/admin/page.tsx` (dashboard)
 
-#### 1.5 Cache Invalidation Strategy (0/3)
-- [ ] Implement invalidation on mutations
-- [ ] Setup refetch on window focus (where appropriate)
-- [ ] Configure stale time and cache time per query type
+#### 1.5 Cache Invalidation Strategy (3/3) ✅
+- [x] Implement invalidation on mutations
+- [x] Setup refetch on window focus (where appropriate)
+- [x] Configure stale time and cache time per query type
 
-**Phase 1 Completion:** 18/28 tasks (64%)
+**Phase 1 Completion:** 28/28 tasks (100%) ✅
 
 ---
 
