@@ -1,5 +1,9 @@
 import { useQuery, UseQueryOptions } from '@tanstack/react-query'
-import { CustomerService } from '@/lib/services/customers'
+import {
+  getCustomersAction,
+  getCustomerAction,
+  getCustomerStatsAction,
+} from '@/lib/actions/customers'
 import { CustomerFilters, CustomerStats, CustomerDetails } from '@/lib/types/customers'
 
 /**
@@ -27,7 +31,7 @@ export function useCustomers(
   return useQuery({
     queryKey: customerKeys.list(filters, page),
     queryFn: async () => {
-      const result = await CustomerService.getCustomers(filters, page, limit)
+      const result = await getCustomersAction(filters, page, limit)
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch customers')
       }
@@ -47,7 +51,7 @@ export function useCustomer(
   return useQuery({
     queryKey: customerKeys.detail(customerId),
     queryFn: async () => {
-      const result = await CustomerService.getCustomer(customerId)
+      const result = await getCustomerAction(customerId)
       if (!result.success || !result.data) {
         throw new Error(result.error || 'Failed to fetch customer')
       }
@@ -67,7 +71,7 @@ export function useCustomerStats(
   return useQuery({
     queryKey: customerKeys.stats(),
     queryFn: async () => {
-      const result = await CustomerService.getCustomerStats()
+      const result = await getCustomerStatsAction()
       if (!result.success || !result.data) {
         throw new Error(result.error || 'Failed to fetch customer stats')
       }
