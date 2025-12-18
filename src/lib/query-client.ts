@@ -2,22 +2,28 @@ import { QueryClient, DefaultOptions } from '@tanstack/react-query'
 
 /**
  * Default options for React Query
- * Optimized for admin dashboard with longer cache times
+ * Optimized for admin dashboard with intelligent cache management
+ * 
+ * Cache Invalidation Strategy:
+ * 1. Mutations automatically invalidate related queries
+ * 2. Stats queries: 2 min stale time, refetch on focus
+ * 3. List queries: 5 min stale time, no auto-refetch
+ * 4. Detail queries: 5 min stale time, refetch on mount
  */
 const defaultOptions: DefaultOptions = {
   queries: {
     // Queries will be considered stale after 5 minutes
     staleTime: 5 * 60 * 1000,
-    // Cache data for 10 minutes
+    // Cache data for 10 minutes (garbage collection)
     gcTime: 10 * 60 * 1000,
     // Retry failed requests once
     retry: 1,
-    // Don't refetch on window focus for admin dashboard
-    refetchOnWindowFocus: false,
+    // Refetch on window focus for real-time updates
+    refetchOnWindowFocus: true,
     // Refetch on mount if data is stale
     refetchOnMount: true,
-    // Don't refetch on reconnect for admin dashboard
-    refetchOnReconnect: false,
+    // Refetch on reconnect for data consistency
+    refetchOnReconnect: true,
   },
   mutations: {
     // Retry failed mutations once
