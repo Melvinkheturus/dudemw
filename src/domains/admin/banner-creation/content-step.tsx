@@ -21,6 +21,8 @@ interface BannerFormData {
   ctaText?: string
   position?: number
   category?: string
+  startDate?: string
+  endDate?: string
 }
 
 interface ContentStepProps {
