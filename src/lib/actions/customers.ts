@@ -203,8 +203,61 @@ export async function getCustomersActionLegacy(
 
 /**
  * Server action to get single customer with full details
+ * NOW USING NEW CUSTOMER DOMAIN
  */
 export async function getCustomerAction(
+  id: string
+): Promise<{ success: boolean; data?: CustomerDetails; error?: string }> {
+  try {
+    // Use new customer domain
+    const result = await getCustomerByIdForAdmin(id)
+    
+    if (!result.success || !result.data) {
+      return { success: false, error: result.error || 'Customer not found' }
+    }
+
+    // Transform to match legacy format
+    const customer = result.data
+    return {
+      success: true,
+      data: {
+        id: customer.id,
+        email: customer.email || '',
+        created_at: customer.created_at,
+        last_sign_in_at: customer.last_order_at, // Use last_order_at as proxy
+        metadata: customer.metadata,
+        totalOrders: customer.total_orders,
+        totalSpent: customer.total_spent,
+        averageOrderValue: customer.average_order_value,
+        lastOrderDate: customer.last_order_at,
+        lifetimeValue: customer.lifetime_value,
+        status: customer.status === 'active' ? 'active' : 'inactive',
+        orders: customer.orders as CustomerOrder[],
+        addresses: customer.addresses.map(addr => ({
+          id: addr.id,
+          user_id: customer.auth_user_id,
+          name: addr.name,
+          phone: addr.phone,
+          address_line1: addr.address_line1,
+          city: addr.city,
+          state: addr.state,
+          pincode: addr.pincode,
+          created_at: addr.created_at,
+        })),
+      } as CustomerDetails,
+    }
+  } catch (error: any) {
+    const errorMessage =
+      error?.message || error?.error_description || JSON.stringify(error) || 'Unknown error'
+    console.error('Error fetching customer:', errorMessage, error)
+    return { success: false, error: `Failed to fetch customer details: ${errorMessage}` }
+  }
+}
+
+/**
+ * LEGACY METHOD - Original implementation using auth.users
+ */
+export async function getCustomerActionLegacy(
   id: string
 ): Promise<{ success: boolean; data?: CustomerDetails; error?: string }> {
   try {
