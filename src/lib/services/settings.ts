@@ -254,11 +254,21 @@ export class SettingsService {
         .select('*')
         .order('name', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching shipping zones:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
+        throw error
+      }
 
       return { success: true, data: data as ShippingZone[] }
-    } catch (error) {
-      console.error('Error fetching shipping zones:', error)
+    } catch (error: any) {
+      console.error('Error fetching shipping zones:', {
+        message: error?.message || 'Unknown error'
+      })
       return { success: false, error: 'Failed to fetch shipping zones' }
     }
   }
@@ -278,11 +288,21 @@ export class SettingsService {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Error creating shipping zone:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
+        throw error
+      }
 
       return { success: true, data: data as ShippingZone }
-    } catch (error) {
-      console.error('Error creating shipping zone:', error)
+    } catch (error: any) {
+      console.error('Error creating shipping zone:', {
+        message: error?.message || 'Unknown error'
+      })
       return { success: false, error: 'Failed to create shipping zone' }
     }
   }
@@ -302,11 +322,23 @@ export class SettingsService {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Error updating shipping zone:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          id
+        })
+        throw error
+      }
 
       return { success: true, data: data as ShippingZone }
-    } catch (error) {
-      console.error('Error updating shipping zone:', error)
+    } catch (error: any) {
+      console.error('Error updating shipping zone:', {
+        message: error?.message || 'Unknown error',
+        id
+      })
       return { success: false, error: 'Failed to update shipping zone' }
     }
   }
@@ -318,11 +350,23 @@ export class SettingsService {
     try {
       const { error } = await supabaseAdmin.from('shipping_zones').delete().eq('id', id)
 
-      if (error) throw error
+      if (error) {
+        console.error('Error deleting shipping zone:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          id
+        })
+        throw error
+      }
 
       return { success: true }
-    } catch (error) {
-      console.error('Error deleting shipping zone:', error)
+    } catch (error: any) {
+      console.error('Error deleting shipping zone:', {
+        message: error?.message || 'Unknown error',
+        id
+      })
       return { success: false, error: 'Failed to delete shipping zone' }
     }
   }
@@ -340,11 +384,23 @@ export class SettingsService {
 
       const { data, error } = await query.order('name', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching shipping rates:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          zoneId
+        })
+        throw error
+      }
 
       return { success: true, data: data as ShippingRate[] }
-    } catch (error) {
-      console.error('Error fetching shipping rates:', error)
+    } catch (error: any) {
+      console.error('Error fetching shipping rates:', {
+        message: error?.message || 'Unknown error',
+        zoneId
+      })
       return { success: false, error: 'Failed to fetch shipping rates' }
     }
   }
@@ -364,11 +420,21 @@ export class SettingsService {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Error creating shipping rate:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
+        throw error
+      }
 
       return { success: true, data: data as ShippingRate }
-    } catch (error) {
-      console.error('Error creating shipping rate:', error)
+    } catch (error: any) {
+      console.error('Error creating shipping rate:', {
+        message: error?.message || 'Unknown error'
+      })
       return { success: false, error: 'Failed to create shipping rate' }
     }
   }
@@ -388,11 +454,23 @@ export class SettingsService {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Error updating shipping rate:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          id
+        })
+        throw error
+      }
 
       return { success: true, data: data as ShippingRate }
-    } catch (error) {
-      console.error('Error updating shipping rate:', error)
+    } catch (error: any) {
+      console.error('Error updating shipping rate:', {
+        message: error?.message || 'Unknown error',
+        id
+      })
       return { success: false, error: 'Failed to update shipping rate' }
     }
   }
@@ -404,11 +482,23 @@ export class SettingsService {
     try {
       const { error } = await supabaseAdmin.from('shipping_rates').delete().eq('id', id)
 
-      if (error) throw error
+      if (error) {
+        console.error('Error deleting shipping rate:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          id
+        })
+        throw error
+      }
 
       return { success: true }
-    } catch (error) {
-      console.error('Error deleting shipping rate:', error)
+    } catch (error: any) {
+      console.error('Error deleting shipping rate:', {
+        message: error?.message || 'Unknown error',
+        id
+      })
       return { success: false, error: 'Failed to delete shipping rate' }
     }
   }
