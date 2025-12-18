@@ -80,17 +80,15 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const { data: product } = await supabase
-    .from('products')
-    .select('*')
-    .eq('slug', slug)
-    .single()
+  const productResult = await ProductService.getProduct(slug, true)
 
-  if (!product) {
+  if (!productResult.success || !productResult.data) {
     return {
       title: 'Product Not Found',
     }
   }
+
+  const product = productResult.data
 
   const description = product.description || `Shop ${product.title} at Dude Menswear. Premium quality menswear with fast delivery.`
 
