@@ -112,7 +112,12 @@ export function ActionStep({ actionType, actionTarget, actionName, onActionTypeC
               {actionType === "category" && (
                 <div className="space-y-2">
                   <Label htmlFor="categoryTarget">Select Category *</Label>
-                  <Select value={actionTarget} onValueChange={onActionTargetChange}>
+                  <Select value={actionTarget} onValueChange={(value) => {
+                    onActionTargetChange(value)
+                    if (onActionNameChange) {
+                      onActionNameChange(value.charAt(0).toUpperCase() + value.slice(1))
+                    }
+                  }}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Choose a category" />
                     </SelectTrigger>
@@ -128,35 +133,59 @@ export function ActionStep({ actionType, actionTarget, actionName, onActionTypeC
               )}
 
               {actionType === "product" && (
-                <div className="space-y-2">
-                  <Label htmlFor="productTarget">Search Product *</Label>
-                  <Input
-                    id="productTarget"
-                    placeholder="Type to search products..."
-                    value={actionTarget}
-                    onChange={(e) => onActionTargetChange(e.target.value)}
-                    className="w-full"
-                  />
-                  <p className="text-xs text-gray-500">
-                    Start typing to search for products
-                  </p>
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="productTarget">Product ID *</Label>
+                    <Input
+                      id="productTarget"
+                      placeholder="Enter product ID..."
+                      value={actionTarget}
+                      onChange={(e) => onActionTargetChange(e.target.value)}
+                      className="w-full"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Enter the product ID
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="productName">Product Name *</Label>
+                    <Input
+                      id="productName"
+                      placeholder="Enter product name for display"
+                      value={actionName || ""}
+                      onChange={(e) => onActionNameChange?.(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                </>
               )}
 
               {actionType === "external" && (
-                <div className="space-y-2">
-                  <Label htmlFor="urlTarget">External URL *</Label>
-                  <Input
-                    id="urlTarget"
-                    placeholder="https://example.com"
-                    value={actionTarget}
-                    onChange={(e) => onActionTargetChange(e.target.value)}
-                    className="w-full"
-                  />
-                  <p className="text-xs text-gray-500">
-                    Enter the full URL including https://
-                  </p>
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="urlTarget">External URL *</Label>
+                    <Input
+                      id="urlTarget"
+                      placeholder="https://example.com"
+                      value={actionTarget}
+                      onChange={(e) => onActionTargetChange(e.target.value)}
+                      className="w-full"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Enter the full URL including https://
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="linkName">Link Name *</Label>
+                    <Input
+                      id="linkName"
+                      placeholder="e.g., Learn More"
+                      value={actionName || ""}
+                      onChange={(e) => onActionNameChange?.(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                </>
               )}
             </div>
           )}
