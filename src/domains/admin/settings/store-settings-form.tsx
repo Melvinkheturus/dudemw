@@ -175,7 +175,8 @@ export function StoreSettingsForm() {
                 id="supportEmail"
                 type="email"
                 placeholder="support@dudemenswears.com"
-                defaultValue="support@dudemenswears.com"
+                value={formData.support_email}
+                onChange={(e) => handleChange('support_email', e.target.value)}
                 className="w-full"
               />
             </div>
@@ -184,7 +185,8 @@ export function StoreSettingsForm() {
               <Input
                 id="supportPhone"
                 placeholder="+91 98765 43210"
-                defaultValue="+91 98765 43210"
+                value={formData.support_phone}
+                onChange={(e) => handleChange('support_phone', e.target.value)}
                 className="w-full"
               />
             </div>
