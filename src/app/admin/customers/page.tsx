@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { CustomerService } from '@/lib/services/customers'
 import { CustomerFilters } from '@/lib/types/customers'
 import { CustomersTable } from '@/domains/admin/customers/customers-table'
 import { CustomersFilters } from '@/domains/admin/customers/customers-filters'
