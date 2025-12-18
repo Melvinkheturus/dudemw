@@ -38,11 +38,21 @@ export class CollectionService {
 
       const { data, error } = await query
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching collections:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
+        throw error
+      }
 
       return { success: true, data: data || [] }
-    } catch (error) {
-      console.error('Error fetching collections:', error)
+    } catch (error: any) {
+      console.error('Error fetching collections:', {
+        message: error?.message || 'Unknown error'
+      })
       return { success: false, error: 'Failed to fetch collections' }
     }
   }
@@ -66,11 +76,30 @@ export class CollectionService {
 
       const { data: collection, error } = await query.single()
 
-      if (error) throw error
+      if (error) {
+        // PGRST116 means no rows found - this is expected when collection doesn't exist
+        if (error.code === 'PGRST116') {
+          return { success: false, error: 'Collection not found', notFound: true }
+        }
+        
+        console.error('Error fetching collection:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          identifier,
+          bySlug
+        })
+        throw error
+      }
 
       return { success: true, data: collection }
-    } catch (error) {
-      console.error('Error fetching collection:', error)
+    } catch (error: any) {
+      console.error('Error fetching collection:', {
+        message: error?.message || 'Unknown error',
+        identifier,
+        bySlug
+      })
       return { success: false, error: 'Failed to fetch collection' }
     }
   }
@@ -103,14 +132,26 @@ export class CollectionService {
 
       const { data, error } = await query
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching collection products:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          collectionId
+        })
+        throw error
+      }
 
       // Extract products from the junction table
       const products = data?.map(cp => cp.product).filter(Boolean) || []
 
       return { success: true, data: products }
-    } catch (error) {
-      console.error('Error fetching collection products:', error)
+    } catch (error: any) {
+      console.error('Error fetching collection products:', {
+        message: error?.message || 'Unknown error',
+        collectionId
+      })
       return { success: false, error: 'Failed to fetch collection products' }
     }
   }
@@ -142,8 +183,12 @@ export class CollectionService {
           product_count: productsResult.data.length
         }
       }
-    } catch (error) {
-      console.error('Error fetching collection with products:', error)
+    } catch (error: any) {
+      console.error('Error fetching collection with products:', {
+        message: error?.message || 'Unknown error',
+        identifier,
+        bySlug
+      })
       return { success: false, error: 'Failed to fetch collection with products' }
     }
   }
@@ -163,11 +208,21 @@ export class CollectionService {
         .order('created_at', { ascending: false })
         .limit(limit)
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching featured collections:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
+        throw error
+      }
 
       return { success: true, data: data || [] }
-    } catch (error) {
-      console.error('Error fetching featured collections:', error)
+    } catch (error: any) {
+      console.error('Error fetching featured collections:', {
+        message: error?.message || 'Unknown error'
+      })
       return { success: false, error: 'Failed to fetch featured collections' }
     }
   }
