@@ -105,22 +105,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <ToastProvider>
-          <html lang="en">
-            <body
-              className={`${satoshi.variable} ${manrope.variable} antialiased flex flex-col min-h-screen`}
-            >
-              <ConditionalNavbar />
-              <main className="flex-1 pt-[52px] lg:pt-[60px] [.pdp-page_&]:pt-0 [.pdp-page_&]:lg:pt-[60px] [.admin-page_&]:pt-0">
-                <PageTransition>{children}</PageTransition>
-              </main>
-              <Footer />
-            </body>
-          </html>
-        </ToastProvider>
-      </CartProvider>
-    </AuthProvider>
+    <QueryProvider>
+      <AuthProvider>
+        <CartProvider>
+          <ToastProvider>
+            <html lang="en">
+              <body
+                className={`${satoshi.variable} ${manrope.variable} antialiased flex flex-col min-h-screen`}
+              >
+                <ConditionalNavbar />
+                <main className="flex-1 pt-[52px] lg:pt-[60px] [.pdp-page_&]:pt-0 [.pdp-page_&]:lg:pt-[60px] [.admin-page_&]:pt-0">
+                  <PageTransition>{children}</PageTransition>
+                </main>
+                <Footer />
+              </body>
+            </html>
+          </ToastProvider>
+        </CartProvider>
+      </AuthProvider>
+    </QueryProvider>
   );
 }
