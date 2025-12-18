@@ -14,6 +14,8 @@ import HorizontalProductScroll from "../cards/HorizontalProductScroll"
 import MobileFilterButton from "../listing/MobileFilterButton"
 import { FilterProvider } from "../../hooks/FilterContext"
 import { Product } from "@/domains/product"
+import { ProductService } from '@/lib/services/products'
+import { CollectionService } from '@/lib/services/collections'
 import { supabase } from '@/lib/supabase/supabase'
 import { transformProducts } from '@/domains/product/utils/productUtils'
 
