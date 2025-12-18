@@ -44,8 +44,8 @@ This checklist tracks technical debt resolution to improve performance, code qua
 - [x] Create `src/hooks/mutations/useOrderMutations.ts`
 - [x] Create `src/hooks/mutations/useSettingsMutations.ts`
 
-#### 1.4 Migrate Admin Pages to React Query (0/8)
-- [ ] Migrate `src/app/admin/customers/page.tsx`
+#### 1.4 Migrate Admin Pages to React Query (1/8)
+- [x] Migrate `src/app/admin/customers/page.tsx`
 - [ ] Migrate `src/app/admin/customers/[id]/page.tsx`
 - [ ] Migrate `src/app/admin/inventory/page.tsx`
 - [ ] Migrate `src/app/admin/products/page.tsx`
