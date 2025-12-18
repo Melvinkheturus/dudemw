@@ -212,9 +212,19 @@ export class CustomerService {
       }
 
       return { success: true, data: customerDetails }
-    } catch (error) {
-      console.error('Error fetching customer:', error)
-      return { success: false, error: 'Failed to fetch customer details' }
+    } catch (error: any) {
+      const errorMessage = error?.message || error?.error_description || JSON.stringify(error) || 'Unknown error'
+      console.error('Error fetching customer:', errorMessage, error)
+      
+      // Special handling for auth errors
+      if (error?.message?.includes('User not allowed') || error?.message?.includes('JWT')) {
+        return { 
+          success: false, 
+          error: 'Admin access required. Please ensure SUPABASE_SERVICE_ROLE_KEY is configured in environment variables.' 
+        }
+      }
+      
+      return { success: false, error: `Failed to fetch customer details: ${errorMessage}` }
     }
   }
 
