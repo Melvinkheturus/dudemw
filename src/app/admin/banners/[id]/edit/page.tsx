@@ -1,103 +1,135 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Save, Upload, Image, AlertTriangle } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Save, Loader2, ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
-
-// Types (same as create page)
-type BannerPlacement = "homepage-carousel" | "product-listing-carousel" | "category-banner"
-type ActionType = "collection" | "category" | "product" | "external"
-
-interface BannerFormData {
-  id: number
-  placement: BannerPlacement
-  internalTitle: string
-  bannerImage?: File
-  ctaText?: string
-  position?: number
-  category?: string
-  actionType: ActionType
-  actionTarget: string
-  isActive: boolean
-  startDate?: string
-  endDate?: string
-}
-
-// Mock data for editing
-const mockBanner: BannerFormData = {
-  id: 1,
-  placement: "homepage-carousel",
-  internalTitle: "Winter Sale – Main Banner",
-  ctaText: "Shop Winter Sale",
-  position: 1,
-  actionType: "collection",
-  actionTarget: "winter-collection",
-  isActive: true,
-  startDate: "2024-12-01",
-  endDate: "2024-12-31"
-}
+import { toast } from "sonner"
+import { Banner } from "@/lib/types/banners"
 
 export default function EditBannerPage() {
   const params = useParams()
+  const router = useRouter()
   const bannerId = params.id as string
-  const [isLoading, setIsLoading] = useState(false)
-  const [formData, setFormData] = useState<BannerFormData | null>(null)
-  const [hasChanges, setHasChanges] = useState(false)
+
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [banner, setBanner] = useState<Banner | null>(null)
+  const [formData, setFormData] = useState({
+    internal_title: "",
+    placement: "",
+    action_type: "",
+    action_target: "",
+    action_name: "",
+    start_date: "",
+    end_date: "",
+    position: "",
+    category: "",
+    cta_text: "",
+    status: "",
+  })
 
   useEffect(() => {
-    // TODO: Fetch banner data by ID
-    setFormData(mockBanner)
+    fetchBanner()
   }, [bannerId])
 
-  const updateFormData = (updates: Partial<BannerFormData>) => {
-    if (!formData) return
-    setFormData(prev => ({ ...prev!, ...updates }))
-    setHasChanges(true)
-  }
-
-  const handleSubmit = async (isDraft = false) => {
-    if (!formData) return
-    
-    setIsLoading(true)
-    
-    // TODO: Implement banner update
-    console.log("Updating banner:", { ...formData, isDraft })
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    setIsLoading(false)
-    setHasChanges(false)
-  }
-
-  const getPlacementLabel = (placement: BannerPlacement): string => {
-    switch (placement) {
-      case "homepage-carousel": return "Homepage Carousel"
-      case "product-listing-carousel": return "Product Listing Carousel"
-      case "category-banner": return "Category Banner"
+  const fetchBanner = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/admin/banners/${bannerId}`)
+      if (!response.ok) throw new Error('Failed to fetch banner')
+      
+      const data = await response.json()
+      setBanner(data)
+      
+      // Populate form
+      setFormData({
+        internal_title: data.internal_title || "",
+        placement: data.placement || "",
+        action_type: data.action_type || "",
+        action_target: data.action_target || "",
+        action_name: data.action_name || "",
+        start_date: data.start_date || "",
+        end_date: data.end_date || "",
+        position: data.position?.toString() || "",
+        category: data.category || "",
+        cta_text: data.cta_text || "",
+        status: data.status || "",
+      })
+    } catch (error) {
+      console.error('Error fetching banner:', error)
+      toast.error('Failed to load banner')
+    } finally {
+      setLoading(false)
     }
   }
 
-  if (!formData) {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    try {
+      setSaving(true)
+
+      const updateData = {
+        internal_title: formData.internal_title,
+        placement: formData.placement,
+        action_type: formData.action_type,
+        action_target: formData.action_target,
+        action_name: formData.action_name,
+        start_date: formData.start_date || undefined,
+        end_date: formData.end_date || undefined,
+        position: formData.position ? parseInt(formData.position) : undefined,
+        category: formData.category || undefined,
+        cta_text: formData.cta_text || undefined,
+        status: formData.status,
+      }
+
+      const response = await fetch(`/api/admin/banners/${bannerId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to update banner')
+      }
+
+      toast.success('Banner updated successfully!')
+      router.push('/admin/banners')
+    } catch (error) {
+      console.error('Error updating banner:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to update banner')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading banner...</p>
-        </div>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-red-600" />
+      </div>
+    )
+  }
+
+  if (!banner) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Banner not found</h2>
+        <Button asChild>
+          <Link href="/admin/banners">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Banners
+          </Link>
+        </Button>
       </div>
     )
   }
@@ -107,313 +139,225 @@ export default function EditBannerPage() {
       <div className="space-y-6 lg:space-y-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center space-x-4 min-w-0">
-            <Button variant="outline" size="icon" asChild className="flex-shrink-0">
-              <Link href="/admin/banners">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <div className="min-w-0">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-gray-900 dark:text-white truncate">
-                Edit Banner
-              </h1>
-              <p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-400 mt-1 sm:mt-2 truncate">
-                {formData.internalTitle}
-              </p>
-            </div>
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-gray-900">
+              Edit Banner
+            </h1>
+            <p className="text-sm sm:text-base lg:text-lg text-gray-600 mt-1 sm:mt-2">
+              Update banner details and settings
+            </p>
           </div>
-          <div className="flex items-center space-x-3 flex-shrink-0">
-            <Button variant="outline" asChild>
-              <Link href="/admin/banners">Cancel</Link>
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => handleSubmit(true)}
-              disabled={isLoading || !hasChanges}
-            >
-              Save as Draft
-            </Button>
-            <Button 
-              className="bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/25"
-              onClick={() => handleSubmit(false)}
-              disabled={isLoading || !hasChanges}
-            >
-              <Save className="mr-2 h-4 w-4" />
-              {isLoading ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
+          <Button variant="outline" asChild>
+            <Link href="/admin/banners">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Link>
+          </Button>
         </div>
 
-        {/* Changes Warning */}
-        {hasChanges && (
-          <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/20">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                <p className="text-sm text-orange-800 dark:text-orange-200">
-                  You have unsaved changes. Don't forget to save your work.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Placement Info (Read-only) */}
-        <Card className="border-0 shadow-sm bg-gradient-to-b from-white to-red-50 dark:from-gray-900 dark:to-red-950/20 border-red-100/50 dark:border-red-900/20 hover:shadow-md transition-all duration-200">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">Placement</CardTitle>
-            <CardDescription className="text-gray-600 dark:text-gray-400">
-              Banner placement cannot be changed after creation
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-gray-900 dark:text-white">{getPlacementLabel(formData.placement)}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    {formData.placement === "homepage-carousel" && "Large rotating banners on homepage"}
-                    {formData.placement === "product-listing-carousel" && "Carousel above/between product grids"}
-                    {formData.placement === "category-banner" && "Single banner per category"}
-                  </p>
-                </div>
-                <Badge variant="secondary">Locked</Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Content Section */}
-        <Card className="border-0 shadow-sm bg-gradient-to-b from-white to-red-50 dark:from-gray-900 dark:to-red-950/20 border-red-100/50 dark:border-red-900/20 hover:shadow-md transition-all duration-200">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">Banner Content</CardTitle>
-            <CardDescription className="text-gray-600 dark:text-gray-400">
-              Update banner details and image
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="internalTitle">Internal Title *</Label>
-              <Input
-                id="internalTitle"
-                placeholder="e.g., Winter Sale – Main Banner"
-                value={formData.internalTitle}
-                onChange={(e) => updateFormData({ internalTitle: e.target.value })}
-                className="w-full"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Banner Image</Label>
-              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
-                <div className="w-full h-24 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center mb-4">
-                  <div className="text-center">
-                    <Image className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Current Banner</p>
-                  </div>
-                </div>
-                <Button variant="outline" onClick={() => document.getElementById('banner-upload')?.click()}>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Replace Image
-                </Button>
-                <input
-                  id="banner-upload"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) updateFormData({ bannerImage: file })
-                  }}
-                />
-                <p className="text-xs text-gray-400 mt-2">PNG, JPG up to 10MB</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Placement-Specific Fields */}
-        {(formData.placement === "homepage-carousel" || formData.placement === "product-listing-carousel") && (
-          <Card className="border-0 shadow-sm bg-gradient-to-b from-white to-red-50 dark:from-gray-900 dark:to-red-950/20 border-red-100/50 dark:border-red-900/20 hover:shadow-md transition-all duration-200">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Info */}
+          <Card className="border-0 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">Carousel Settings</CardTitle>
+              <CardTitle>Basic Information</CardTitle>
+              <CardDescription>Update banner title and placement</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 w-full">
-                <div className="space-y-2 min-w-0">
-                  <Label htmlFor="ctaText">CTA Text (Optional)</Label>
-                  <Input
-                    id="ctaText"
-                    placeholder="e.g., Shop Winter Sale"
-                    value={formData.ctaText || ""}
-                    onChange={(e) => updateFormData({ ctaText: e.target.value })}
-                    className="w-full"
-                  />
-                </div>
-                <div className="space-y-2 min-w-0">
-                  <Label htmlFor="position">Position in Carousel</Label>
-                  <Select value={formData.position?.toString()} onValueChange={(value) => updateFormData({ position: parseInt(value) })}>
-                    <SelectTrigger className="w-full">
+              <div className="space-y-2">
+                <Label htmlFor="internal_title">Internal Title *</Label>
+                <Input
+                  id="internal_title"
+                  value={formData.internal_title}
+                  onChange={(e) => setFormData({ ...formData, internal_title: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="placement">Placement</Label>
+                  <Select value={formData.placement} onValueChange={(value) => setFormData({ ...formData, placement: value })}>
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">1 (First)</SelectItem>
-                      <SelectItem value="2">2</SelectItem>
-                      <SelectItem value="3">3</SelectItem>
-                      <SelectItem value="4">4</SelectItem>
-                      <SelectItem value="5">5</SelectItem>
+                      <SelectItem value="homepage-carousel">Homepage Carousel</SelectItem>
+                      <SelectItem value="product-listing-carousel">Product Listing Carousel</SelectItem>
+                      <SelectItem value="category-banner">Category Banner</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="scheduled">Scheduled</SelectItem>
+                      <SelectItem value="disabled">Disabled</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
             </CardContent>
           </Card>
-        )}
 
-        {formData.placement === "category-banner" && (
-          <Card className="border-0 shadow-sm bg-gradient-to-b from-white to-red-50 dark:from-gray-900 dark:to-red-950/20 border-red-100/50 dark:border-red-900/20 hover:shadow-md transition-all duration-200">
+          {/* Action Target */}
+          <Card className="border-0 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">Category Settings</CardTitle>
+              <CardTitle>Action Target</CardTitle>
+              <CardDescription>Where the banner links to</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="category">Category *</Label>
-                <Select value={formData.category} onValueChange={(value) => updateFormData({ category: value })}>
-                  <SelectTrigger className="w-full">
+                <Label htmlFor="action_type">Action Type</Label>
+                <Select value={formData.action_type} onValueChange={(value) => setFormData({ ...formData, action_type: value })}>
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Shirts">Shirts</SelectItem>
-                    <SelectItem value="Hoodies">Hoodies</SelectItem>
-                    <SelectItem value="Pants">Pants</SelectItem>
-                    <SelectItem value="Jackets">Jackets</SelectItem>
-                    <SelectItem value="Accessories">Accessories</SelectItem>
+                    <SelectItem value="collection">Collection</SelectItem>
+                    <SelectItem value="category">Category</SelectItem>
+                    <SelectItem value="product">Product</SelectItem>
+                    <SelectItem value="external">External URL</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="action_target">Action Target</Label>
+                  <Input
+                    id="action_target"
+                    value={formData.action_target}
+                    onChange={(e) => setFormData({ ...formData, action_target: e.target.value })}
+                    placeholder="ID or URL"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="action_name">Action Name</Label>
+                  <Input
+                    id="action_name"
+                    value={formData.action_name}
+                    onChange={(e) => setFormData({ ...formData, action_name: e.target.value })}
+                    placeholder="Display name"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
-        )}
 
-        {/* Action Target */}
-        <Card className="border-0 shadow-sm bg-gradient-to-b from-white to-red-50 dark:from-gray-900 dark:to-red-950/20 border-red-100/50 dark:border-red-900/20 hover:shadow-md transition-all duration-200">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">Action Target</CardTitle>
-            <CardDescription className="text-gray-600 dark:text-gray-400">
-              Where the banner links to when clicked
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="actionType">Action Type</Label>
-              <Select value={formData.actionType} onValueChange={(value: ActionType) => updateFormData({ actionType: value, actionTarget: "" })}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="collection">Link to Collection</SelectItem>
-                  <SelectItem value="category">Link to Category</SelectItem>
-                  <SelectItem value="product">Link to Product</SelectItem>
-                  <SelectItem value="external">External URL</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Optional Fields */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader>
+              <CardTitle>Optional Settings</CardTitle>
+              <CardDescription>Additional banner configuration</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cta_text">CTA Text</Label>
+                  <Input
+                    id="cta_text"
+                    value={formData.cta_text}
+                    onChange={(e) => setFormData({ ...formData, cta_text: e.target.value })}
+                    placeholder="e.g., Shop Now"
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="actionTarget">Target *</Label>
-              {formData.actionType === "collection" && (
-                <Select value={formData.actionTarget} onValueChange={(value) => updateFormData({ actionTarget: value })}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Choose a collection" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="winter-collection">Winter Collection</SelectItem>
-                    <SelectItem value="new-arrivals">New Arrivals</SelectItem>
-                    <SelectItem value="best-sellers">Best Sellers</SelectItem>
-                    <SelectItem value="holiday-collection">Holiday Collection</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
+                <div className="space-y-2">
+                  <Label htmlFor="position">Position</Label>
+                  <Input
+                    id="position"
+                    type="number"
+                    value={formData.position}
+                    onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                    placeholder="1, 2, 3..."
+                  />
+                </div>
+              </div>
 
-              {formData.actionType === "category" && (
-                <Select value={formData.actionTarget} onValueChange={(value) => updateFormData({ actionTarget: value })}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Choose a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="shirts">Shirts</SelectItem>
-                    <SelectItem value="hoodies">Hoodies</SelectItem>
-                    <SelectItem value="pants">Pants</SelectItem>
-                    <SelectItem value="jackets">Jackets</SelectItem>
-                    <SelectItem value="accessories">Accessories</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-
-              {formData.actionType === "product" && (
+              <div className="space-y-2">
+                <Label htmlFor="category">Category (for category banners)</Label>
                 <Input
-                  placeholder="Type to search products..."
-                  value={formData.actionTarget}
-                  onChange={(e) => updateFormData({ actionTarget: e.target.value })}
-                  className="w-full"
+                  id="category"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  placeholder="e.g., Shirts"
                 />
-              )}
+              </div>
 
-              {formData.actionType === "external" && (
-                <Input
-                  placeholder="https://example.com"
-                  value={formData.actionTarget}
-                  onChange={(e) => updateFormData({ actionTarget: e.target.value })}
-                  className="w-full"
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="start_date">Start Date</Label>
+                  <Input
+                    id="start_date"
+                    type="datetime-local"
+                    value={formData.start_date ? new Date(formData.start_date).toISOString().slice(0, 16) : ""}
+                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="end_date">End Date</Label>
+                  <Input
+                    id="end_date"
+                    type="datetime-local"
+                    value={formData.end_date ? new Date(formData.end_date).toISOString().slice(0, 16) : ""}
+                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Current Image */}
+          {banner.image_url && (
+            <Card className="border-0 shadow-sm">
+              <CardHeader>
+                <CardTitle>Current Banner Image</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <img 
+                  src={banner.image_url} 
+                  alt={banner.internal_title}
+                  className="w-full max-w-2xl rounded-lg border border-gray-200"
                 />
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Schedule & Status */}
-        <Card className="border-0 shadow-sm bg-gradient-to-b from-white to-red-50 dark:from-gray-900 dark:to-red-950/20 border-red-100/50 dark:border-red-900/20 hover:shadow-md transition-all duration-200">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">Schedule & Status</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between p-4 rounded-xl bg-white/60 dark:bg-gray-800/60 border border-gray-200/50 dark:border-gray-700/50">
-              <div className="space-y-0.5">
-                <Label className="text-base font-semibold text-gray-900 dark:text-white">Active Banner</Label>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Enable this banner to make it visible to customers
+                <p className="text-sm text-gray-500 mt-2">
+                  Note: To change the image, please create a new banner
                 </p>
-              </div>
-              <Switch 
-                checked={formData.isActive}
-                onCheckedChange={(checked) => updateFormData({ isActive: checked })}
-              />
-            </div>
+              </CardContent>
+            </Card>
+          )}
 
-            <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 w-full">
-              <div className="space-y-2 min-w-0">
-                <Label htmlFor="startDate">Start Date (Optional)</Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={formData.startDate || ""}
-                  onChange={(e) => updateFormData({ startDate: e.target.value })}
-                  className="w-full"
-                />
-              </div>
-              <div className="space-y-2 min-w-0">
-                <Label htmlFor="endDate">End Date (Optional)</Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={formData.endDate || ""}
-                  onChange={(e) => updateFormData({ endDate: e.target.value })}
-                  className="w-full"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Submit Button */}
+          <div className="flex justify-end space-x-4">
+            <Button type="button" variant="outline" asChild>
+              <Link href="/admin/banners">Cancel</Link>
+            </Button>
+            <Button 
+              type="submit" 
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={saving}
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
       </div>
     </div>
   )
