@@ -1,34 +1,7 @@
 import { notFound } from 'next/navigation'
 import { generateBreadcrumbSchema } from '@/lib/utils/seo'
+import { CollectionService } from '@/lib/services/collections'
 import { ProductsPage } from '@/domains/product'
-
-// Define available collections
-const COLLECTIONS = {
-  'new-arrivals': {
-    title: 'New Arrivals',
-    description: 'Discover the latest trends in menswear',
-  },
-  'best-sellers': {
-    title: 'Best Sellers',
-    description: 'Our most popular items',
-  },
-  'trending': {
-    title: 'Trending Now',
-    description: 'What\'s hot right now',
-  },
-  'sale': {
-    title: 'Sale',
-    description: 'Great deals on premium menswear',
-  },
-  'winter-collection': {
-    title: 'Winter Collection',
-    description: 'Stay warm and stylish',
-  },
-  'summer-collection': {
-    title: 'Summer Collection',
-    description: 'Cool and comfortable styles',
-  },
-}
 
 export default async function CollectionPage({
   params,
@@ -40,12 +13,14 @@ export default async function CollectionPage({
   const { slug } = await params
   const resolvedSearchParams = await searchParams
   
-  // Check if collection exists
-  const collection = COLLECTIONS[slug as keyof typeof COLLECTIONS]
+  // Fetch collection from database using CollectionService
+  const collectionResult = await CollectionService.getCollection(slug, true)
   
-  if (!collection) {
+  if (!collectionResult.success || !collectionResult.data) {
     notFound()
   }
+
+  const collection = collectionResult.data
 
   // Generate structured data for SEO
   const breadcrumbSchema = generateBreadcrumbSchema([
