@@ -26,15 +26,21 @@ export function useExportCustomers() {
 
 /**
  * Mutation hook for sending email to customer
+ * Note: Email functionality would need to be implemented server-side
  */
 export function useSendCustomerEmail() {
   return useMutation({
-    mutationFn: async ({ customerId, subject, message }: { customerId: string; subject: string; message: string }) => {
-      const result = await CustomerService.sendEmail(customerId, subject, message)
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to send email')
-      }
-      return result
+    mutationFn: async ({
+      customerId,
+      subject,
+      message,
+    }: {
+      customerId: string
+      subject: string
+      message: string
+    }) => {
+      // TODO: Implement server action for sending emails
+      throw new Error('Email functionality not yet implemented')
     },
     onSuccess: () => {
       toast.success('Email sent successfully')
