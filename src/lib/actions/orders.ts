@@ -1,6 +1,12 @@
 "use server"
 
-// Re-export types
+// Import services for server actions
+import { OrderService } from '@/lib/services/orders'
+import { OrderStatusService } from '@/lib/services/order-status'
+import { OrderExportService } from '@/lib/services/order-export'
+import type { OrderFilters } from '@/lib/types/orders'
+
+// Re-export types (types can be exported from server action files)
 export type { 
   OrderWithDetails, 
   OrderFilters, 
@@ -10,17 +16,6 @@ export type {
   OrderItem,
   Address
 } from '@/lib/types/orders'
-
-// Re-export services
-export { OrderService } from '@/lib/services/orders'
-export { OrderStatusService } from '@/lib/services/order-status'
-export { OrderExportService } from '@/lib/services/order-export'
-
-// Import services for convenience functions
-import { OrderService } from '@/lib/services/orders'
-import { OrderStatusService } from '@/lib/services/order-status'
-import { OrderExportService } from '@/lib/services/order-export'
-import type { OrderFilters } from '@/lib/types/orders'
 
 // Convenience functions that delegate to services
 export async function getOrders(filters?: OrderFilters, page: number = 1, limit: number = 20) {

@@ -69,7 +69,7 @@ export async function isSetupCompleted(): Promise<boolean> {
     const supabase = await createServerSupabase()
     
     const { data, error } = await supabase
-      .from('admin_settings')
+      .from('admin_settings' as any)
       .select('setup_completed')
       .single()
     
@@ -78,7 +78,7 @@ export async function isSetupCompleted(): Promise<boolean> {
       return false
     }
     
-    return data?.setup_completed || false
+    return (data as any)?.setup_completed || false
   } catch (error) {
     console.error('Error in isSetupCompleted:', error)
     return false

@@ -218,7 +218,7 @@ export async function getRecentOrders(limit: number = 5): Promise<{ success: boo
       customer_email: order.guest_email || '',
       total_amount: order.total_amount || 0,
       status: order.order_status || 'pending',
-      created_at: order.created_at,
+      created_at: order.created_at || new Date().toISOString(),
       items_count: order.order_items?.length || 0
     })) || []
 
