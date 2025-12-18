@@ -55,28 +55,30 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const collection = COLLECTIONS[slug as keyof typeof COLLECTIONS]
+  const collectionResult = await CollectionService.getCollection(slug, true)
 
-  if (!collection) {
+  if (!collectionResult.success || !collectionResult.data) {
     return {
       title: 'Collection Not Found',
     }
   }
 
+  const collection = collectionResult.data
+
   return {
     title: `${collection.title} - Dude Menswear`,
-    description: collection.description,
+    description: collection.description || `Shop ${collection.title} collection at Dude Menswear`,
     keywords: ['menswear', 'fashion', 'collection', collection.title.toLowerCase(), 'clothing'],
     openGraph: {
       type: 'website',
       title: collection.title,
-      description: collection.description,
+      description: collection.description || `Shop ${collection.title} collection`,
       siteName: 'Dude Menswear',
     },
     twitter: {
       card: 'summary_large_image',
       title: collection.title,
-      description: collection.description,
+      description: collection.description || `Shop ${collection.title} collection`,
     },
     alternates: {
       canonical: `/collections/${slug}`,
@@ -84,9 +86,15 @@ export async function generateMetadata({
   }
 }
 
-// Generate static params for known collections
+// Generate static params for collections from database
 export async function generateStaticParams() {
-  return Object.keys(COLLECTIONS).map((slug) => ({
-    slug,
+  const collectionsResult = await CollectionService.getCollections(true)
+  
+  if (!collectionsResult.success || !collectionsResult.data) {
+    return []
+  }
+
+  return collectionsResult.data.map((collection: any) => ({
+    slug: collection.slug,
   }))
 }
