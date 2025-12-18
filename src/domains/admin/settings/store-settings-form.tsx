@@ -139,7 +139,8 @@ export function StoreSettingsForm() {
             <Textarea
               id="description"
               placeholder="Premium men's clothing and accessories"
-              defaultValue="Premium men's clothing and accessories for the modern gentleman"
+              value={formData.description}
+              onChange={(e) => handleChange('description', e.target.value)}
               rows={3}
             />
           </div>
