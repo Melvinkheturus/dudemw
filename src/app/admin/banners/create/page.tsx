@@ -4,6 +4,8 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Save } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { ProgressSteps } from "@/domains/admin/banner-creation/progress-steps"
 import { PlacementStep } from "@/domains/admin/banner-creation/placement-step"
 import { ContentStep } from "@/domains/admin/banner-creation/content-step"
@@ -18,34 +20,99 @@ interface BannerFormData {
   placement?: BannerPlacement
   internalTitle: string
   bannerImage?: File
+  imageUrl?: string
   ctaText?: string
   position?: number
   category?: string
   actionType?: ActionType
   actionTarget: string
+  actionName: string
+  startDate?: string
+  endDate?: string
 }
 
 export default function CreateBannerPage() {
+  const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState<BannerFormData>({
     internalTitle: "",
-    actionTarget: ""
+    actionTarget: "",
+    actionName: ""
   })
 
   const updateFormData = (updates: Partial<BannerFormData>) => {
     setFormData(prev => ({ ...prev, ...updates }))
   }
 
+  const uploadImage = async (file: File): Promise<string> => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch('/api/admin/banners/upload', {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to upload image')
+    }
+
+    const data = await response.json()
+    return data.url
+  }
+
   const handleSubmit = async (isDraft = false) => {
-    setIsLoading(true)
-    // TODO: Implement banner creation
-    console.log("Creating banner:", { ...formData, isDraft })
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    setIsLoading(false)
+    try {
+      setIsLoading(true)
+
+      // Validate required fields
+      if (!formData.placement || !formData.internalTitle || !formData.bannerImage || !formData.actionType || !formData.actionTarget) {
+        toast.error('Please fill in all required fields')
+        return
+      }
+
+      // Upload image first
+      const imageUrl = await uploadImage(formData.bannerImage)
+
+      // Create banner
+      const bannerData = {
+        internal_title: formData.internalTitle,
+        image_url: imageUrl,
+        placement: formData.placement,
+        action_type: formData.actionType,
+        action_target: formData.actionTarget,
+        action_name: formData.actionName || formData.actionTarget,
+        start_date: formData.startDate,
+        end_date: formData.endDate,
+        position: formData.position,
+        category: formData.category,
+        cta_text: formData.ctaText,
+        status: isDraft ? 'disabled' : 'active',
+      }
+
+      const response = await fetch('/api/admin/banners', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bannerData),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to create banner')
+      }
+
+      toast.success(isDraft ? 'Banner saved as draft' : 'Banner published successfully!')
+      router.push('/admin/banners')
+    } catch (error) {
+      console.error('Error creating banner:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to create banner')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const canProceedToStep = (step: number): boolean => {
