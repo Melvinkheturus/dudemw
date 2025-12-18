@@ -98,12 +98,14 @@ Connect Store pages to fetch data from Admin Dashboard uploads stored in Supabas
 - ✅ Breadcrumbs already implemented
 - ✅ Category data from Supabase (uses ProductsPage internally)
 
-### 2.5 Collections Pages
-- ⏳ Create collections listing page (`/collections`)
-- ⏳ Create collection detail page (`/collections/[slug]`)
-- ✅ CollectionService created and ready
-- ⏳ Display products in collection (Service layer ready)
-- ⏳ Add collection filters
+### 2.5 Collections Pages ✅
+- ✅ Created collections listing page (`/collections/page.tsx`)
+- ✅ Updated collection detail page (`/collections/[slug]/page.tsx`)
+- ✅ CollectionService integration complete
+- ✅ Display products in collection using ProductsPage component
+- ✅ Collections dynamically fetched from Supabase
+- ✅ SEO metadata from database
+- ✅ Static params generation from database
 
 ---
 
