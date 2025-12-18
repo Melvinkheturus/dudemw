@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { ProductGrid } from '@/domains/product'
 import { CampaignSection } from '../types'
 import { Product } from '@/domains/product'
-import { supabase } from '@/lib/supabase/supabase'
+import { createClient } from '@/lib/supabase/client'
 import { transformProducts } from '@/domains/product/utils/productUtils'
 
 interface SectionRendererProps {
@@ -177,6 +177,7 @@ function ProductGridSection({
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        const supabase = createClient()
         let data: Product[] = []
         switch (query) {
           case 'bestsellers':

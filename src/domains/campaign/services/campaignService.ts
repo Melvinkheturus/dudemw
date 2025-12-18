@@ -1,16 +1,22 @@
 import { Campaign } from '../types'
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 
 export async function getActiveCampaign(): Promise<Campaign | null> {
   try {
+    const supabase = createClient()
     const { data: sections, error } = await supabase
       .from('homepage_sections')
       .select('*')
       .eq('is_active', true)
-      .order('display_order', { ascending: true })
+      .order('position', { ascending: true })
 
     if (error) {
-      console.error('Error fetching homepage sections:', error)
+      console.error('Error fetching homepage sections:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
       return null
     }
 
