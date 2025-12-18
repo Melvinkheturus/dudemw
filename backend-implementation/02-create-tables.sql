@@ -163,7 +163,6 @@ CREATE TABLE products (
     
     -- Pricing
     price NUMERIC(10, 2) DEFAULT 0,
-    original_price NUMERIC(10, 2),
     compare_price NUMERIC(10, 2),
     cost NUMERIC(10, 2),
     
