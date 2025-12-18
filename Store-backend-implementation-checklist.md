@@ -11,51 +11,59 @@ Connect Store pages to fetch data from Admin Dashboard uploads stored in Supabas
 
 ---
 
-## Phase 1: Fix Service Layer (Core Foundation) 🔄
+## Phase 1: Fix Service Layer (Core Foundation) ✅
 
 ### 1.1 ProductService Methods
-- ⏳ Add `getProducts()` method with filters
+- ✅ Add `getProducts()` method with filters
   - Fetch products with images, variants, categories, collections
   - Support filtering by category, collection, status, search
   - Support pagination
   - Support sorting options
   
-- ⏳ Add `getProduct()` method for single product
+- ✅ Add `getProduct()` method for single product
   - Fetch complete product data
   - Include all relationships (images, variants, options, categories, collections)
   - Include inventory data
   
-- ⏳ Add `getFeaturedProducts()` method
+- ✅ Add `getFeaturedProducts()` method
   - Fetch products marked as featured
   
-- ⏳ Add `getNewArrivals()` method
+- ✅ Add `getNewArrivals()` method
   - Fetch recent products (last 30 days)
   
-- ⏳ Add `getBestSellers()` method
+- ✅ Add `getBestSellers()` method
   - Fetch products based on sales data
 
 ### 1.2 CategoryService Methods
-- ⏳ Add `getCategories()` method
+- ✅ `getCategories()` method already exists
   - Fetch all active categories
   - Include subcategories if any
   
-- ⏳ Add `getCategory()` method
+- ✅ `getCategory()` method already exists
   - Fetch single category by slug/id
   - Include products count
 
-### 1.3 CollectionService Methods
-- ⏳ Add `getCollections()` method
+### 1.3 CollectionService Methods ✅
+- ✅ Created `/lib/services/collections.ts`
+- ✅ Add `getCollections()` method
   - Fetch all active collections
   - Include product count
   
-- ⏳ Add `getCollection()` method
+- ✅ Add `getCollection()` method
   - Fetch single collection with products
   - Support pagination for products
 
+- ✅ Add `getCollectionProducts()` method
+  - Fetch products in a collection
+
+- ✅ Add `getCollectionWithProducts()` method
+  - Combined collection + products fetch
+
 ### 1.4 BannerService Methods
-- ⏳ Add `getActiveBanners()` method
+- ✅ Add `getActiveBanners()` method
   - Fetch banners by placement (hero, sidebar, etc.)
   - Filter by active status
+  - Check date range for validity
 
 ---
 
