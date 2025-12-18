@@ -21,6 +21,8 @@ const getPlacementLabel = (placement: string): string => {
       return "Product Listing Carousel"
     case "category-banner":
       return "Category Banner"
+    case "top-marquee-banner":
+      return "Top Marquee Banner"
     default:
       return placement
   }
@@ -106,8 +108,8 @@ export default function BannersPage() {
 
   // Calculate display stats
   const activeBanners = stats?.active || 0
-  const totalClicks = stats?.totalClicks || 0
-  const avgCTR = stats?.averageCTR?.toFixed(1) || "0"
+  const totalBanners = stats?.total || 0
+  const scheduledBanners = stats?.scheduled || 0
 
   return (
     <div className="w-full max-w-full overflow-x-hidden">
@@ -161,30 +163,30 @@ export default function BannersPage() {
           <Card className="border-0 shadow-sm bg-gradient-to-b from-white to-red-50 border-red-100/50 hover:shadow-md transition-all duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-semibold text-gray-700">
-                Total Clicks
+                Total Banners
               </CardTitle>
               <div className="p-2 rounded-xl bg-blue-100">
                 <Image className="h-4 w-4 text-blue-600" />
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{totalClicks.toLocaleString()}</div>
-              <p className="text-xs text-gray-600">This month</p>
+              <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{totalBanners.toLocaleString()}</div>
+              <p className="text-xs text-gray-600">All banners</p>
             </CardContent>
           </Card>
 
           <Card className="border-0 shadow-sm bg-gradient-to-b from-white to-red-50 border-red-100/50 hover:shadow-md transition-all duration-200 sm:col-span-2 lg:col-span-1">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-semibold text-gray-700">
-                Avg. CTR
+                Scheduled
               </CardTitle>
               <div className="p-2 rounded-xl bg-purple-100">
-                <Upload className="h-4 w-4 text-purple-600" />
+                <Calendar className="h-4 w-4 text-purple-600" />
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{avgCTR}%</div>
-              <p className="text-xs text-gray-600">Click-through rate</p>
+              <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{scheduledBanners}</div>
+              <p className="text-xs text-gray-600">Upcoming banners</p>
             </CardContent>
           </Card>
         </div>
@@ -223,6 +225,7 @@ export default function BannersPage() {
                     <SelectItem value="homepage-carousel">Homepage Carousel</SelectItem>
                     <SelectItem value="product-listing-carousel">Product Listing Carousel</SelectItem>
                     <SelectItem value="category-banner">Category Banner</SelectItem>
+                    <SelectItem value="top-marquee-banner">Top Marquee Banner</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -350,17 +353,9 @@ export default function BannersPage() {
                       </div>
                     </div>
 
-                    {/* Stats & Actions */}
+                    {/* Status & Actions */}
                     <div className="flex items-center justify-between lg:justify-end space-x-6">
                       <div className="flex items-center space-x-6">
-                        <div className="text-center">
-                          <p className="text-sm font-medium text-gray-900">{banner.clicks?.toLocaleString() || 0}</p>
-                          <p className="text-xs text-gray-500">Clicks</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm font-medium text-gray-900">{banner.ctr || 0}%</p>
-                          <p className="text-xs text-gray-500">CTR</p>
-                        </div>
                         <Badge variant="outline" className={getStatusColor(banner.status)}>
                           {banner.status}
                         </Badge>

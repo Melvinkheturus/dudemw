@@ -45,15 +45,6 @@ export default function CustomerDetailPage() {
             Active
           </Badge>
         )
-      case 'vip':
-        return (
-          <Badge
-            variant="outline"
-            className="bg-purple-100 text-purple-700 border-purple-200"
-          >
-            VIP
-          </Badge>
-        )
       case 'inactive':
         return (
           <Badge

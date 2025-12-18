@@ -18,12 +18,12 @@ export type CustomerWithStats = Customer & {
   averageOrderValue: number
   lastOrderDate?: string | null
   lifetimeValue: number
-  status: 'active' | 'inactive' | 'vip'
+  status: 'active' | 'inactive'
 }
 
 export type CustomerFilters = {
   search?: string
-  status?: 'all' | 'active' | 'inactive' | 'vip'
+  status?: 'all' | 'active' | 'inactive'
   dateFrom?: string
   dateTo?: string
   minOrders?: number
@@ -34,10 +34,8 @@ export type CustomerStats = {
   total: number
   active: number
   inactive: number
-  vip: number
   newThisMonth: number
   totalRevenue: number
-  averageLifetimeValue: number
 }
 
 export type PaginationInfo = {

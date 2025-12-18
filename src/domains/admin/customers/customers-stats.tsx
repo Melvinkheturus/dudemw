@@ -2,7 +2,7 @@
 
 import { CustomerStats } from '@/lib/types/customers'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Users, UserCheck, UserX, Crown, TrendingUp, DollarSign } from 'lucide-react'
+import { Users, UserCheck, UserX, TrendingUp } from 'lucide-react'
 
 interface CustomersStatsProps {
   stats?: CustomerStats | null
@@ -12,8 +12,8 @@ interface CustomersStatsProps {
 export function CustomersStats({ stats, isLoading }: CustomersStatsProps) {
   if (isLoading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {[...Array(6)].map((_, i) => (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
           <Card key={i} className="animate-pulse">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <div className="h-4 w-20 bg-muted rounded"></div>
@@ -30,8 +30,8 @@ export function CustomersStats({ stats, isLoading }: CustomersStatsProps) {
   // Return null or empty state if stats are not available
   if (!stats) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {[...Array(6)].map((_, i) => (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
           <Card key={i}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -73,14 +73,6 @@ export function CustomersStats({ stats, isLoading }: CustomersStatsProps) {
       testId: 'inactive-customers-stat',
     },
     {
-      title: 'VIP Customers',
-      value: (stats.vip || 0).toLocaleString(),
-      icon: Crown,
-      color: 'text-purple-600 dark:text-purple-400',
-      bgColor: 'bg-purple-100 dark:bg-purple-950',
-      testId: 'vip-customers-stat',
-    },
-    {
       title: 'New This Month',
       value: (stats.newThisMonth || 0).toLocaleString(),
       icon: TrendingUp,
@@ -88,18 +80,10 @@ export function CustomersStats({ stats, isLoading }: CustomersStatsProps) {
       bgColor: 'bg-orange-100 dark:bg-orange-950',
       testId: 'new-customers-stat',
     },
-    {
-      title: 'Avg Lifetime Value',
-      value: `₹${(stats.averageLifetimeValue || 0).toFixed(0)}`,
-      icon: DollarSign,
-      color: 'text-red-600 dark:text-red-400',
-      bgColor: 'bg-red-100 dark:bg-red-950',
-      testId: 'avg-ltv-stat',
-    },
   ]
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6" data-testid="customers-stats">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4" data-testid="customers-stats">
       {statCards.map((stat) => {
         const Icon = stat.icon
         return (

@@ -62,33 +62,6 @@ export default function InventoryPage() {
 
   const hasInventory = inventory.length > 0 || isLoading
 
-  if (!hasInventory && !isLoading) {
-    return (
-      <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-              Inventory
-            </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-400 mt-2">
-              Monitor stock levels and manage inventory
-            </p>
-          </div>
-          <Button
-            className="bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/25"
-            asChild
-          >
-            <Link href="/admin/products/create">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Products
-            </Link>
-          </Button>
-        </div>
-        <InventoryEmptyState />
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-8" data-testid="inventory-page">
       {/* Header */}
@@ -196,21 +169,27 @@ export default function InventoryPage() {
         </Card>
       </div>
 
-      {/* Low Stock Alerts */}
-      <LowStockAlerts items={lowStockItems} isLoading={isLoadingLowStock} />
+      {hasInventory ? (
+        <>
+          {/* Low Stock Alerts */}
+          <LowStockAlerts items={lowStockItems} isLoading={isLoadingLowStock} />
 
-      {/* Filters */}
-      <InventoryFiltersComponent
-        filters={filters}
-        onFiltersChange={handleFiltersChange}
-      />
+          {/* Filters */}
+          <InventoryFiltersComponent
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+          />
 
-      {/* Inventory Table */}
-      <InventoryTable
-        inventory={inventory}
-        isLoading={isLoading}
-        onRefresh={refetchInventory}
-      />
+          {/* Inventory Table */}
+          <InventoryTable
+            inventory={inventory}
+            isLoading={isLoading}
+            onRefresh={refetchInventory}
+          />
+        </>
+      ) : (
+        !isLoading && <InventoryEmptyState />
+      )}
     </div>
   )
 }

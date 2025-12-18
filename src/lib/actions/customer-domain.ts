@@ -454,7 +454,6 @@ export async function getCustomerStatsForAdmin(): Promise<{
     inactive: number
     new_this_month: number
     total_revenue: number
-    average_lifetime_value: number
   }
   error?: string
 }> {
@@ -484,7 +483,6 @@ export async function getCustomerStatsForAdmin(): Promise<{
     const { data: orders } = await supabaseAdmin.from('orders').select('total_amount, customer_id')
 
     const total_revenue = orders?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0
-    const average_lifetime_value = total > 0 ? total_revenue / total : 0
 
     return {
       success: true,
@@ -496,7 +494,6 @@ export async function getCustomerStatsForAdmin(): Promise<{
         inactive,
         new_this_month,
         total_revenue,
-        average_lifetime_value,
       },
     }
   } catch (error: any) {

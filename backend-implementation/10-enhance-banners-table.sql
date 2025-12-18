@@ -38,7 +38,7 @@ ALTER TABLE banners
 
 ALTER TABLE banners
   ADD CONSTRAINT banners_placement_check 
-  CHECK (placement IN ('homepage-carousel', 'product-listing-carousel', 'category-banner'));
+  CHECK (placement IN ('homepage-carousel', 'product-listing-carousel', 'category-banner', 'top-marquee-banner'));
 
 -- Remove is_active column (replaced by status)
 ALTER TABLE banners DROP COLUMN IF EXISTS is_active;

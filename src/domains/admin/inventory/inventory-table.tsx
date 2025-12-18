@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { TableCell } from '@/components/ui/table'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -289,14 +290,22 @@ export function InventoryTable({ inventory, isLoading, onRefresh }: InventoryTab
   ]
 
   return (
-    <div className="rounded-xl border-0 shadow-sm bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50 overflow-hidden" data-testid="inventory-table">
-      <VirtualizedTable
-        data={inventory}
-        columns={columns}
-        estimatedRowHeight={80}
-        isLoading={isLoading}
-        emptyMessage="No inventory items found. Try adjusting your filters or add products first."
-      />
-    </div>
+    <Card className="border-0 shadow-sm bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50" data-testid="inventory-table">
+      <CardHeader>
+        <CardTitle className="text-xl font-bold text-gray-900 dark:text-gray-100">
+          Inventory Items ({inventory.length})
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <VirtualizedTable
+          data={inventory}
+          columns={columns}
+          estimatedRowHeight={80}
+          isLoading={isLoading}
+          emptyMessage="No inventory items found. Try adjusting your filters or add products first."
+          className="border-0"
+        />
+      </CardContent>
+    </Card>
   )
 }

@@ -29,16 +29,6 @@ export function CustomersTable({ customers, isLoading }: CustomersTableProps) {
             Active
           </Badge>
         )
-      case 'vip':
-        return (
-          <Badge
-            variant="outline"
-            className="bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-400"
-            data-testid={`customer-status-${status}`}
-          >
-            VIP
-          </Badge>
-        )
       case 'inactive':
         return (
           <Badge

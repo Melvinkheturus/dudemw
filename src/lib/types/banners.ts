@@ -1,6 +1,6 @@
 // Banner Types for Backend Service
 
-export type BannerPlacement = 'homepage-carousel' | 'product-listing-carousel' | 'category-banner'
+export type BannerPlacement = 'homepage-carousel' | 'product-listing-carousel' | 'category-banner' | 'top-marquee-banner'
 export type BannerStatus = 'active' | 'scheduled' | 'expired' | 'disabled'
 export type ActionType = 'collection' | 'category' | 'product' | 'external'
 
@@ -25,10 +25,7 @@ export interface Banner {
   category?: string
   cta_text?: string
   
-  // Analytics
-  clicks: number
-  impressions: number
-  ctr: number
+  // Analytics removed - no longer tracked in banner interface
   
   // Metadata
   created_at: string
@@ -78,29 +75,6 @@ export interface BannerStats {
   scheduled: number
   expired: number
   disabled: number
-  totalClicks: number
-  totalImpressions: number
-  averageCTR: number
 }
 
-export interface BannerAnalytics {
-  banner_id: string
-  clicks: number
-  impressions: number
-  ctr: number
-  date: string
-}
-
-export interface BannerClickEvent {
-  banner_id: string
-  user_id?: string
-  session_id?: string
-  timestamp: string
-}
-
-export interface BannerImpressionEvent {
-  banner_id: string
-  user_id?: string
-  session_id?: string
-  timestamp: string
-}
+// Analytics interfaces removed - no longer tracking banner analytics

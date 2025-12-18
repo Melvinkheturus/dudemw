@@ -45,10 +45,8 @@ export class CustomerService {
         )[0]
 
         // Determine status
-        let status: 'active' | 'inactive' | 'vip' = 'inactive'
-        if (totalSpent > 50000) {
-          status = 'vip'
-        } else if (totalOrders > 0) {
+        let status: 'active' | 'inactive' = 'inactive'
+        if (totalOrders > 0) {
           const daysSinceLastOrder = lastOrder 
             ? Math.floor((Date.now() - new Date(lastOrder.created_at || '').getTime()) / (1000 * 60 * 60 * 24))
             : 999
@@ -185,10 +183,8 @@ export class CustomerService {
       const lastOrder = orders?.[0]
 
       // Determine status
-      let status: 'active' | 'inactive' | 'vip' = 'inactive'
-      if (totalSpent > 50000) {
-        status = 'vip'
-      } else if (totalOrders > 0) {
+      let status: 'active' | 'inactive' = 'inactive'
+      if (totalOrders > 0) {
         const daysSinceLastOrder = lastOrder
           ? Math.floor((Date.now() - new Date(lastOrder.created_at || '').getTime()) / (1000 * 60 * 60 * 24))
           : 999
@@ -260,15 +256,11 @@ export class CustomerService {
       // Calculate customer stats
       let activeCount = 0
       let inactiveCount = 0
-      let vipCount = 0
 
       authData.users.forEach(user => {
         const customerOrders = orders?.filter(o => o.user_id === user.id) || []
-        const totalSpent = customerOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0)
 
-        if (totalSpent > 50000) {
-          vipCount++
-        } else if (customerOrders.length > 0) {
+        if (customerOrders.length > 0) {
           const lastOrder = customerOrders.sort((a, b) =>
             new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
           )[0]
@@ -289,10 +281,8 @@ export class CustomerService {
         total: totalCustomers,
         active: activeCount,
         inactive: inactiveCount,
-        vip: vipCount,
         newThisMonth,
         totalRevenue,
-        averageLifetimeValue: totalCustomers > 0 ? totalRevenue / totalCustomers : 0,
       }
 
       return { success: true, data: stats }

@@ -1,9 +1,9 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Monitor, ShoppingBag, Tag } from "lucide-react"
+import { Monitor, ShoppingBag, Tag, Megaphone } from "lucide-react"
 
-type BannerPlacement = "homepage-carousel" | "product-listing-carousel" | "category-banner"
+type BannerPlacement = "homepage-carousel" | "product-listing-carousel" | "category-banner" | "top-marquee-banner"
 
 interface PlacementStepProps {
   selectedPlacement?: BannerPlacement
@@ -28,6 +28,12 @@ const placementOptions = [
     title: "Category Page Banner",
     aspectRatio: "16:4",
     icon: Tag,
+  },
+  {
+    id: "top-marquee-banner" as BannerPlacement,
+    title: "Top Marquee Banner",
+    aspectRatio: "Full width scrolling",
+    icon: Megaphone,
   }
 ]
 

@@ -76,8 +76,22 @@ export function InventoryEmptyState() {
         No inventory items yet
       </h3>
       <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
-        Inventory items will appear here when products are added to your store.
+        Inventory items will appear here when products are added to your store. Start by creating your first product to begin tracking inventory.
       </p>
+      <div className="flex items-center justify-center space-x-4">
+        <Button className="bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/25" asChild>
+          <Link href="/admin/products/create">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Product
+          </Link>
+        </Button>
+        <Button variant="outline" className="border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/30" asChild>
+          <Link href="/admin/products/import">
+            <Upload className="mr-2 h-4 w-4" />
+            Import Products
+          </Link>
+        </Button>
+      </div>
     </div>
   )
 }

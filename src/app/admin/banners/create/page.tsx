@@ -13,7 +13,7 @@ import { ActionStep } from "@/domains/admin/banner-creation/action-step"
 import { PreviewStep } from "@/domains/admin/banner-creation/preview-step"
 
 // Types
-type BannerPlacement = "homepage-carousel" | "product-listing-carousel" | "category-banner"
+type BannerPlacement = "homepage-carousel" | "product-listing-carousel" | "category-banner" | "top-marquee-banner"
 type ActionType = "collection" | "category" | "product" | "external"
 
 interface BannerFormData {
