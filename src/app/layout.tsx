@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import { AuthProvider } from "@/domains/auth/context";
 import { CartProvider } from "@/domains/cart";
 import { ToastProvider } from "@/lib/layout/feedback/ToastContext";
+import { QueryProvider } from "@/components/providers/query-provider";
 import "./globals.css";
 import Footer from "@/lib/layout/layout/Footer";
 import ConditionalNavbar from "@/lib/layout/layout/ConditionalNavbar";
