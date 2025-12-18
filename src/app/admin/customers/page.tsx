@@ -38,9 +38,10 @@ export default function CustomersPage() {
 
   const handleExport = async () => {
     try {
-      const result = await CustomerService.exportCustomers(filters)
+      const { exportCustomersAction } = await import('@/lib/actions/customers')
+      const result = await exportCustomersAction(filters)
       if (result.success && result.data) {
-        const csv = CustomerService.convertToCSV(result.data)
+        const csv = convertToCSV(result.data)
         const blob = new Blob([csv], { type: 'text/csv' })
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -50,10 +51,33 @@ export default function CustomersPage() {
         a.click()
         document.body.removeChild(a)
         window.URL.revokeObjectURL(url)
+        toast.success('Customers exported successfully')
+      } else {
+        toast.error(result.error || 'Failed to export customers')
       }
     } catch (error) {
       console.error('Error exporting customers:', error)
+      toast.error('Failed to export customers')
     }
+  }
+
+  // Helper function to convert export data to CSV string
+  const convertToCSV = (data: any[]): string => {
+    if (data.length === 0) return ''
+
+    const headers = Object.keys(data[0])
+    const csvRows = [
+      headers.join(','),
+      ...data.map(row =>
+        headers.map(header => {
+          const value = row[header]
+          // Escape commas and quotes in values
+          return `"${String(value).replace(/"/g, '""')}"`
+        }).join(',')
+      ),
+    ]
+
+    return csvRows.join('\n')
   }
 
   const handleRefresh = async () => {
