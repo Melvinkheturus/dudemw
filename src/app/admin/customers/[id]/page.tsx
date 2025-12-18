@@ -97,7 +97,7 @@ export default function CustomerDetailPage() {
     )
   }
 
-  if (!customer) {
+  if (isError || !customer) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <p className="text-muted-foreground mb-4">Customer not found</p>
