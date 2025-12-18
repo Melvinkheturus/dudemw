@@ -30,10 +30,10 @@ export default async function VariantsListPage({ params, searchParams }: Variant
         <VariantsListView 
           product={product}
           filters={{
-            search: searchParams.search,
-            option: searchParams.option,
-            stock: searchParams.stock,
-            status: searchParams.status,
+            search: filters.search,
+            option: filters.option,
+            stock: filters.stock,
+            status: filters.status,
           }}
         />
       </Suspense>
