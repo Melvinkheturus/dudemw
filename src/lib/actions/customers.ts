@@ -356,8 +356,46 @@ export async function getCustomerActionLegacy(
 
 /**
  * Server action to get customer statistics for dashboard
+ * NOW USING NEW CUSTOMER DOMAIN
  */
 export async function getCustomerStatsAction(): Promise<{
+  success: boolean
+  data?: CustomerStats
+  error?: string
+}> {
+  try {
+    // Use new customer domain
+    const result = await getCustomerStatsForAdmin()
+    
+    if (!result.success || !result.data) {
+      return { success: false, error: result.error || 'Failed to fetch stats' }
+    }
+
+    // Transform to match legacy format
+    return {
+      success: true,
+      data: {
+        total: result.data.total,
+        active: result.data.active,
+        inactive: result.data.inactive,
+        vip: 0, // VIP logic needs to be implemented in new domain
+        newThisMonth: result.data.new_this_month,
+        totalRevenue: result.data.total_revenue,
+        averageLifetimeValue: result.data.average_lifetime_value,
+      } as CustomerStats,
+    }
+  } catch (error: any) {
+    const errorMessage =
+      error?.message || error?.error_description || JSON.stringify(error) || 'Unknown error'
+    console.error('Error fetching customer stats:', errorMessage, error)
+    return { success: false, error: `Failed to fetch customer statistics: ${errorMessage}` }
+  }
+}
+
+/**
+ * LEGACY METHOD - Original implementation using auth.users
+ */
+export async function getCustomerStatsActionLegacy(): Promise<{
   success: boolean
   data?: CustomerStats
   error?: string
