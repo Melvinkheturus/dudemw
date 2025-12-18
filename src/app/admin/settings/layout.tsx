@@ -15,8 +15,8 @@ export default function SettingsLayout({
 
   // This layout completely replaces the admin layout for settings pages
   return (
-    <div className="fixed inset-0 z-[9999] bg-gray-50">
-      <div className="flex h-full min-h-0">
+    <div className="flex h-screen bg-gray-50">
+      <div className="flex h-full min-h-0 w-full">
         {/* Desktop Settings Sidebar */}
         <div className="hidden lg:block">
           <SettingsSidebar collapsed={sidebarCollapsed} />
