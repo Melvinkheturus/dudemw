@@ -104,14 +104,14 @@ export default function InventoryPage() {
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <BulkImportDialog onSuccess={fetchInventory} />
+          <BulkImportDialog onSuccess={refetchInventory} />
           <Button
             variant="outline"
             onClick={handleRefresh}
-            disabled={isRefreshing}
+            disabled={isLoading || isLoadingStats}
             data-testid="refresh-inventory-button"
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 mr-2 ${(isLoading || isLoadingStats) ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
         </div>
@@ -130,10 +130,10 @@ export default function InventoryPage() {
           </CardHeader>
           <CardContent className="pt-0">
             <div className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-              {stats.totalItems}
+              {stats?.totalItems || 0}
             </div>
             <p className="text-xs text-gray-600 dark:text-gray-400">
-              {stats.inStock} in stock
+              {stats?.inStock || 0} in stock
             </p>
           </CardContent>
         </Card>
@@ -149,7 +149,7 @@ export default function InventoryPage() {
           </CardHeader>
           <CardContent className="pt-0">
             <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-2">
-              {stats.lowStock}
+              {stats?.lowStock || 0}
             </div>
             <p className="text-xs text-gray-600 dark:text-gray-400">Need restocking</p>
           </CardContent>
@@ -166,7 +166,7 @@ export default function InventoryPage() {
           </CardHeader>
           <CardContent className="pt-0">
             <div className="text-3xl font-bold text-red-600 dark:text-red-400 mb-2">
-              {stats.outOfStock}
+              {stats?.outOfStock || 0}
             </div>
             <p className="text-xs text-gray-600 dark:text-gray-400">Currently unavailable</p>
           </CardContent>
@@ -183,7 +183,7 @@ export default function InventoryPage() {
           </CardHeader>
           <CardContent className="pt-0">
             <div className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-              ₹{stats.totalValue.toLocaleString()}
+              ₹{stats?.totalValue ? stats.totalValue.toLocaleString() : 0}
             </div>
             <p className="text-xs text-gray-600 dark:text-gray-400">Current inventory value</p>
           </CardContent>
@@ -203,7 +203,7 @@ export default function InventoryPage() {
       <InventoryTable
         inventory={inventory}
         isLoading={isLoading}
-        onRefresh={fetchInventory}
+        onRefresh={refetchInventory}
       />
     </div>
   )

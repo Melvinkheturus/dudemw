@@ -1,13 +1,14 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useMemo } from "react"
 import { ProductsTable } from "@/domains/admin/products/products-table"
 import { ProductsFilters } from "@/domains/admin/products/products-filters"
 import { ProductsEmptyState } from "@/components/common/empty-states"
 import { Button } from "@/components/ui/button"
-import { Plus, Upload, Download } from "lucide-react"
+import { Plus, Upload, Download, RefreshCw } from "lucide-react"
 import Link from "next/link"
-import { getProducts } from "@/lib/actions/products"
+import { useProducts } from "@/hooks/queries/useProducts"
+import { toast } from "sonner"
 
 interface Product {
   id: string
@@ -43,33 +44,25 @@ interface Product {
 }
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
   const [stockFilter, setStockFilter] = useState('all')
 
-  const fetchProducts = async () => {
-    try {
-      setLoading(true)
-      const result = await getProducts()
-      if (result.success && result.data) {
-        setProducts(result.data)
-      }
-    } catch (error) {
-      console.error('Error fetching products:', error)
-    } finally {
-      setLoading(false)
-    }
+  // React Query hook
+  const { 
+    data: products = [], 
+    isLoading,
+    refetch: refetchProducts 
+  } = useProducts()
+
+  const handleRefresh = async () => {
+    await refetchProducts()
+    toast.success('Products refreshed')
   }
 
-  useEffect(() => {
-    fetchProducts()
-  }, [])
-
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
+    return products.filter((product: Product) => {
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase()
@@ -123,7 +116,7 @@ export default function ProductsPage() {
     setStockFilter('all')
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-8">
         <div className="flex items-center justify-between">
@@ -145,7 +138,7 @@ export default function ProductsPage() {
   const hasFilteredProducts = filteredProducts.length > 0
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" data-testid="products-page">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold tracking-tight text-gray-900">Products</h1>
@@ -155,6 +148,15 @@ export default function ProductsPage() {
         </div>
         {hasProducts ? (
           <div className="flex items-center space-x-3">
+            <Button
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={isLoading}
+              data-testid="refresh-products-button"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
             <Button variant="outline" className="border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300" asChild>
               <Link href="/admin/products/import">
                 <Upload className="mr-2 h-4 w-4" />
@@ -210,7 +212,7 @@ export default function ProductsPage() {
           {hasFilteredProducts ? (
             <ProductsTable 
               products={filteredProducts}
-              onRefresh={fetchProducts}
+              onRefresh={refetchProducts}
             />
           ) : (
             <div className="text-center py-12">
