@@ -1,5 +1,11 @@
 'use server'
 
+/**
+ * LEGACY Customer Actions - DEPRECATED
+ * These use auth.users directly which violates domain separation
+ * Use customer-domain.ts actions instead
+ */
+
 import { supabaseAdmin } from '@/lib/supabase/supabase'
 import {
   Customer,
@@ -12,10 +18,59 @@ import {
   CustomerExportData,
 } from '@/lib/types/customers'
 
+// Import new domain actions
+import {
+  getCustomersForAdmin,
+  getCustomerByIdForAdmin,
+  getCustomerStatsForAdmin,
+} from './customer-domain'
+
 /**
  * Server action to get customers with filtering and pagination
+ * NOW USING NEW CUSTOMER DOMAIN
  */
 export async function getCustomersAction(
+  filters?: CustomerFilters,
+  page: number = 1,
+  limit: number = 20
+) {
+  try {
+    // Use new customer domain
+    const result = await getCustomersForAdmin({
+      customer_type: filters?.status === 'all' ? undefined : filters?.status as any,
+      search: filters?.search,
+      limit,
+      offset: (page - 1) * limit,
+    })
+
+    if (!result.success) {
+      return { success: false, error: result.error }
+    }
+
+    return {
+      success: true,
+      data: result.data,
+      total: result.total,
+      pagination: {
+        page,
+        limit,
+        total: result.total || 0,
+        totalPages: Math.ceil((result.total || 0) / limit),
+      } as PaginationInfo,
+    }
+  } catch (error: any) {
+    const errorMessage =
+      error?.message || error?.error_description || JSON.stringify(error) || 'Unknown error'
+    console.error('Error fetching customers:', errorMessage, error)
+    return { success: false, error: `Failed to fetch customers: ${errorMessage}` }
+  }
+}
+
+/**
+ * LEGACY METHOD - Keeping for backward compatibility
+ * This was the old way using auth.users
+ */
+export async function getCustomersActionLegacy(
   filters?: CustomerFilters,
   page: number = 1,
   limit: number = 20
