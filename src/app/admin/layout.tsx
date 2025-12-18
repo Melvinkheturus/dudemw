@@ -39,9 +39,12 @@ export default function AdminLayout({
   // Auth routes that don't need the admin layout
   const authRoutes = ['/admin/login', '/admin/setup', '/admin/recover', '/admin/pending', '/admin/logout']
   const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
+  
+  // Settings routes that have their own complete layout
+  const isSettingsRoute = pathname.startsWith('/admin/settings')
 
   // Client-side auth verification (backup to middleware)
-  // IMPORTANT: This hook must be called before any conditional returns
+  // IMPORTANT: ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   useEffect(() => {
     // Skip auth check for auth routes
     const skipAuth = authRoutes.some(route => pathname.startsWith(route))
@@ -67,6 +70,15 @@ export default function AdminLayout({
 
   // If it's an auth route, just render the children without the admin layout
   if (isAuthRoute) {
+    return <>{children}</>
+  }
+  
+  // If it's a settings route, render children without the admin layout wrapper
+  // Settings has its own complete layout
+  if (isSettingsRoute) {
+    if (isCheckingAuth) {
+      return <LoadingScreen />
+    }
     return <>{children}</>
   }
 
