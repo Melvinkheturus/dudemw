@@ -4,17 +4,19 @@ import { VariantsListView } from '@/domains/admin/variants/variants-list-view'
 import { getProduct } from '@/lib/actions/products'
 
 interface VariantsListPageProps {
-  params: { id: string }
-  searchParams: { 
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ 
     search?: string
     option?: string
     stock?: string
     status?: string
-  }
+  }>
 }
 
 export default async function VariantsListPage({ params, searchParams }: VariantsListPageProps) {
-  const result = await getProduct(params.id)
+  const { id } = await params
+  const filters = await searchParams
+  const result = await getProduct(id)
   
   if (!result.success || !result.data) {
     notFound()
