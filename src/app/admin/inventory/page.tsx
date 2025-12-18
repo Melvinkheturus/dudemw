@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { InventoryService } from '@/lib/services/inventory'
-import { InventoryFilters, InventoryStats } from '@/lib/types/inventory'
+import { useState } from 'react'
+import { InventoryFilters } from '@/lib/types/inventory'
 import { InventoryTable } from '@/domains/admin/inventory/inventory-table'
 import { InventoryFilters as InventoryFiltersComponent } from '@/domains/admin/inventory/inventory-filters'
 import { LowStockAlerts } from '@/domains/admin/inventory/low-stock-alerts'
@@ -14,63 +13,29 @@ import { CSVService } from '@/lib/services/csv'
 import { toast } from 'sonner'
 import { Package, AlertTriangle, PackageX, DollarSign, RefreshCw, Plus, Download } from 'lucide-react'
 import Link from 'next/link'
+import { useInventory, useInventoryStats } from '@/hooks/queries/useInventory'
 
 export default function InventoryPage() {
-  const [inventory, setInventory] = useState<any[]>([])
-  const [stats, setStats] = useState<InventoryStats>({
-    totalItems: 0,
-    inStock: 0,
-    lowStock: 0,
-    outOfStock: 0,
-    totalValue: 0,
-  })
   const [filters, setFilters] = useState<InventoryFilters>({
     stockStatus: 'all',
   })
   const [page, setPage] = useState(1)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isRefreshing, setIsRefreshing] = useState(false)
 
-  useEffect(() => {
-    fetchInventory()
-  }, [filters, page])
-
-  useEffect(() => {
-    fetchStats()
-  }, [])
-
-  const fetchInventory = async () => {
-    setIsLoading(true)
-    try {
-      const result = await InventoryService.getInventoryItems(filters, page, 50)
-      if (result.success && result.data) {
-        setInventory(result.data)
-      } else {
-        toast.error(result.error || 'Failed to fetch inventory')
-      }
-    } catch (error) {
-      console.error('Error fetching inventory:', error)
-      toast.error('Failed to fetch inventory')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const fetchStats = async () => {
-    try {
-      const result = await InventoryService.getInventoryStats()
-      if (result.success && result.data) {
-        setStats(result.data)
-      }
-    } catch (error) {
-      console.error('Error fetching stats:', error)
-    }
-  }
+  // React Query hooks
+  const { 
+    data: inventory = [], 
+    isLoading,
+    refetch: refetchInventory 
+  } = useInventory(filters, page, 50)
+  
+  const { 
+    data: stats,
+    isLoading: isLoadingStats,
+    refetch: refetchStats 
+  } = useInventoryStats()
 
   const handleRefresh = async () => {
-    setIsRefreshing(true)
-    await Promise.all([fetchInventory(), fetchStats()])
-    setIsRefreshing(false)
+    await Promise.all([refetchInventory(), refetchStats()])
     toast.success('Inventory refreshed')
   }
 
