@@ -1,4 +1,4 @@
-import Papa from 'papaparse'
+import * as Papa from 'papaparse'
 import { supabaseAdmin } from '@/lib/supabase/supabase'
 import type {
   CSVRow,
