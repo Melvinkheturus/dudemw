@@ -118,9 +118,19 @@ export class CustomerService {
           totalPages: Math.ceil(total / limit),
         } as PaginationInfo,
       }
-    } catch (error) {
-      console.error('Error fetching customers:', error)
-      return { success: false, error: 'Failed to fetch customers' }
+    } catch (error: any) {
+      const errorMessage = error?.message || error?.error_description || JSON.stringify(error) || 'Unknown error'
+      console.error('Error fetching customers:', errorMessage, error)
+      
+      // Special handling for auth errors
+      if (error?.message?.includes('User not allowed') || error?.message?.includes('JWT')) {
+        return { 
+          success: false, 
+          error: 'Admin access required. Please ensure SUPABASE_SERVICE_ROLE_KEY is configured in environment variables.' 
+        }
+      }
+      
+      return { success: false, error: `Failed to fetch customers: ${errorMessage}` }
     }
   }
 
