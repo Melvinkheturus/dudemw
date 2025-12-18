@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, UserCheck, UserX, Crown, TrendingUp, DollarSign } from 'lucide-react'
 
 interface CustomersStatsProps {
-  stats: CustomerStats
+  stats?: CustomerStats | null
   isLoading?: boolean
 }
 
@@ -27,10 +27,30 @@ export function CustomersStats({ stats, isLoading }: CustomersStatsProps) {
     )
   }
 
+  // Return null or empty state if stats are not available
+  if (!stats) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {[...Array(6)].map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Loading...
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">-</div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
   const statCards = [
     {
       title: 'Total Customers',
-      value: stats.total.toLocaleString(),
+      value: (stats.total || 0).toLocaleString(),
       icon: Users,
       color: 'text-blue-600 dark:text-blue-400',
       bgColor: 'bg-blue-100 dark:bg-blue-950',
@@ -38,7 +58,7 @@ export function CustomersStats({ stats, isLoading }: CustomersStatsProps) {
     },
     {
       title: 'Active Customers',
-      value: stats.active.toLocaleString(),
+      value: (stats.active || 0).toLocaleString(),
       icon: UserCheck,
       color: 'text-green-600 dark:text-green-400',
       bgColor: 'bg-green-100 dark:bg-green-950',
@@ -46,7 +66,7 @@ export function CustomersStats({ stats, isLoading }: CustomersStatsProps) {
     },
     {
       title: 'Inactive Customers',
-      value: stats.inactive.toLocaleString(),
+      value: (stats.inactive || 0).toLocaleString(),
       icon: UserX,
       color: 'text-gray-600 dark:text-gray-400',
       bgColor: 'bg-gray-100 dark:bg-gray-950',
@@ -54,7 +74,7 @@ export function CustomersStats({ stats, isLoading }: CustomersStatsProps) {
     },
     {
       title: 'VIP Customers',
-      value: stats.vip.toLocaleString(),
+      value: (stats.vip || 0).toLocaleString(),
       icon: Crown,
       color: 'text-purple-600 dark:text-purple-400',
       bgColor: 'bg-purple-100 dark:bg-purple-950',
@@ -62,7 +82,7 @@ export function CustomersStats({ stats, isLoading }: CustomersStatsProps) {
     },
     {
       title: 'New This Month',
-      value: stats.newThisMonth.toLocaleString(),
+      value: (stats.newThisMonth || 0).toLocaleString(),
       icon: TrendingUp,
       color: 'text-orange-600 dark:text-orange-400',
       bgColor: 'bg-orange-100 dark:bg-orange-950',
@@ -70,7 +90,7 @@ export function CustomersStats({ stats, isLoading }: CustomersStatsProps) {
     },
     {
       title: 'Avg Lifetime Value',
-      value: `₹${stats.averageLifetimeValue.toFixed(0)}`,
+      value: `₹${(stats.averageLifetimeValue || 0).toFixed(0)}`,
       icon: DollarSign,
       color: 'text-red-600 dark:text-red-400',
       bgColor: 'bg-red-100 dark:bg-red-950',
