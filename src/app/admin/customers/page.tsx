@@ -23,12 +23,14 @@ export default function CustomersPage() {
   const { 
     data: customers = [], 
     isLoading: isLoadingCustomers,
+    error: customersError,
     refetch: refetchCustomers 
   } = useCustomers(filters, page, 20)
   
   const { 
     data: stats,
     isLoading: isLoadingStats,
+    error: statsError,
     refetch: refetchStats 
   } = useCustomerStats()
 
