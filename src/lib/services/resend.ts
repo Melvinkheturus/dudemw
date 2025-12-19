@@ -40,7 +40,7 @@ export interface WelcomeEmailData {
  * Email service for e-commerce operations
  */
 export class EmailService {
-  private static readonly FROM_EMAIL = 'Dude Menswear <orders@dudemenswear.com>';
+  private static readonly FROM_EMAIL = 'Dude Menswear <onboarding@resend.dev>';
   private static readonly SUPPORT_EMAIL = 'support@dudemenswear.com';
 
   /**

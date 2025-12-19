@@ -15,6 +15,53 @@ export default function TestEmailPage() {
 
   const supabase = createClient()
 
+  const testResendAPI = async () => {
+    if (!email) {
+      setResult({
+        success: false,
+        message: 'Please enter an email address'
+      })
+      return
+    }
+
+    setLoading(true)
+    setResult(null)
+
+    try {
+      const response = await fetch('/api/test-resend', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setResult({
+          success: true,
+          message: 'Resend API test successful! Check your inbox.',
+          details: data
+        })
+      } else {
+        setResult({
+          success: false,
+          message: data.error || 'Failed to send test email',
+          details: data
+        })
+      }
+    } catch (err: any) {
+      setResult({
+        success: false,
+        message: 'Failed to test Resend API: ' + err.message,
+        details: err
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const testOTP = async () => {
     if (!email) {
       setResult({
@@ -149,7 +196,26 @@ export default function TestEmailPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Test Resend API Button */}
+            <button
+              onClick={testResendAPI}
+              disabled={loading || !email}
+              className="flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="w-5 h-5" />
+                  Test Resend API
+                </>
+              )}
+            </button>
+
             {/* Test OTP Button */}
             <button
               onClick={testOTP}
@@ -240,10 +306,11 @@ export default function TestEmailPage() {
           <h3 className="font-semibold mb-3">Testing Instructions:</h3>
           <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
             <li>Enter your email address above</li>
-            <li>Click "Test OTP Email" to test magic link/OTP flow</li>
+            <li><strong>Start with "Test Resend API"</strong> - Tests direct Resend integration</li>
+            <li>Then try "Test OTP Email" - Tests Supabase + Resend integration</li>
             <li>Check your email inbox (and spam folder)</li>
-            <li>Verify you received the email with OTP code</li>
-            <li>If successful, your configuration is working!</li>
+            <li>Verify you received the emails</li>
+            <li>If both work, your configuration is perfect!</li>
           </ol>
 
           <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
