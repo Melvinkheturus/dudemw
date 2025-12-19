@@ -41,7 +41,10 @@ export interface WelcomeEmailData {
  */
 export class EmailService {
   private static readonly FROM_EMAIL = 'Dude Menswear <onboarding@resend.dev>';
-  private static readonly SUPPORT_EMAIL = 'support@dudemenswear.com';
+  private static readonly SUPPORT_EMAIL = 'support@dudemw.com';
+  private static readonly INSTAGRAM_HANDLE = '@dude_mensclothing';
+  private static readonly INSTAGRAM_URL = 'https://instagram.com/dude_mensclothing';
+  private static readonly STORE_LOCATION = 'Tharamanagalam, Tamil Nadu, India';
 
   /**
    * Send order confirmation email
@@ -171,10 +174,14 @@ export class EmailService {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Order Confirmation</title>
         </head>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #000; margin-bottom: 10px;">Dude Menswear</h1>
-            <h2 style="color: #666; font-weight: normal;">Order Confirmation</h2>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #1a1a1a; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
+          <div style="text-align: center; margin-bottom: 30px; background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%); padding: 30px; border-radius: 8px;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: bold; letter-spacing: 2px;">DUDE MENSWEAR</h1>
+            <p style="color: #dc2626; margin: 10px 0 0 0; font-size: 14px; font-weight: 600;">Premium Men's Fashion</p>
+          </div>
+          
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #000; font-weight: 600; margin: 0;">Order Confirmation</h2>
           </div>
           
           <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
@@ -219,11 +226,16 @@ export class EmailService {
             </div>
           </div>
 
-          <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
-            <p style="color: #666; margin-bottom: 10px;">Questions about your order?</p>
-            <p style="margin: 0;">
-              <a href="mailto:${this.SUPPORT_EMAIL}" style="color: #000; text-decoration: none;">${this.SUPPORT_EMAIL}</a>
+          <div style="text-align: center; margin-top: 40px; padding: 30px; background-color: #f9fafb; border-radius: 8px;">
+            <p style="color: #374151; margin: 0 0 15px 0; font-size: 14px;">Questions about your order?</p>
+            <p style="margin: 0 0 15px 0;">
+              <a href="mailto:${this.SUPPORT_EMAIL}" style="color: #dc2626; text-decoration: none; font-weight: 600;">${this.SUPPORT_EMAIL}</a>
             </p>
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+              <p style="color: #6b7280; margin: 0 0 10px 0; font-size: 13px;">Follow us on Instagram</p>
+              <a href="${this.INSTAGRAM_URL}" style="display: inline-block; color: #dc2626; text-decoration: none; font-weight: 600; font-size: 16px;">${this.INSTAGRAM_HANDLE}</a>
+            </div>
+            <p style="color: #9ca3af; margin-top: 20px; font-size: 12px;">📍 ${this.STORE_LOCATION}</p>
           </div>
         </body>
       </html>
@@ -242,9 +254,10 @@ export class EmailService {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Welcome to Dude Menswear</title>
         </head>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #000; margin-bottom: 10px;">Welcome to Dude Menswear!</h1>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #1a1a1a; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
+          <div style="text-align: center; margin-bottom: 30px; background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%); padding: 40px; border-radius: 8px;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: bold; letter-spacing: 2px;">DUDE MENSWEAR</h1>
+            <p style="color: #dc2626; margin: 10px 0 0 0; font-size: 16px; font-weight: 600;">Welcome to Premium Men's Fashion!</p>
           </div>
           
           <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
@@ -254,16 +267,20 @@ export class EmailService {
           </div>
 
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${data.loginUrl}" style="background: #000; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
-              Start Shopping
+            <a href="${data.loginUrl}" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; padding: 14px 40px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2);">
+              Start Shopping Now
             </a>
           </div>
 
-          <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
-            <p style="color: #666; margin-bottom: 10px;">Need help getting started?</p>
-            <p style="margin: 0;">
-              <a href="mailto:${this.SUPPORT_EMAIL}" style="color: #000; text-decoration: none;">${this.SUPPORT_EMAIL}</a>
+          <div style="text-align: center; margin-top: 40px; padding: 30px; background-color: #f9fafb; border-radius: 8px;">
+            <p style="color: #374151; margin: 0 0 15px 0; font-size: 14px;">Need help getting started?</p>
+            <p style="margin: 0 0 15px 0;">
+              <a href="mailto:${this.SUPPORT_EMAIL}" style="color: #dc2626; text-decoration: none; font-weight: 600;">${this.SUPPORT_EMAIL}</a>
             </p>
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+              <p style="color: #6b7280; margin: 0 0 10px 0; font-size: 13px;">Follow us for style inspiration</p>
+              <a href="${this.INSTAGRAM_URL}" style="display: inline-block; color: #dc2626; text-decoration: none; font-weight: 600; font-size: 16px;">${this.INSTAGRAM_HANDLE}</a>
+            </div>
           </div>
         </body>
       </html>
