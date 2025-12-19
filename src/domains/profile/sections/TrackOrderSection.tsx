@@ -79,20 +79,12 @@ export default function TrackOrderSection() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Track Orders Section with Background Image */}
-      <div className="relative bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden min-h-[400px]">
-        {/* Background Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: "url('/illustration/track_order.png')"
-          }}
-        />
-        
-        {/* Overlay Content */}
-        <div className="relative z-10 p-8 h-full flex items-center">
-          <div className="w-full max-w-md">
+    <div className="w-full">
+      {/* Single Card Structure */}
+      <div className="relative bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="grid lg:grid-cols-2 gap-0">
+          {/* Left Side - Track Order Form */}
+          <div className="p-8">
             <h2 className="text-2xl font-bold text-black mb-6">
               Track Your Order
             </h2>
@@ -135,59 +127,73 @@ export default function TrackOrderSection() {
               </button>
             </form>
           </div>
-        </div>
-      </div>
 
-      {tracking && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
-            <div>
-              <h3 className="font-semibold text-lg">Order #{tracking.orderNumber}</h3>
-              <p className="text-sm text-gray-600">Currently: {tracking.status}</p>
-            </div>
-            <Package className="w-8 h-8 text-red-600" />
-          </div>
-
-          <div className="space-y-6">
-            {tracking.timeline.map((item: any, index: number) => (
-              <div key={index} className="flex gap-4">
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      item.completed
-                        ? 'bg-green-100 text-green-600'
-                        : 'bg-gray-100 text-gray-400'
-                    }`}
-                  >
-                    {item.completed ? (
-                      <CheckCircle className="w-5 h-5" />
-                    ) : (
-                      <div className="w-3 h-3 rounded-full bg-gray-300"></div>
-                    )}
+          {/* Right Side - Background Image or Tracking Results */}
+          <div className="relative min-h-[400px]">
+            {!tracking ? (
+              <>
+                {/* Background Image */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                  style={{
+                    backgroundImage: "url('/illustration/track_order.png')"
+                  }}
+                />
+              </>
+            ) : (
+              /* Tracking Results */
+              <div className="p-8 bg-gray-50 h-full">
+                <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+                  <div>
+                    <h3 className="font-semibold text-lg">Order #{tracking.orderNumber}</h3>
+                    <p className="text-sm text-gray-600">Currently: {tracking.status}</p>
                   </div>
-                  {index < tracking.timeline.length - 1 && (
-                    <div
-                      className={`w-0.5 h-12 ${
-                        item.completed ? 'bg-green-300' : 'bg-gray-200'
-                      }`}
-                    ></div>
-                  )}
+                  <Package className="w-8 h-8 text-red-600" />
                 </div>
-                <div className="flex-1 pb-4">
-                  <h4
-                    className={`font-medium ${
-                      item.completed ? 'text-black' : 'text-gray-400'
-                    }`}
-                  >
-                    {item.status}
-                  </h4>
-                  <p className="text-sm text-gray-600">{item.date}</p>
+
+                <div className="space-y-6">
+                  {tracking.timeline.map((item: any, index: number) => (
+                    <div key={index} className="flex gap-4">
+                      <div className="flex flex-col items-center">
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            item.completed
+                              ? 'bg-green-100 text-green-600'
+                              : 'bg-gray-100 text-gray-400'
+                          }`}
+                        >
+                          {item.completed ? (
+                            <CheckCircle className="w-5 h-5" />
+                          ) : (
+                            <div className="w-3 h-3 rounded-full bg-gray-300"></div>
+                          )}
+                        </div>
+                        {index < tracking.timeline.length - 1 && (
+                          <div
+                            className={`w-0.5 h-12 ${
+                              item.completed ? 'bg-green-300' : 'bg-gray-200'
+                            }`}
+                          ></div>
+                        )}
+                      </div>
+                      <div className="flex-1 pb-4">
+                        <h4
+                          className={`font-medium ${
+                            item.completed ? 'text-black' : 'text-gray-400'
+                          }`}
+                        >
+                          {item.status}
+                        </h4>
+                        <p className="text-sm text-gray-600">{item.date}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
+            )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

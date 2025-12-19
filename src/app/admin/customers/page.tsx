@@ -89,7 +89,7 @@ export default function CustomersPage() {
     setPage(1)
   }
 
-  const hasCustomers = customers.length > 0 || isLoadingCustomers
+  const hasCustomers = customers.length > 0
 
   return (
     <div className="space-y-8" data-testid="customers-page">
@@ -114,7 +114,16 @@ export default function CustomersPage() {
         </Button>
       </div>
 
-      {hasCustomers ? (
+      {isLoadingCustomers ? (
+        <div className="space-y-6">
+          <div className="h-16 bg-gray-100 rounded-lg animate-pulse"></div>
+          <div className="space-y-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse"></div>
+            ))}
+          </div>
+        </div>
+      ) : hasCustomers ? (
         <>
           {/* Stats Cards */}
           <CustomersStats stats={stats} isLoading={isLoadingStats} />
@@ -131,7 +140,7 @@ export default function CustomersPage() {
           <CustomersTable customers={customers} isLoading={isLoadingCustomers} />
         </>
       ) : (
-        !isLoadingCustomers && <CustomersEmptyState />
+        <CustomersEmptyState />
       )}
     </div>
   )

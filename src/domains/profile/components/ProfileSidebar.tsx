@@ -33,10 +33,10 @@ export default function ProfileSidebar({
       ]
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-full flex flex-col">
       {/* User Profile Header */}
       {!isGuest && (
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
               <User className="w-6 h-6 text-gray-600" />
@@ -54,7 +54,7 @@ export default function ProfileSidebar({
       )}
 
       {/* Navigation Menu */}
-      <nav className="p-2">
+      <nav className="p-2 flex-1">
         {menuItems.map((item) => {
           const Icon = item.icon
           const isActive = activeSection === item.id
@@ -65,7 +65,7 @@ export default function ProfileSidebar({
               onClick={() => onSectionChange(item.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
                 isActive
-                  ? 'bg-pink-50 text-pink-600'
+                  ? 'bg-red-50 text-red-600'
                   : 'hover:bg-gray-50 text-gray-700'
               }`}
             >
@@ -78,7 +78,7 @@ export default function ProfileSidebar({
       
       {/* Logout Button */}
       {!isGuest && (
-        <div className="p-2 border-t border-gray-200">
+        <div className="p-2 border-t border-gray-200 flex-shrink-0">
           <button
             onClick={onLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-red-600 hover:bg-red-50 transition-all"

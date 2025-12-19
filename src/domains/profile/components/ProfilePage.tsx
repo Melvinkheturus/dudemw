@@ -86,22 +86,26 @@ export default function ProfilePage() {
           </div>
 
           {/* Desktop View - Logged In */}
-          <div className="hidden lg:block min-h-screen bg-gray-50 py-8">
-            <div className="container mx-auto px-4 max-w-7xl">
-              <div className="grid lg:grid-cols-[300px_1fr] gap-6">
+          <div className="hidden lg:block min-h-screen bg-gray-50">
+            <div className="w-full px-4 py-8">
+              <div className="grid lg:grid-cols-[300px_1fr] gap-6 w-full">
                 {/* Sidebar - Desktop */}
                 <div className="hidden lg:block">
-                  <ProfileSidebar
-                    activeSection={activeSection}
-                    onSectionChange={setActiveSection}
-                    onLogout={logout}
-                    userName={user.name || user.email}
-                    userEmail={user.email}
-                  />
+                  <div className="sticky top-8">
+                    <div className="h-[calc(100vh-4rem)] overflow-hidden">
+                      <ProfileSidebar
+                        activeSection={activeSection}
+                        onSectionChange={setActiveSection}
+                        onLogout={logout}
+                        userName={user.name || user.email}
+                        userEmail={user.email}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Main Content */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 w-full">
                   {renderSection()}
                 </div>
               </div>
