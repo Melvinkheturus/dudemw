@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/supabase'
 import { CollectionService } from '@/lib/services/collections'
+import { ProductService } from '@/lib/services/products'
 import type { HomepageSectionWithCollection } from '@/types/collections'
 import type { Product } from '@/domains/product'
 import HorizontalProductScroll from '@/domains/product/components/cards/HorizontalProductScroll'
 import { ProductGrid } from '@/domains/product'
+import { transformProducts } from '@/domains/product/utils/productUtils'
 
 interface SectionWithProducts extends HomepageSectionWithCollection {
   products: Product[]
@@ -14,11 +16,12 @@ interface SectionWithProducts extends HomepageSectionWithCollection {
 
 export default function DynamicHomepage() {
   const [sections, setSections] = useState<SectionWithProducts[]>([])
+  const [allProducts, setAllProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    loadHomepageSections()
+    loadHomepageContent()
   }, [])
 
   const loadHomepageSections = async () => {
