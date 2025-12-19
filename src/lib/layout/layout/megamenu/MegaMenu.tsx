@@ -232,7 +232,7 @@ export default function MegaMenu({ onClose }: MegaMenuProps) {
 
             {/* View All Button */}
             <Link
-              href="/collections/all"
+              href="/products"
               className="block w-full rounded-full bg-red-600 py-3 text-center font-heading text-sm tracking-wider text-white transition-colors hover:bg-black"
             >
               VIEW ALL PRODUCTS
