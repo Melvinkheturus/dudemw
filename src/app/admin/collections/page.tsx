@@ -206,7 +206,10 @@ export default function CollectionsPage() {
               <Layers className="h-12 w-12 mx-auto text-gray-400 mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">No collections yet</h3>
               <p className="text-gray-600 mb-4">Create your first collection to organize your products</p>
-              <Button className="bg-red-600 hover:bg-red-700 text-white">
+              <Button 
+                className="bg-red-600 hover:bg-red-700 text-white"
+                onClick={() => setShowCreateDialog(true)}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Create Collection
               </Button>
