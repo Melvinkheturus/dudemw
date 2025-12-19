@@ -25,6 +25,7 @@ interface Collection {
 export default function CollectionsPage() {
   const [collections, setCollections] = useState<Collection[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
   const supabase = createClient()
 
   const fetchCollections = async () => {
