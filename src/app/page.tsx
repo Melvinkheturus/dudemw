@@ -1,4 +1,4 @@
-import { DataDrivenHomepage } from "@/domains/homepage"
+import DynamicHomepage from '@/domains/homepage/components/DynamicHomepage'
 import FloatingWhatsApp from "@/lib/layout/media/FloatingWhatsApp"
 import { generateOrganizationSchema, generateWebsiteSchema } from "@/lib/utils/seo"
 
@@ -18,8 +18,8 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
       />
       
-      {/* Data-Driven Homepage Content */}
-      <DataDrivenHomepage />
+      {/* Dynamic Homepage Content - Shows products even without campaigns */}
+      <DynamicHomepage />
       
       {/* Keep floating WhatsApp for now */}
       <FloatingWhatsApp />
