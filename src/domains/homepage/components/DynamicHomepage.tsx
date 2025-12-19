@@ -24,7 +24,7 @@ export default function DynamicHomepage() {
     loadHomepageContent()
   }, [])
 
-  const loadHomepageSections = async () => {
+  const loadHomepageContent = async () => {
     try {
       setLoading(true)
       
@@ -37,6 +37,19 @@ export default function DynamicHomepage() {
         `)
         .eq('is_active', true)
         .order('position')
+
+      // If no homepage sections, fetch all active products as fallback
+      if (!homepageSections || homepageSections.length === 0) {
+        const productsResult = await ProductService.getProducts({
+          status: 'active',
+          limit: 12
+        })
+        const products = productsResult.success ? transformProducts(productsResult.data) : []
+        setAllProducts(products)
+        setSections([])
+        setLoading(false)
+        return
+      }
 
       // Load products for each section using CollectionService
       const sectionsWithProducts = await Promise.all(
@@ -59,7 +72,7 @@ export default function DynamicHomepage() {
 
       setSections(sectionsWithProducts)
     } catch (err) {
-      console.error('Failed to load homepage sections:', err)
+      console.error('Failed to load homepage content:', err)
       setError('Failed to load homepage content')
     } finally {
       setLoading(false)
