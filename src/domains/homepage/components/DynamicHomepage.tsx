@@ -99,10 +99,22 @@ export default function DynamicHomepage() {
   }
 
   if (sections.length === 0) {
+    // Fallback: Show all products when no homepage sections are configured
     return (
       <div className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-12">
-        <div className="text-center">
-          <p className="text-gray-600">No homepage sections configured</p>
+        <div className="mb-8 text-center">
+          <h1 className="font-heading text-4xl tracking-wider text-black md:text-5xl">
+            Welcome to Dude Menswear
+          </h1>
+          <p className="mt-4 font-body text-lg text-gray-600">
+            Discover our premium collection of menswear
+          </p>
+          <a
+            href="/products"
+            className="mt-6 inline-block px-8 py-3 bg-black text-white hover:bg-gray-800 transition-colors rounded-lg font-medium"
+          >
+            Shop All Products
+          </a>
         </div>
       </div>
     )
