@@ -32,7 +32,7 @@ export default function PreferencesPage() {
   const loadPreferences = async () => {
     setIsLoading(true)
     try {
-      const result = await SettingsService.getSystemPreferences()
+      const result = await SettingsClientService.getSystemPreferences()
       if (result.success && result.data) {
         setPreferences(result.data)
       } else {
