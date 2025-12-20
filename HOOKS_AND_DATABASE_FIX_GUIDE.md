@@ -75,8 +75,12 @@ You need to run the migration in your Supabase SQL Editor to ensure all columns 
    - ✅ All hooks now called unconditionally at the top
    - ✅ Clear separation between hooks and render logic
    - ✅ No more conditional hook execution
+   - ✅ Added ARIA accessibility attributes to mobile menu
 
-2. **Database Types** (`/src/types/database.types.ts`):
+2. **Settings Layout** (`/src/app/admin/settings/layout.tsx`):
+   - ✅ Added ARIA accessibility attributes to mobile settings menu
+
+3. **Database Types** (`/src/types/database.types.ts`):
    - ✅ Added `country: string` (required field)
    - ✅ Added `description: string | null`
    - ✅ Added `address: string | null`
@@ -85,7 +89,7 @@ You need to run the migration in your Supabase SQL Editor to ensure all columns 
    - ✅ Added `postal_code: string | null`
    - ✅ Fixed `invoice_prefix` to be required (not nullable)
 
-3. **Migration SQL** (new file):
+4. **Migration SQL** (new file):
    - ✅ Safely adds all missing columns if they don't exist
    - ✅ Sets proper defaults and constraints
    - ✅ Includes schema cache refresh command
