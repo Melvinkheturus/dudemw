@@ -132,13 +132,15 @@ The error `Could not find the 'country' column of 'store_settings' in the schema
 - Supabase's schema cache didn't have the latest table structure
 - The migration adds missing columns and refreshes the cache
 
-### Remaining Accessibility Warnings (Low Priority)
-You may still see these warnings in the console:
-```
-`DialogContent` requires a `DialogTitle` for accessibility
-```
+### 3. ✅ Accessibility Warnings Fixed
 
-These are accessibility warnings from the Sheet component (used for mobile sidebars). They don't break functionality but should be addressed for better screen reader support. This is a lower priority fix.
+**Root Cause**: The Sheet components (used for mobile menus) were missing proper ARIA descriptions for screen readers.
+
+**Fix Applied**: Added `aria-describedby` attributes and hidden descriptions to all Sheet components.
+
+**Files Changed**:
+- `/src/app/admin/layout.tsx` - Added ARIA description to mobile sidebar
+- `/src/app/admin/settings/layout.tsx` - Added ARIA description to settings mobile sidebar
 
 ---
 
