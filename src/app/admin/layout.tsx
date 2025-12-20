@@ -99,7 +99,10 @@ export default function AdminLayout({
 
       {/* Mobile Sidebar Sheet */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetContent side="left" className="p-0 w-64 bg-white border-r border-red-100">
+        <SheetContent side="left" className="p-0 w-64 bg-white border-r border-red-100" aria-describedby="mobile-menu-description">
+          <span id="mobile-menu-description" className="sr-only">
+            Navigation menu
+          </span>
           <Sidebar collapsed={false} />
         </SheetContent>
       </Sheet>
