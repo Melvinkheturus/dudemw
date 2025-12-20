@@ -234,10 +234,10 @@ export function MediaStep({ formData, onFormDataChange }: MediaStepProps) {
                 Square Category Thumbnail *
               </Label>
               <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 bg-gray-50/50">
-                {formData.plp_square_thumbnail_url ? (
+                {(previewUrls.plp_square_thumbnail || formData.plp_square_thumbnail_url) ? (
                   <div className="relative group">
                     <Image
-                      src={formData.plp_square_thumbnail_url}
+                      src={previewUrls.plp_square_thumbnail || formData.plp_square_thumbnail_url}
                       alt="PLP square thumbnail"
                       width={200}
                       height={200}
@@ -256,34 +256,23 @@ export function MediaStep({ formData, onFormDataChange }: MediaStepProps) {
                 ) : (
                   <div className="text-center">
                     <ImageIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-sm font-medium text-gray-700 mb-2">Upload square thumbnail</p>
+                    <p className="text-sm font-medium text-gray-700 mb-2">Select square thumbnail</p>
                     <p className="text-xs text-gray-500 mb-4">Required: 1:1 ratio (e.g., 400x400px)</p>
                     <Input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => handleImageUpload(e, 'plp_square_thumbnail')}
-                      disabled={uploadingSquareThumbnail}
+                      onChange={(e) => handleFileSelect(e, 'plp_square_thumbnail')}
                       className="hidden"
                       id="plp-thumbnail"
                     />
                     <Button 
                       type="button" 
                       variant="outline" 
-                      disabled={uploadingSquareThumbnail} 
                       className="w-full"
                       onClick={() => document.getElementById('plp-thumbnail')?.click()}
                     >
-                      {uploadingSquareThumbnail ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Uploading...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="h-4 w-4 mr-2" />
-                          Choose File
-                        </>
-                      )}
+                      <Upload className="h-4 w-4 mr-2" />
+                      Choose File
                     </Button>
                   </div>
                 )}
