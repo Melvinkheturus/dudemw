@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { ProgressSteps } from "@/domains/admin/banner-creation/progress-steps"
 import { PlacementStep } from "@/domains/admin/banner-creation/placement-step"
 import { ContentStep } from "@/domains/admin/banner-creation/content-step"
+import { CategorySelectionStep } from "@/domains/admin/banner-creation/category-selection-step"
 import { ActionStep } from "@/domains/admin/banner-creation/action-step"
 import { PreviewStep } from "@/domains/admin/banner-creation/preview-step"
 
@@ -16,10 +17,31 @@ import { PreviewStep } from "@/domains/admin/banner-creation/preview-step"
 type BannerPlacement = "homepage-carousel" | "product-listing-carousel" | "category-banner" | "top-marquee-banner"
 type ActionType = "collection" | "category" | "product" | "external"
 
+interface BannerImageSettings {
+  file: File
+  titleText?: string
+  ctaText?: string
+  actionType?: string
+  actionTarget?: string
+  actionName?: string
+}
+
+interface MarqueeItem {
+  id: string
+  text: string
+  icon?: string
+}
+
 interface BannerFormData {
   placement?: BannerPlacement
   internalTitle: string
   bannerImage?: File
+  bannerImages?: File[]
+  bannerTitle?: string
+  bannerSubtitle?: string
+  bannerDescription?: string
+  marqueeItems?: MarqueeItem[]
+  imageSettings?: BannerImageSettings[]
   imageUrl?: string
   ctaText?: string
   position?: number
@@ -40,6 +62,10 @@ export default function CreateBannerPage() {
     actionTarget: "",
     actionName: ""
   })
+
+  const isCategoryBanner = formData.placement === "category-banner"
+  const isMarqueeBanner = formData.placement === "top-marquee-banner"
+  const totalSteps = isMarqueeBanner ? 3 : 4
 
   const updateFormData = (updates: Partial<BannerFormData>) => {
     setFormData(prev => ({ ...prev, ...updates }))
@@ -68,30 +94,107 @@ export default function CreateBannerPage() {
       setIsLoading(true)
 
       // Validate required fields
-      if (!formData.placement || !formData.internalTitle || !formData.bannerImage || !formData.actionType || !formData.actionTarget) {
+      const isCarousel = formData.placement === "homepage-carousel" || formData.placement === "product-listing-carousel"
+      
+      if (!formData.placement || !formData.internalTitle) {
         toast.error('Please fill in all required fields')
         return
       }
 
-      // Upload image first
-      const imageUrl = await uploadImage(formData.bannerImage)
+      // Validate marquee banners
+      if (isMarqueeBanner) {
+        if (!formData.marqueeItems || formData.marqueeItems.length === 0) {
+          toast.error('Please add at least one marquee message')
+          return
+        }
+        const hasEmptyMessages = formData.marqueeItems.some(item => !item.text.trim())
+        if (hasEmptyMessages) {
+          toast.error('All marquee messages must have text')
+          return
+        }
+      } else {
+        // Validate image banners
+        const hasRequiredImages = isCarousel 
+          ? (formData.imageSettings && formData.imageSettings.length > 0)
+          : formData.bannerImage
+        
+        if (!hasRequiredImages) {
+          toast.error('Please upload banner image(s)')
+          return
+        }
 
-      // Create banner
-      const bannerData = {
-        internal_title: formData.internalTitle,
-        image_url: imageUrl,
-        placement: formData.placement,
-        action_type: formData.actionType,
-        action_target: formData.actionTarget,
-        action_name: formData.actionName || formData.actionTarget,
-        start_date: formData.startDate,
-        end_date: formData.endDate,
-        position: formData.position,
-        category: formData.category,
-        cta_text: formData.ctaText,
-        status: isDraft ? 'disabled' : 'active',
+        // Validate carousel images have action targets
+        if (isCarousel && formData.imageSettings) {
+          const missingActions = formData.imageSettings.some(setting => !setting.actionType || !setting.actionTarget)
+          if (missingActions) {
+            toast.error('Please set action targets for all carousel images')
+            return
+          }
+        } else if (!isCarousel && !isCategoryBanner && (!formData.actionType || !formData.actionTarget)) {
+          toast.error('Please set the banner action target')
+          return
+        } else if (isCategoryBanner && !formData.category) {
+          toast.error('Please select a category for the banner')
+          return
+        }
       }
 
+      // Upload images and prepare data
+      let bannerData: any
+      
+      if (isMarqueeBanner) {
+        // For marquee banner, no images to upload
+        bannerData = {
+          internal_title: formData.internalTitle,
+          placement: formData.placement,
+          marquee_data: JSON.stringify(formData.marqueeItems),
+          status: isDraft ? 'disabled' : 'active',
+        }
+      } else if (isCarousel && formData.imageSettings) {
+        // For carousel, upload all images and store complete settings
+        const carouselData = await Promise.all(
+          formData.imageSettings.map(async (setting) => ({
+            image_url: await uploadImage(setting.file),
+            title_text: setting.titleText || null,
+            cta_text: setting.ctaText || null,
+            action_type: setting.actionType,
+            action_target: setting.actionTarget,
+            action_name: setting.actionName || setting.actionTarget
+          }))
+        )
+        
+        bannerData = {
+          internal_title: formData.internalTitle,
+          placement: formData.placement,
+          carousel_data: JSON.stringify(carouselData),
+          start_date: formData.startDate,
+          end_date: formData.endDate,
+          category: formData.category,
+          status: isDraft ? 'disabled' : 'active',
+        }
+      } else if (formData.bannerImage) {
+        // For single banner, upload single image
+        const imageUrl = await uploadImage(formData.bannerImage)
+        
+        bannerData = {
+          internal_title: formData.internalTitle,
+          image_url: imageUrl,
+          placement: formData.placement,
+          action_type: formData.actionType,
+          action_target: formData.actionTarget,
+          action_name: formData.actionName || formData.actionTarget,
+          start_date: formData.startDate,
+          end_date: formData.endDate,
+          position: formData.position,
+          category: formData.category,
+          cta_text: formData.ctaText,
+          status: isDraft ? 'disabled' : 'active',
+        }
+      } else if (!isMarqueeBanner) {
+        throw new Error('No images to upload')
+      }
+
+      // Create banner
       const response = await fetch('/api/admin/banners', {
         method: 'POST',
         headers: {
@@ -116,21 +219,59 @@ export default function CreateBannerPage() {
   }
 
   const canProceedToStep = (step: number): boolean => {
-    switch (step) {
-      case 2:
-        return !!formData.placement
-      case 3:
-        return !!formData.placement && !!formData.internalTitle
-      case 4:
-        return !!formData.placement && !!formData.internalTitle && !!formData.actionType && !!formData.actionTarget
-      default:
-        return true
+    const isCarousel = formData.placement === "homepage-carousel" || formData.placement === "product-listing-carousel"
+    const hasImages = isCarousel 
+      ? (formData.bannerImages && formData.bannerImages.length > 0)
+      : !!formData.bannerImage
+    
+    if (isMarqueeBanner) {
+      // Marquee banner flow: Placement -> Content (Text & Icons) -> Preview
+      switch (step) {
+        case 2:
+          return !!formData.placement
+        case 3:
+          return !!formData.placement && !!formData.internalTitle && !!formData.marqueeItems && formData.marqueeItems.length > 0
+        default:
+          return true
+      }
+    } else if (isCategoryBanner) {
+      // Category banner flow: Placement -> Content -> Action (Category Selection) -> Preview
+      switch (step) {
+        case 2:
+          return !!formData.placement
+        case 3:
+          return !!formData.placement && !!formData.internalTitle && hasImages && !!formData.bannerTitle
+        case 4:
+          return !!formData.placement && !!formData.internalTitle && hasImages && !!formData.bannerTitle && !!formData.category
+        default:
+          return true
+      }
+    } else {
+      // Carousel banner flow: Placement -> Content -> Action -> Preview
+      switch (step) {
+        case 2:
+          return !!formData.placement
+        case 3:
+          return !!formData.placement && !!formData.internalTitle && hasImages
+        case 4:
+          return !!formData.placement && !!formData.internalTitle && hasImages && !!formData.actionType && !!formData.actionTarget
+        default:
+          return true
+      }
     }
   }
 
   const getStepTitle = (step: number): string => {
-    const titles = ["Placement", "Content Section", "Action Target", "Preview & Save"]
-    return titles[step - 1] || ""
+    if (isMarqueeBanner) {
+      const titles = ["Placement", "Marquee Content", "Preview & Save"]
+      return titles[step - 1] || ""
+    } else if (isCategoryBanner) {
+      const titles = ["Placement", "Content Section", "Category Selection", "Preview & Save"]
+      return titles[step - 1] || ""
+    } else {
+      const titles = ["Placement", "Content Section", "Action Target", "Preview & Save"]
+      return titles[step - 1] || ""
+    }
   }
 
   return (
@@ -143,37 +284,26 @@ export default function CreateBannerPage() {
               Create Banner
             </h1>
             <p className="text-sm sm:text-base lg:text-lg text-gray-600 mt-1 sm:mt-2 truncate">
-              Step {currentStep} of 4: {getStepTitle(currentStep)}
+              Step {currentStep} of {totalSteps}: {getStepTitle(currentStep)}
             </p>
           </div>
           <div className="flex items-center space-x-3 flex-shrink-0">
             <Button variant="outline" asChild>
               <Link href="/admin/banners">Cancel</Link>
             </Button>
-            {currentStep === 4 && (
-              <>
-                <Button 
-                  variant="outline" 
-                  onClick={() => handleSubmit(true)}
-                  disabled={isLoading}
-                >
-                  Save as Draft
-                </Button>
-                <Button 
-                  className="bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/25"
-                  onClick={() => handleSubmit(false)}
-                  disabled={isLoading}
-                >
-                  <Save className="mr-2 h-4 w-4" />
-                  {isLoading ? "Publishing..." : "Publish Banner"}
-                </Button>
-              </>
-            )}
           </div>
         </div>
 
         {/* Progress Steps */}
-        <ProgressSteps currentStep={currentStep} totalSteps={4} />
+        <ProgressSteps 
+          currentStep={currentStep} 
+          totalSteps={totalSteps} 
+          bannerType={
+            isMarqueeBanner ? "marquee" : 
+            isCategoryBanner ? "category" : 
+            "carousel"
+          } 
+        />
 
         {/* Step Content */}
         {currentStep === 1 && (
@@ -183,6 +313,7 @@ export default function CreateBannerPage() {
           />
         )}
 
+        {/* Content Step */}
         {currentStep === 2 && formData.placement && (
           <ContentStep 
             placement={formData.placement}
@@ -191,18 +322,23 @@ export default function CreateBannerPage() {
           />
         )}
 
-        {currentStep === 3 && (
+        {/* Action Step (Category Selection for category banners, Action Target for others) - Skip for marquee */}
+        {currentStep === 3 && !isMarqueeBanner && (
           <ActionStep 
             actionType={formData.actionType}
             actionTarget={formData.actionTarget}
             actionName={formData.actionName}
+            category={formData.category}
+            placement={formData.placement}
             onActionTypeChange={(actionType) => updateFormData({ actionType })}
             onActionTargetChange={(actionTarget) => updateFormData({ actionTarget })}
             onActionNameChange={(actionName) => updateFormData({ actionName })}
+            onCategoryChange={(category) => updateFormData({ category })}
           />
         )}
 
-        {currentStep === 4 && (
+        {/* Preview Step */}
+        {((currentStep === 3 && isMarqueeBanner) || (currentStep === 4 && !isMarqueeBanner)) && (
           <PreviewStep formData={formData} />
         )}
 
@@ -215,13 +351,35 @@ export default function CreateBannerPage() {
           >
             Previous
           </Button>
-          <Button 
-            onClick={() => setCurrentStep(Math.min(4, currentStep + 1))}
-            disabled={!canProceedToStep(currentStep + 1) || currentStep === 4}
-            className="bg-red-600 hover:bg-red-700 text-white"
-          >
-            Next
-          </Button>
+          
+          {/* Show publish buttons on final step, otherwise show Next button */}
+          {currentStep === totalSteps ? (
+            <div className="flex items-center space-x-3">
+              <Button 
+                variant="outline" 
+                onClick={() => handleSubmit(true)}
+                disabled={isLoading}
+              >
+                Save as Draft
+              </Button>
+              <Button 
+                className="bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/25"
+                onClick={() => handleSubmit(false)}
+                disabled={isLoading}
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {isLoading ? "Publishing..." : "Publish Banner"}
+              </Button>
+            </div>
+          ) : (
+            <Button 
+              onClick={() => setCurrentStep(Math.min(totalSteps, currentStep + 1))}
+              disabled={!canProceedToStep(currentStep + 1)}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Next
+            </Button>
+          )}
         </div>
       </div>
     </div>

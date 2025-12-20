@@ -16,24 +16,33 @@ export class InventoryService {
    */
   static async getInventoryItems(filters?: InventoryFilters, page: number = 1, limit: number = 50) {
     try {
-      // Fetch all inventory items without complex filtering in SQL
-      let query = supabaseAdmin
+      // Fetch all inventory items with proper joins
+      const { data, error } = await supabaseAdmin
         .from('inventory_items')
         .select(`
-          *,
-          product_variants (
+          id,
+          variant_id,
+          sku,
+          quantity,
+          available_quantity,
+          reserved_quantity,
+          low_stock_threshold,
+          allow_backorders,
+          track_quantity,
+          cost,
+          product_variants!inner (
             id,
             name,
             sku,
+            price,
             product_id,
-            products (
+            products!inner (
               id,
               title
             )
           )
         `)
-
-      const { data, error } = await query.order('quantity', { ascending: true })
+        .order('quantity', { ascending: true })
 
       if (error) throw error
 
@@ -41,15 +50,15 @@ export class InventoryService {
       let inventoryItems: InventoryItem[] = (data || []).map((item: any) => ({
         id: item.id,
         variant_id: item.variant_id,
-        sku: item.product_variants?.sku || null,
-        quantity: item.quantity,
-        available_quantity: item.available_quantity,
-        reserved_quantity: item.reserved_quantity,
-        low_stock_threshold: item.low_stock_threshold,
-        allow_backorders: item.allow_backorders,
-        track_quantity: item.track_quantity,
+        sku: item.product_variants?.sku || item.sku || null,
+        quantity: item.quantity || 0,
+        available_quantity: item.available_quantity || 0,
+        reserved_quantity: item.reserved_quantity || 0,
+        low_stock_threshold: item.low_stock_threshold || 5,
+        allow_backorders: item.allow_backorders || false,
+        track_quantity: item.track_quantity || true,
         product_name: item.product_variants?.products?.title || 'Unknown Product',
-        variant_name: item.product_variants?.name,
+        variant_name: item.product_variants?.name || null,
         product_id: item.product_variants?.product_id || '',
       }))
 
@@ -263,7 +272,7 @@ export class InventoryService {
           quantity,
           low_stock_threshold,
           cost,
-          product_variants (
+          product_variants!inner (
             price
           )
         `)
@@ -291,7 +300,7 @@ export class InventoryService {
         }
 
         // Calculate total value (quantity * price)
-        const price = item.product_variants?.price || item.cost || 0
+        const price = parseFloat(item.product_variants?.price || item.cost || 0)
         stats.totalValue += quantity * price
       })
 
@@ -317,10 +326,10 @@ export class InventoryService {
           quantity,
           low_stock_threshold,
           sku,
-          product_variants (
+          product_variants!inner (
             name,
             sku,
-            products (
+            products!inner (
               title
             )
           )

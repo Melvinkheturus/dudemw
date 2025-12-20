@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,9 +8,13 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { Loader2, Upload, X } from 'lucide-react'
+import { Loader2, Search, X, Package, Plus } from 'lucide-react'
+import { ProductService } from '@/lib/services/products'
 
 interface CreateCollectionDialogProps {
   open: boolean
@@ -18,11 +22,26 @@ interface CreateCollectionDialogProps {
   onSuccess?: () => void
 }
 
+interface Product {
+  id: string
+  title: string
+  handle: string
+  price?: number
+  product_images?: Array<{
+    id: string
+    image_url: string
+    alt_text?: string
+    is_primary: boolean
+  }>
+}
+
 export default function CreateCollectionDialog({ open, onOpenChange, onSuccess }: CreateCollectionDialogProps) {
   const [loading, setLoading] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [products, setProducts] = useState<Product[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedProducts, setSelectedProducts] = useState<Map<string, Product>>(new Map())
+  const [showProductPopover, setShowProductPopover] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
@@ -32,6 +51,69 @@ export default function CreateCollectionDialog({ open, onOpenChange, onSuccess }
   })
 
   const supabase = createClient()
+
+  // Load products when searching
+  useEffect(() => {
+    if (searchQuery.trim().length >= 2) {
+      const debounceTimer = setTimeout(() => {
+        loadProducts(searchQuery.trim())
+        setShowProductPopover(true)
+      }, 300)
+      
+      return () => clearTimeout(debounceTimer)
+    } else {
+      setProducts([])
+      setShowProductPopover(false)
+    }
+  }, [searchQuery])
+
+  const loadProducts = async (search: string) => {
+    try {
+      setSearchLoading(true)
+      const result = await ProductService.getProducts({
+        search,
+        limit: 20,
+        sortBy: 'title',
+        sortOrder: 'asc'
+      })
+      
+      if (result.success) {
+        // Filter out already selected products
+        const filteredProducts = (result.data || []).filter(
+          product => !selectedProducts.has(product.id)
+        )
+        setProducts(filteredProducts)
+      } else {
+        toast.error('Failed to load products')
+      }
+    } catch (error) {
+      console.error('Error loading products:', error)
+      toast.error('Failed to load products')
+    } finally {
+      setSearchLoading(false)
+    }
+  }
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query)
+  }
+
+  const addProduct = (product: Product) => {
+    const newSelected = new Map(selectedProducts)
+    newSelected.set(product.id, product)
+    setSelectedProducts(newSelected)
+    
+    // Clear search and close popover
+    setSearchQuery('')
+    setShowProductPopover(false)
+    setProducts([])
+  }
+
+  const removeSelectedProduct = (productId: string) => {
+    const newSelected = new Map(selectedProducts)
+    newSelected.delete(productId)
+    setSelectedProducts(newSelected)
+  }
 
   const generateSlug = (title: string) => {
     return title
@@ -48,72 +130,7 @@ export default function CreateCollectionDialog({ open, onOpenChange, onSuccess }
     }))
   }
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB')
-      return
-    }
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file')
-      return
-    }
-
-    setImageFile(file)
-    
-    // Create preview
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string)
-    }
-    reader.readAsDataURL(file)
-  }
-
-  const handleRemoveImage = () => {
-    setImageFile(null)
-    setImagePreview(null)
-  }
-
-  const uploadImage = async (collectionId: string): Promise<string | null> => {
-    if (!imageFile) return null
-
-    try {
-      setUploading(true)
-      
-      const fileExt = imageFile.name.split('.').pop()
-      const fileName = `${collectionId}-${Date.now()}.${fileExt}`
-      const filePath = `${fileName}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('collections')
-        .upload(filePath, imageFile, {
-          cacheControl: '3600',
-          upsert: false
-        })
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError)
-        throw uploadError
-      }
-
-      const { data } = supabase.storage
-        .from('collections')
-        .getPublicUrl(filePath)
-
-      return data.publicUrl
-    } catch (error) {
-      console.error('Error uploading image:', error)
-      toast.error('Failed to upload image')
-      return null
-    } finally {
-      setUploading(false)
-    }
-  }
 
   const handleSubmit = async () => {
     if (!formData.title.trim()) {
@@ -121,8 +138,13 @@ export default function CreateCollectionDialog({ open, onOpenChange, onSuccess }
       return
     }
 
-    if (!formData.slug.trim()) {
-      toast.error('Please enter a collection slug')
+    if (!formData.description.trim()) {
+      toast.error('Please enter a collection description')
+      return
+    }
+
+    if (selectedProducts.size === 0) {
+      toast.error('Please select at least one product for this collection')
       return
     }
 
@@ -135,10 +157,10 @@ export default function CreateCollectionDialog({ open, onOpenChange, onSuccess }
         .insert({
           title: formData.title,
           slug: formData.slug,
-          description: formData.description || null,
-          type: formData.type,
+          description: formData.description,
+          type: 'manual', // Always manual for simplified collections
           is_active: formData.is_active,
-          rule_json: formData.type === 'rule' ? {} : null
+          rule_json: null
         })
         .select()
         .single()
@@ -148,12 +170,25 @@ export default function CreateCollectionDialog({ open, onOpenChange, onSuccess }
         throw collectionError
       }
 
-      // Upload image if provided
-      if (imageFile && collection) {
-        await uploadImage(collection.id)
+      // Add products to collection
+      const collectionProducts = Array.from(selectedProducts.keys()).map((productId, index) => ({
+        collection_id: collection.id,
+        product_id: productId,
+        sort_order: index + 1
+      }))
+
+      const { error: productsError } = await supabase
+        .from('collection_products')
+        .insert(collectionProducts)
+
+      if (productsError) {
+        console.error('Error adding products to collection:', productsError)
+        // Try to clean up the collection if product insertion fails
+        await supabase.from('collections').delete().eq('id', collection.id)
+        throw productsError
       }
 
-      toast.success('Collection created successfully')
+      toast.success(`Collection created successfully with ${selectedProducts.size} products`)
       
       // Reset form
       setFormData({
@@ -163,8 +198,8 @@ export default function CreateCollectionDialog({ open, onOpenChange, onSuccess }
         type: 'manual',
         is_active: true
       })
-      setImageFile(null)
-      setImagePreview(null)
+      setSelectedProducts(new Map())
+      setSearchQuery('')
       
       onOpenChange(false)
       onSuccess?.()
@@ -178,7 +213,7 @@ export default function CreateCollectionDialog({ open, onOpenChange, onSuccess }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Collection</DialogTitle>
           <DialogDescription>
@@ -190,7 +225,7 @@ export default function CreateCollectionDialog({ open, onOpenChange, onSuccess }
           {/* Title */}
           <div className="space-y-2">
             <Label htmlFor="title">
-              Title <span className="text-red-500">*</span>
+              Collection Title <span className="text-red-500">*</span>
             </Label>
             <Input
               id="title"
@@ -201,103 +236,151 @@ export default function CreateCollectionDialog({ open, onOpenChange, onSuccess }
             />
           </div>
 
-          {/* Slug */}
-          <div className="space-y-2">
-            <Label htmlFor="slug">
-              Slug <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="slug"
-              placeholder="e.g., summer-collection"
-              value={formData.slug}
-              onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-              disabled={loading}
-            />
-            <p className="text-xs text-gray-500">
-              URL-friendly version of the title (auto-generated)
-            </p>
-          </div>
-
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">
+              Description <span className="text-red-500">*</span>
+            </Label>
             <Textarea
               id="description"
-              placeholder="Describe this collection..."
+              placeholder="Short description for homepage display..."
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               disabled={loading}
-              rows={3}
+              rows={2}
             />
-          </div>
-
-          {/* Type */}
-          <div className="space-y-2">
-            <Label htmlFor="type">Collection Type</Label>
-            <Select
-              value={formData.type}
-              onValueChange={(value: 'manual' | 'rule') => 
-                setFormData(prev => ({ ...prev, type: value }))
-              }
-              disabled={loading}
-            >
-              <SelectTrigger id="type">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="manual">Manual</SelectItem>
-                <SelectItem value="rule">Rule-based</SelectItem>
-              </SelectContent>
-            </Select>
             <p className="text-xs text-gray-500">
-              {formData.type === 'manual' 
-                ? 'Manually select products to include' 
-                : 'Automatically include products based on rules'}
+              This will be shown on the homepage below the collection title
             </p>
           </div>
 
-          {/* Image Upload */}
+          {/* Product Selection */}
           <div className="space-y-2">
-            <Label>Collection Image (Optional)</Label>
-            {imagePreview ? (
-              <div className="relative">
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="w-full h-40 object-cover rounded-lg border"
-                />
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="icon"
-                  className="absolute top-2 right-2"
-                  onClick={handleRemoveImage}
-                  disabled={loading || uploading}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ) : (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
-                <input
-                  type="file"
-                  id="collection-image"
-                  accept="image/*"
-                  onChange={handleImageSelect}
-                  disabled={loading || uploading}
-                  className="hidden"
-                />
-                <label htmlFor="collection-image" className="cursor-pointer">
-                  <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                  <p className="text-sm text-gray-600">
-                    Click to upload collection image
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    PNG, JPG, WEBP up to 5MB
-                  </p>
-                </label>
+            <Label>
+              Select Products <span className="text-red-500">*</span>
+            </Label>
+            
+            {/* Selected Products Count */}
+            {selectedProducts.size > 0 && (
+              <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <Package className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-medium text-green-900">
+                  {selectedProducts.size} product{selectedProducts.size !== 1 ? 's' : ''} selected
+                </span>
               </div>
             )}
+
+            {/* Selected Products Display */}
+            {selectedProducts.size > 0 && (
+              <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg max-h-24 overflow-y-auto">
+                {Array.from(selectedProducts.values()).map(product => (
+                  <Badge 
+                    key={product.id} 
+                    variant="secondary" 
+                    className="flex items-center gap-1 pr-1 text-xs"
+                  >
+                    <span className="truncate max-w-[120px]">{product.title}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeSelectedProduct(product.id)}
+                      className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                      disabled={loading}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {/* Search Products with Popover */}
+            <div className="relative">
+              <Popover open={showProductPopover} onOpenChange={setShowProductPopover}>
+                <PopoverTrigger asChild>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Search products to add..."
+                      value={searchQuery}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      disabled={loading}
+                      className="pl-9"
+                    />
+                  </div>
+                </PopoverTrigger>
+                
+                <PopoverContent 
+                  className="w-[var(--radix-popover-trigger-width)] p-0 z-50" 
+                  align="start"
+                  side="bottom"
+                  sideOffset={4}
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                >
+                  <div className="max-h-48 overflow-y-auto">
+                    {searchLoading ? (
+                      <div className="flex items-center justify-center py-6">
+                        <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                        <span className="ml-2 text-sm text-gray-500">Searching...</span>
+                      </div>
+                    ) : products.length === 0 && searchQuery.trim().length >= 2 ? (
+                      <div className="text-center py-6 text-gray-500">
+                        <Package className="h-6 w-6 mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm">No products found for "{searchQuery}"</p>
+                      </div>
+                    ) : searchQuery.trim().length < 2 ? (
+                      <div className="text-center py-6 text-gray-500">
+                        <Search className="h-6 w-6 mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm">Type at least 2 characters to search</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-gray-200">
+                        {products.map(product => {
+                          const primaryImage = product.product_images?.find(img => img.is_primary)
+                          
+                          return (
+                            <div
+                              key={product.id}
+                              className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                              onClick={() => addProduct(product)}
+                            >
+                              {primaryImage && (
+                                <img
+                                  src={primaryImage.image_url}
+                                  alt={primaryImage.alt_text || product.title}
+                                  className="w-8 h-8 object-cover rounded border border-gray-200 flex-shrink-0"
+                                />
+                              )}
+                              
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">
+                                  {product.title}
+                                </p>
+                                <p className="text-xs text-gray-500 truncate">
+                                  {product.handle}
+                                </p>
+                              </div>
+                              
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {product.price && (
+                                  <span className="text-sm font-medium text-gray-900">
+                                    ₹{product.price.toFixed(2)}
+                                  </span>
+                                )}
+                                <Plus className="h-4 w-4 text-gray-400" />
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            <p className="text-xs text-gray-500">
+              Search and click to add products to this collection. Type at least 2 characters to see results.
+            </p>
           </div>
 
           {/* Active Status */}
@@ -305,7 +388,7 @@ export default function CreateCollectionDialog({ open, onOpenChange, onSuccess }
             <div className="space-y-0.5">
               <Label htmlFor="is_active">Active Status</Label>
               <p className="text-xs text-gray-500">
-                Make this collection visible on the storefront
+                Make this collection visible on homepage and product pages
               </p>
             </div>
             <Switch
@@ -324,20 +407,20 @@ export default function CreateCollectionDialog({ open, onOpenChange, onSuccess }
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={loading || uploading}
+            disabled={loading}
           >
             Cancel
           </Button>
           <Button
             type="button"
             onClick={handleSubmit}
-            disabled={loading || uploading}
+            disabled={loading || selectedProducts.size === 0}
             className="bg-red-600 hover:bg-red-700"
           >
-            {loading || uploading ? (
+            {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {uploading ? 'Uploading...' : 'Creating...'}
+                Creating...
               </>
             ) : (
               'Create Collection'

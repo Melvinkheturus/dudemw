@@ -11,9 +11,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CSVService } from '@/lib/services/csv'
 import { toast } from 'sonner'
-import { Package, AlertTriangle, PackageX, DollarSign, RefreshCw, Plus, Download } from 'lucide-react'
+import { Package, AlertTriangle, PackageX, IndianRupee, RefreshCw, Plus, Download } from 'lucide-react'
 import Link from 'next/link'
 import { useInventory, useInventoryStats, useLowStockAlerts } from '@/hooks/queries/useInventory'
+import { formatCurrency } from '@/lib/utils'
 
 export default function InventoryPage() {
   const [filters, setFilters] = useState<InventoryFilters>({
@@ -168,12 +169,12 @@ export default function InventoryPage() {
                   Total Value
                 </CardTitle>
                 <div className="p-2 rounded-xl bg-green-100 dark:bg-green-950">
-                  <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <IndianRupee className="h-4 w-4 text-green-600 dark:text-green-400" />
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                  ₹{stats?.totalValue ? stats.totalValue.toLocaleString() : 0}
+                  {formatCurrency(stats?.totalValue || 0)}
                 </div>
                 <p className="text-xs text-gray-600 dark:text-gray-400">Current inventory value</p>
               </CardContent>
@@ -181,7 +182,7 @@ export default function InventoryPage() {
           </div>
 
           {/* Low Stock Alerts */}
-          <LowStockAlerts items={lowStockItems} isLoading={isLoadingLowStock} />
+          <LowStockAlerts items={lowStockItems} isLoading={isLoadingLowStock} showViewButton={false} />
 
           {/* Filters */}
           <InventoryFiltersComponent

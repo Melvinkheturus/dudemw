@@ -101,22 +101,22 @@ export default function AdminLayout({
         </SheetContent>
       </Sheet>
 
-      <div className="flex-1 flex flex-col overflow-hidden p-3 lg:p-6 gap-3 lg:gap-6">
-        <div className="bg-white rounded-xl lg:rounded-2xl shadow-lg border border-red-100/50 backdrop-blur-sm">
+      <div className="flex-1 flex flex-col overflow-hidden p-1 lg:p-2">
+        <div className="flex-1 flex flex-col bg-white rounded-xl lg:rounded-2xl shadow-lg border border-red-100/50 backdrop-blur-sm overflow-hidden">
           <Header 
             sidebarCollapsed={sidebarCollapsed} 
             onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
             mobileMenuOpen={mobileMenuOpen}
             onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
           />
-        </div>
-        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-white rounded-xl lg:rounded-2xl shadow-lg border border-red-100/50 backdrop-blur-sm">
-          <div className="p-6 lg:p-10 w-full max-w-full">
-            <div className="max-w-7xl mx-auto w-full min-w-0">
-              {children}
+          <main className="flex-1 overflow-y-auto overflow-x-hidden">
+            <div className="p-6 lg:p-10 w-full max-w-full">
+              <div className="max-w-7xl mx-auto w-full min-w-0">
+                {children}
+              </div>
             </div>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
     </div>
   )

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Percent, Users, Calendar, Copy, Edit, Trash2, Eye, EyeOff, RefreshCw } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
+import { CreateCouponDialog } from "@/domains/admin/coupons/create-coupon-dialog"
 
 interface Coupon {
   id: string
@@ -135,10 +136,7 @@ export default function CouponsPage() {
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button className="bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/25" data-testid="create-coupon-button">
-            <Plus className="mr-2 h-4 w-4" />
-            Create Coupon
-          </Button>
+          <CreateCouponDialog onSuccess={fetchCoupons} />
         </div>
       </div>
 
@@ -216,10 +214,7 @@ export default function CouponsPage() {
               <Percent className="h-12 w-12 mx-auto text-gray-400 mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">No coupons yet</h3>
               <p className="text-gray-600 mb-4">Create your first coupon to start offering discounts</p>
-              <Button className="bg-red-600 hover:bg-red-700 text-white">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Coupon
-              </Button>
+              <CreateCouponDialog onSuccess={fetchCoupons} />
             </div>
           ) : (
             <div className="space-y-4">

@@ -150,20 +150,17 @@ export default function ProductsPage({ searchParams, category }: ProductsPagePro
               products={newDrops}
               badge="NEW"
               badgeColor="red"
-              viewAllLink="/collections/new-arrivals"
             />
             <HorizontalProductScroll
               title="Best Sellers"
               products={bestSellers}
               badge="BESTSELLER"
               badgeColor="black"
-              viewAllLink="/collections/best-sellers"
             />
             <HorizontalProductScroll
               title="Trending Now"
               products={trendingProducts}
               badgeColor="red"
-              viewAllLink="/collections/trending"
             />
 
             {/* Divider */}

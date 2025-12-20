@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Package, Users } from "lucide-react"
+import { TrendingUp, TrendingDown, IndianRupee, ShoppingCart, Package, Users } from "lucide-react"
 import { DashboardStats as DashboardStatsType } from "@/lib/actions/analytics"
 
 interface DashboardStatsProps {
@@ -33,7 +33,7 @@ export function DashboardStats({ stats, isLoading, hasError }: DashboardStatsPro
     const emptyStatsConfig = [
       {
         title: "Revenue",
-        icon: DollarSign,
+        icon: IndianRupee,
         color: "green",
         description: hasError ? "Unable to load data" : "No revenue data yet",
       },
@@ -111,7 +111,7 @@ export function DashboardStats({ stats, isLoading, hasError }: DashboardStatsPro
       change: stats.revenue.changePercent,
       trend: stats.revenue.change >= 0 ? "up" as const : "down" as const,
       period: "from last month",
-      icon: DollarSign,
+      icon: IndianRupee,
     },
     {
       title: "Orders",

@@ -9,6 +9,13 @@ export interface Category {
   parent_id?: string | null
   image_url?: string | null
   icon_url?: string | null
+  // New media fields
+  homepage_thumbnail_url?: string | null
+  homepage_video_url?: string | null
+  plp_square_thumbnail_url?: string | null
+  // Banner management
+  selected_banner_id?: string | null
+  // SEO fields
   meta_title?: string | null
   meta_description?: string | null
   status: 'active' | 'inactive'
@@ -37,6 +44,13 @@ export interface CreateCategoryData {
   parent_id?: string | null
   image_url?: string | null
   icon_url?: string | null
+  // New media fields
+  homepage_thumbnail_url?: string | null
+  homepage_video_url?: string | null
+  plp_square_thumbnail_url?: string | null
+  // Banner management
+  selected_banner_id?: string | null
+  // SEO fields
   meta_title?: string | null
   meta_description?: string | null
   status?: 'active' | 'inactive'
@@ -50,6 +64,13 @@ export interface UpdateCategoryData {
   parent_id?: string | null
   image_url?: string | null
   icon_url?: string | null
+  // New media fields
+  homepage_thumbnail_url?: string | null
+  homepage_video_url?: string | null
+  plp_square_thumbnail_url?: string | null
+  // Banner management
+  selected_banner_id?: string | null
+  // SEO fields
   meta_title?: string | null
   meta_description?: string | null
   status?: 'active' | 'inactive'
@@ -288,16 +309,16 @@ export class CategoryService {
     try {
       const fileExt = file.name.split('.').pop()
       const fileName = `${type}-${Date.now()}.${fileExt}`
-      const filePath = `categories/${fileName}`
+      const filePath = `${fileName}`
 
       const { data, error } = await supabase.storage
-        .from('public-assets')
+        .from('categories')
         .upload(filePath, file)
 
       if (error) throw error
 
       const { data: { publicUrl } } = supabase.storage
-        .from('public-assets')
+        .from('categories')
         .getPublicUrl(filePath)
 
       return { success: true, url: publicUrl }
@@ -312,11 +333,11 @@ export class CategoryService {
    */
   static async deleteImage(imageUrl: string) {
     try {
-      const path = imageUrl.split('/public-assets/')[1]
+      const path = imageUrl.split('/categories/')[1]
       if (!path) return { success: true }
 
       const { error } = await supabase.storage
-        .from('public-assets')
+        .from('categories')
         .remove([path])
 
       if (error) throw error

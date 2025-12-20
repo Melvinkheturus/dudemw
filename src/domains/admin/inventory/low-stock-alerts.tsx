@@ -8,9 +8,10 @@ import { LowStockItem } from "@/lib/actions/analytics"
 interface LowStockAlertsProps {
   items: LowStockItem[]
   isLoading?: boolean
+  showViewButton?: boolean
 }
 
-export function LowStockAlerts({ items, isLoading }: LowStockAlertsProps) {
+export function LowStockAlerts({ items, isLoading, showViewButton = true }: LowStockAlertsProps) {
   const handleItemAction = (itemName: string) => {
     // TODO: Implement item action
     console.log(`Manage stock for: ${itemName}`)
@@ -64,15 +65,17 @@ export function LowStockAlerts({ items, isLoading }: LowStockAlertsProps) {
         </CardHeader>
         <CardContent>
           <p className="text-center text-gray-500 py-4">No low stock alerts at this time</p>
-          <Button 
-            variant="outline" 
-            className="w-full border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300" 
-            asChild
-          >
-            <Link href="/admin/inventory">
-              View Inventory
-            </Link>
-          </Button>
+          {showViewButton && (
+            <Button 
+              variant="outline" 
+              className="w-full border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300" 
+              asChild
+            >
+              <Link href="/admin/inventory">
+                View Inventory
+              </Link>
+            </Button>
+          )}
         </CardContent>
       </Card>
     )
@@ -126,15 +129,17 @@ export function LowStockAlerts({ items, isLoading }: LowStockAlertsProps) {
             </div>
           </div>
         ))}
-        <Button 
-          variant="outline" 
-          className="w-full mt-4 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300" 
-          asChild
-        >
-          <Link href="/admin/inventory">
-            Manage Inventory
-          </Link>
-        </Button>
+        {showViewButton && (
+          <Button 
+            variant="outline" 
+            className="w-full mt-4 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300" 
+            asChild
+          >
+            <Link href="/admin/inventory">
+              Manage Inventory
+            </Link>
+          </Button>
+        )}
       </CardContent>
     </Card>
   )

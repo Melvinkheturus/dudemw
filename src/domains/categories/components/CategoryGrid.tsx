@@ -18,7 +18,7 @@ export function CategoryGrid({ parentId, showInactive = false, className = '' }:
 
   if (loading) {
     return (
-      <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ${className}`}>
+      <div className={`grid grid-cols-2 md:grid-cols-4 gap-6 ${className}`}>
         {Array.from({ length: 8 }).map((_, i) => (
           <CategoryCardSkeleton key={i} />
         ))}
@@ -49,7 +49,7 @@ export function CategoryGrid({ parentId, showInactive = false, className = '' }:
   }
 
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ${className}`}>
+    <div className={`grid grid-cols-2 md:grid-cols-4 gap-6 ${className}`}>
       {categories.map((category) => (
         <CategoryCard key={category.id} category={category} />
       ))}

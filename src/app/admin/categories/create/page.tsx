@@ -1,295 +1,285 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Save } from "lucide-react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { ProgressSteps, BasicInfoStep, MediaStep, BannerStep, PreviewStep } from "@/domains/admin/category-creation"
 import { CategoryService } from '@/lib/services/categories'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
-import { toast } from 'sonner'
-import { ArrowLeft, Upload, Loader2 } from 'lucide-react'
-import Link from 'next/link'
+import { BannerService } from '@/lib/services/banners'
+
+interface BannerOption {
+  id: string
+  internal_title: string
+  image_url: string
+  placement: string
+  status: string
+}
+
+interface CategoryFormData {
+  name: string
+  slug: string
+  description: string
+  parent_id: string
+  // Homepage category display
+  homepage_thumbnail_url: string
+  homepage_video_url: string
+  // PLP square category lite thumbnail
+  plp_square_thumbnail_url: string
+  // Banner options
+  banner_source: 'none' | 'existing' | 'create'
+  selected_banner_id: string
+  // SEO
+  meta_title: string
+  meta_description: string
+  status: 'active' | 'inactive'
+  display_order: number
+}
 
 export default function CreateCategoryPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [uploadingImage, setUploadingImage] = useState(false)
-  const [uploadingIcon, setUploadingIcon] = useState(false)
-
-  const [formData, setFormData] = useState({
-    name: '',
-    slug: '',
-    description: '',
-    parent_id: '',
-    image_url: '',
-    icon_url: '',
-    meta_title: '',
-    meta_description: '',
-    status: 'active' as 'active' | 'inactive',
+  const [currentStep, setCurrentStep] = useState(1)
+  const [isLoading, setIsLoading] = useState(false)
+  const [availableBanners, setAvailableBanners] = useState<BannerOption[]>([])
+  const [formData, setFormData] = useState<CategoryFormData>({
+    name: "",
+    slug: "",
+    description: "",
+    parent_id: "",
+    homepage_thumbnail_url: "",
+    homepage_video_url: "",
+    plp_square_thumbnail_url: "",
+    banner_source: 'none',
+    selected_banner_id: "",
+    meta_title: "",
+    meta_description: "",
+    status: 'active',
     display_order: 0
   })
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'icon') => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const totalSteps = 4
 
-    if (type === 'image') {
-      setUploadingImage(true)
-    } else {
-      setUploadingIcon(true)
-    }
-
-    try {
-      const result = await CategoryService.uploadImage(file, type)
-      if (result.success && result.url) {
-        setFormData(prev => ({
-          ...prev,
-          [type === 'image' ? 'image_url' : 'icon_url']: result.url
-        }))
-        toast.success(`${type === 'image' ? 'Image' : 'Icon'} uploaded successfully`)
-      } else {
-        toast.error(result.error || 'Failed to upload')
-      }
-    } catch (error) {
-      toast.error('Failed to upload file')
-    } finally {
-      if (type === 'image') {
-        setUploadingImage(false)
-      } else {
-        setUploadingIcon(false)
+  // Load available banners
+  useEffect(() => {
+    const loadBanners = async () => {
+      try {
+        const result = await BannerService.getBanners({ 
+          placement: 'category-banner',
+          status: 'active' 
+        })
+        if (result.success && result.data) {
+          setAvailableBanners(result.data.banners || [])
+        }
+      } catch (error) {
+        console.error('Error loading banners:', error)
       }
     }
+    loadBanners()
+  }, [])
+
+  const updateFormData = (updates: Partial<CategoryFormData>) => {
+    setFormData(prev => ({ ...prev, ...updates }))
+  }
+
+  const generateSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
   }
 
   const handleNameChange = (name: string) => {
-    setFormData(prev => ({
-      ...prev,
+    updateFormData({
       name,
-      slug: CategoryService.generateSlug(name)
-    }))
+      slug: generateSlug(name)
+    })
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+  const handleCreateBanner = () => {
+    // Navigate to banner creation with category context
+    router.push('/admin/banners/create?context=category&category_name=' + encodeURIComponent(formData.name))
+  }
 
+  const handleSubmit = async (isDraft = false) => {
     try {
-      const result = await CategoryService.createCategory({
-        ...formData,
-        parent_id: formData.parent_id || null
-      })
+      setIsLoading(true)
 
+      // Validate required fields
+      if (!formData.name.trim()) {
+        toast.error('Please enter a category name')
+        return
+      }
+
+      if (!formData.description.trim()) {
+        toast.error('Please enter a category description')
+        return
+      }
+
+      if (!formData.homepage_thumbnail_url) {
+        toast.error('Please upload a homepage thumbnail')
+        return
+      }
+
+      if (!formData.plp_square_thumbnail_url) {
+        toast.error('Please upload a PLP square thumbnail')
+        return
+      }
+
+      const categoryData = {
+        name: formData.name,
+        slug: formData.slug,
+        description: formData.description,
+        parent_id: formData.parent_id || null,
+        homepage_thumbnail_url: formData.homepage_thumbnail_url || null,
+        homepage_video_url: formData.homepage_video_url || null,
+        plp_square_thumbnail_url: formData.plp_square_thumbnail_url || null,
+        selected_banner_id: formData.banner_source === 'existing' ? formData.selected_banner_id : null,
+        meta_title: formData.meta_title || null,
+        meta_description: formData.meta_description || null,
+        status: isDraft ? 'inactive' : formData.status,
+        display_order: formData.display_order
+      }
+
+      const result = await CategoryService.createCategory(categoryData)
+      
       if (result.success) {
-        toast.success('Category created successfully')
+        toast.success(
+          isDraft 
+            ? 'Category saved as draft'
+            : 'Category created successfully'
+        )
         router.push('/admin/categories')
       } else {
         toast.error(result.error || 'Failed to create category')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating category:', error)
-      toast.error('Failed to create category')
+      toast.error(error.message || 'Failed to create category')
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
+  const canProceedToStep = (step: number): boolean => {
+    switch (step) {
+      case 2:
+        return !!formData.name.trim() && !!formData.description.trim()
+      case 3:
+        return !!formData.name.trim() && !!formData.description.trim() && 
+               !!formData.homepage_thumbnail_url && !!formData.plp_square_thumbnail_url
+      case 4:
+        return !!formData.name.trim() && !!formData.description.trim() && 
+               !!formData.homepage_thumbnail_url && !!formData.plp_square_thumbnail_url
+      default:
+        return true
+    }
+  }
+
+  const getStepTitle = (step: number): string => {
+    const titles = ["Basic Information", "Media Assets", "Banner Settings", "Preview & Save"]
+    return titles[step - 1] || ""
+  }
+
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center space-x-4">
-        <Link href="/admin/categories">
-          <Button variant="outline" size="icon">
-            <ArrowLeft className="h-4 w-4" />
+    <div className="w-full max-w-full overflow-x-hidden">
+      <div className="space-y-6 lg:space-y-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-gray-900 truncate">
+              Create Category
+            </h1>
+            <p className="text-sm sm:text-base lg:text-lg text-gray-600 mt-1 sm:mt-2 truncate">
+              Step {currentStep} of {totalSteps}: {getStepTitle(currentStep)}
+            </p>
+          </div>
+          <div className="flex items-center space-x-3 flex-shrink-0">
+            <Button variant="outline" asChild>
+              <Link href="/admin/categories">Cancel</Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Progress Steps */}
+        <ProgressSteps 
+          currentStep={currentStep} 
+          totalSteps={totalSteps}
+        />
+
+        {/* Step Content */}
+        {currentStep === 1 && (
+          <BasicInfoStep 
+            formData={formData}
+            onNameChange={handleNameChange}
+            onFormDataChange={updateFormData}
+          />
+        )}
+
+        {currentStep === 2 && (
+          <MediaStep 
+            formData={formData}
+            onFormDataChange={updateFormData}
+          />
+        )}
+
+        {currentStep === 3 && (
+          <BannerStep 
+            formData={formData}
+            availableBanners={availableBanners}
+            onFormDataChange={updateFormData}
+            onCreateBanner={handleCreateBanner}
+          />
+        )}
+
+        {currentStep === 4 && (
+          <PreviewStep 
+            formData={formData} 
+            availableBanners={availableBanners}
+          />
+        )}
+
+        {/* Navigation */}
+        <div className="flex justify-between">
+          <Button 
+            variant="outline"
+            onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
+            disabled={currentStep === 1}
+          >
+            Previous
           </Button>
-        </Link>
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900">Create Category</h1>
-          <p className="text-lg text-gray-600 mt-2">Add a new category to your store</p>
+          
+          {/* Show publish buttons on final step, otherwise show Next button */}
+          {currentStep === totalSteps ? (
+            <div className="flex items-center space-x-3">
+              <Button 
+                variant="outline" 
+                onClick={() => handleSubmit(true)}
+                disabled={isLoading}
+              >
+                Save as Draft
+              </Button>
+              <Button 
+                className="bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/25"
+                onClick={() => handleSubmit(false)}
+                disabled={isLoading}
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {isLoading ? "Creating..." : "Create Category"}
+              </Button>
+            </div>
+          ) : (
+            <Button 
+              onClick={() => setCurrentStep(Math.min(totalSteps, currentStep + 1))}
+              disabled={!canProceedToStep(currentStep + 1)}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Next
+            </Button>
+          )}
         </div>
       </div>
-
-      <form onSubmit={handleSubmit}>
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Basic Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Basic Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Category Name *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => handleNameChange(e.target.value)}
-                    placeholder="e.g., T-Shirts"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="slug">URL Slug *</Label>
-                  <Input
-                    id="slug"
-                    value={formData.slug}
-                    onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                    placeholder="e.g., t-shirts"
-                    required
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Auto-generated from name, but you can customize it</p>
-                </div>
-
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Describe this category..."
-                    rows={4}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* SEO Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle>SEO Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="meta_title">Meta Title</Label>
-                  <Input
-                    id="meta_title"
-                    value={formData.meta_title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, meta_title: e.target.value }))}
-                    placeholder="SEO title for this category"
-                    maxLength={60}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">{formData.meta_title.length}/60 characters</p>
-                </div>
-
-                <div>
-                  <Label htmlFor="meta_description">Meta Description</Label>
-                  <Textarea
-                    id="meta_description"
-                    value={formData.meta_description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, meta_description: e.target.value }))}
-                    placeholder="SEO description for this category"
-                    rows={3}
-                    maxLength={160}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">{formData.meta_description.length}/160 characters</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Status */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Status</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="status">Active</Label>
-                  <Switch
-                    id="status"
-                    checked={formData.status === 'active'}
-                    onCheckedChange={(checked) => 
-                      setFormData(prev => ({ ...prev, status: checked ? 'active' : 'inactive' }))
-                    }
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Images */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Category Image</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="image">Main Image</Label>
-                  <div className="mt-2">
-                    {formData.image_url ? (
-                      <div className="relative">
-                        <img src={formData.image_url} alt="Category" className="w-full h-48 object-cover rounded-lg" />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          className="absolute top-2 right-2"
-                          onClick={() => setFormData(prev => ({ ...prev, image_url: '' }))}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                        <div className="mt-4">
-                          <Label htmlFor="image-upload" className="cursor-pointer">
-                            <span className="text-red-600 hover:text-red-700">Upload an image</span>
-                            <input
-                              id="image-upload"
-                              type="file"
-                              className="hidden"
-                              accept="image/*"
-                              onChange={(e) => handleImageUpload(e, 'image')}
-                              disabled={uploadingImage}
-                            />
-                          </Label>
-                        </div>
-                        {uploadingImage && <Loader2 className="mx-auto h-6 w-6 animate-spin mt-2" />}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Display Order */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Display Order</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Label htmlFor="display_order">Order</Label>
-                <Input
-                  id="display_order"
-                  type="number"
-                  value={formData.display_order}
-                  onChange={(e) => setFormData(prev => ({ ...prev, display_order: parseInt(e.target.value) || 0 }))}
-                  min={0}
-                />
-                <p className="text-xs text-gray-500 mt-1">Lower numbers appear first</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="mt-6 flex items-center justify-end space-x-4">
-          <Link href="/admin/categories">
-            <Button type="button" variant="outline">Cancel</Button>
-          </Link>
-          <Button type="submit" disabled={loading} className="bg-red-600 hover:bg-red-700">
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Category
-          </Button>
-        </div>
-      </form>
     </div>
   )
 }

@@ -17,7 +17,7 @@ interface HeaderProps {
 export function Header({ sidebarCollapsed, onToggleSidebar, mobileMenuOpen, onToggleMobileMenu }: HeaderProps) {
 
   return (
-    <header className="px-6 py-4" suppressHydrationWarning>
+    <header className="px-6 py-4 border-b border-gray-100" suppressHydrationWarning>
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           {/* Mobile Menu Toggle */}

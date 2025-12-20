@@ -5,16 +5,21 @@ import { Card, CardContent } from "@/components/ui/card"
 interface ProgressStepsProps {
   currentStep: number
   totalSteps: number
+  bannerType?: "marquee" | "category" | "carousel"
 }
 
-const stepTitles = [
-  "Placement",
-  "Content Section", 
-  "Action Target",
-  "Preview & Save"
-]
+export function ProgressSteps({ currentStep, totalSteps, bannerType }: ProgressStepsProps) {
+  const getStepTitles = () => {
+    if (bannerType === "marquee") {
+      return ["Placement", "Marquee Content", "Preview & Save"]
+    } else if (bannerType === "category") {
+      return ["Placement", "Content Section", "Category Selection", "Preview & Save"]
+    } else {
+      return ["Placement", "Content Section", "Action Target", "Preview & Save"]
+    }
+  }
 
-export function ProgressSteps({ currentStep, totalSteps }: ProgressStepsProps) {
+  const stepTitles = getStepTitles()
   return (
     <Card className="border-0 shadow-sm bg-gradient-to-br from-white to-gray-50/50">
       <CardContent className="p-6">
@@ -41,7 +46,7 @@ export function ProgressSteps({ currentStep, totalSteps }: ProgressStepsProps) {
           ))}
         </div>
         <div className="flex justify-between mt-4 w-full">
-          {stepTitles.map((title, index) => (
+          {stepTitles.slice(0, totalSteps).map((title, index) => (
             <div key={index} className="flex-1 text-center">
               <span className={`text-sm ${
                 index + 1 === currentStep 

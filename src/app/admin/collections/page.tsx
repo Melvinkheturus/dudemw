@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Layers, Package, Eye, EyeOff, Edit, Trash2, Calendar, RefreshCw } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
-import { CreateCollectionDialog } from "@/domains/collections/components"
+import Link from "next/link"
 
 interface Collection {
   id: string
@@ -25,7 +25,6 @@ interface Collection {
 export default function CollectionsPage() {
   const [collections, setCollections] = useState<Collection[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
   const supabase = createClient()
 
   const fetchCollections = async () => {
@@ -139,10 +138,12 @@ export default function CollectionsPage() {
           <Button 
             className="bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/25" 
             data-testid="create-collection-button"
-            onClick={() => setShowCreateDialog(true)}
+            asChild
           >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Collection
+            <Link href="/admin/collections/create">
+              <Plus className="mr-2 h-4 w-4" />
+              Create Collection
+            </Link>
           </Button>
         </div>
       </div>
@@ -208,10 +209,12 @@ export default function CollectionsPage() {
               <p className="text-gray-600 mb-4">Create your first collection to organize your products</p>
               <Button 
                 className="bg-red-600 hover:bg-red-700 text-white"
-                onClick={() => setShowCreateDialog(true)}
+                asChild
               >
-                <Plus className="mr-2 h-4 w-4" />
-                Create Collection
+                <Link href="/admin/collections/create">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Collection
+                </Link>
               </Button>
             </div>
           ) : (
@@ -293,13 +296,6 @@ export default function CollectionsPage() {
           )}
         </CardContent>
       </Card>
-
-      {/* Create Collection Dialog */}
-      <CreateCollectionDialog
-        open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
-        onSuccess={fetchCollections}
-      />
     </div>
   )
 }
