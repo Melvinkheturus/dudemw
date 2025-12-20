@@ -10,6 +10,14 @@ import {
   UpdatePaymentSettingsInput,
   UpdateTaxSettingsInput,
   UpdateSystemSettingsInput,
+  StoreLocation,
+  CreateStoreLocationInput,
+  UpdateStoreLocationInput,
+  ShippingRule,
+  CreateShippingRuleInput,
+  UpdateShippingRuleInput,
+  SystemPreferences,
+  UpdateSystemPreferencesInput,
 } from '@/lib/types/settings'
 
 export class SettingsService {
