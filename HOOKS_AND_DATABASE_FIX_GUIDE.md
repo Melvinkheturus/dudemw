@@ -169,6 +169,7 @@ The error `Could not find the 'country' column of 'store_settings' in the schema
 
 ✅ **Fixed**: React hooks error by reorganizing component structure  
 ✅ **Fixed**: Database types to include all required columns  
+✅ **Fixed**: Accessibility warnings for Sheet components  
 ✅ **Created**: Migration to add missing database columns  
 ✅ **Next Step**: Run the migration in Supabase SQL Editor  
 
