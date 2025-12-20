@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { SettingsService } from "@/lib/services/settings"
+import { SettingsClientService } from "@/lib/services/settings-client"
 import { StoreSettings } from "@/lib/types/settings"
 import { toast } from "sonner"
 import { Upload, Save, Loader2 } from "lucide-react"
