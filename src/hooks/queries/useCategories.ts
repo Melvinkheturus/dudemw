@@ -43,7 +43,7 @@ export function useCategory(
   return useQuery({
     queryKey: categoryKeys.detail(categoryId),
     queryFn: async () => {
-      const result = await CategoryService.getCategory(categoryId)
+      const result = await getCategoryAction(categoryId)
       if (!result.success || !result.data) {
         throw new Error(result.error || 'Failed to fetch category')
       }
