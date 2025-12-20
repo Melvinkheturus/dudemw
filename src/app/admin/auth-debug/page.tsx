@@ -385,13 +385,14 @@ export default function AuthDebugPage() {
         <CardContent className="space-y-3 text-sm">
           <p>If you see issues above, follow these steps:</p>
           <ol className="list-decimal list-inside space-y-2 ml-2">
-            <li>Run <code className="bg-gray-100 px-2 py-1 rounded">/app/FIX_RLS_STORAGE_POLICIES.sql</code> in Supabase SQL Editor</li>
-            <li>Log out from admin dashboard</li>
-            <li>Clear browser cache (Ctrl+Shift+Delete)</li>
-            <li>Log back in with your email</li>
+            <li>Run <code className="bg-gray-100 px-2 py-1 rounded">/app/FIX_STORAGE_RLS_FOR_ADMIN_PROFILES.sql</code> in Supabase SQL Editor</li>
+            <li>This updates RLS policies to check admin_profiles table (not user_metadata)</li>
+            <li>Close ALL browser tabs for your site</li>
+            <li>Clear browser cache completely (Ctrl+Shift+Delete)</li>
+            <li>Log out and log back in</li>
             <li>Refresh this page to verify</li>
-            <li>Check that your role shows as "admin"</li>
-            <li>Click "Test Upload" button above</li>
+            <li>Check that "Admin Profile" shows your role as super_admin and Active</li>
+            <li>Click "Test Upload" button above - should succeed!</li>
           </ol>
         </CardContent>
       </Card>
