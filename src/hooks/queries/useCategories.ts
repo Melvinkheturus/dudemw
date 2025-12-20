@@ -23,7 +23,7 @@ export function useCategories(
   return useQuery({
     queryKey: categoryKeys.list(filters),
     queryFn: async () => {
-      const result = await CategoryService.getCategories(filters)
+      const result = await getCategoriesAction()
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch categories')
       }
