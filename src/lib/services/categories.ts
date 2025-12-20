@@ -307,6 +307,9 @@ export class CategoryService {
    */
   static async uploadImage(file: File, type: 'image' | 'icon' = 'image') {
     try {
+      // Create fresh authenticated client to get current user session
+      const supabase = createClient()
+      
       const fileExt = file.name.split('.').pop()
       const fileName = `${type}-${Date.now()}.${fileExt}`
       const filePath = `${fileName}`
