@@ -24,32 +24,13 @@ These are two different tables/fields, so the policies can't find your admin rol
 
 ---
 
-## 🔧 SOLUTION - 3 Steps
+## 🔧 SOLUTION - 2 Steps
 
-### Step 1: Run Diagnostic (Optional but Recommended)
+### Step 1: Apply the Fix
 
 1. Open **Supabase Dashboard** → **SQL Editor**
 2. Click **"New Query"**
-3. Copy and paste: `/app/VERIFY_RLS_ISSUE.sql`
-4. Click **Run** (or F5)
-
-**Expected Output:**
-```
-❌ MISMATCH DETECTED!
-Your role is in admin_profiles (super_admin), but RLS
-policies are checking raw_user_meta_data (NULL).
-
-🔧 SOLUTION:
-   Run: /app/RLS_FIX_CLEAN.sql
-```
-
----
-
-### Step 2: Apply the Fix
-
-1. Stay in **Supabase Dashboard** → **SQL Editor**
-2. Click **"New Query"**
-3. Copy and paste the **ENTIRE contents** of: `/app/RLS_FIX_CLEAN.sql`
+3. Copy and paste the **ENTIRE contents** of: `/app/QUICK_FIX_RLS.sql`
 4. Click **Run** (or F5)
 
 **This script will:**
