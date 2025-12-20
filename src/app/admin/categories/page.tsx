@@ -9,7 +9,8 @@ import { Plus, FolderTree, Package, Eye, Edit, Trash2, ChevronRight, Loader2, Re
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { useCategories, useCategoryStats } from '@/hooks/queries/useCategories'
-import { CategoryService, CategoryWithChildren } from '@/lib/services/categories'
+import { CategoryWithChildren } from '@/lib/services/categories'
+import { deleteCategoryAction } from '@/lib/actions/categories'
 
 export default function CategoriesPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
