@@ -17,7 +17,7 @@ import {
   Loader2
 } from "lucide-react"
 import { toast } from "sonner"
-import { SettingsService } from "@/lib/services/settings"
+import { SettingsClientService } from "@/lib/services/settings-client"
 import { SystemPreferences } from "@/lib/types/settings"
 
 export default function PreferencesPage() {
