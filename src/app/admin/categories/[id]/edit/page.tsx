@@ -97,7 +97,7 @@ export default function EditCategoryPage() {
     setLoading(true)
 
     try {
-      const result = await CategoryService.updateCategory(categoryId, {
+      const result = await updateCategoryAction(categoryId, {
         ...formData,
         parent_id: formData.parent_id || null
       })
