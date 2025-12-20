@@ -28,6 +28,10 @@ interface CategoryFormData {
   homepage_video_url: string
   // PLP square category lite thumbnail
   plp_square_thumbnail_url: string
+  // File objects (stored temporarily, uploaded on publish)
+  homepage_thumbnail_file?: File
+  homepage_video_file?: File
+  plp_square_thumbnail_file?: File
   // Banner options
   banner_source: 'none' | 'existing' | 'create'
   selected_banner_id: string
