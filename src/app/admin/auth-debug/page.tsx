@@ -81,7 +81,8 @@ export default function AuthDebugPage() {
           canAccess: !bucketsError,
           buckets: buckets?.map(b => b.name),
           error: bucketsError?.message,
-        }
+        },
+        canUploadFunction: canUpload
       })
     } catch (err: any) {
       setAuthState({ error: err.message })
