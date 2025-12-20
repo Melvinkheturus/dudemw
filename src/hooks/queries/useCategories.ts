@@ -1,5 +1,5 @@
 import { useQuery, UseQueryOptions } from '@tanstack/react-query'
-import { CategoryService } from '@/lib/services/categories'
+import { getCategoriesAction, getCategoryAction, getCategoryStatsAction } from '@/lib/actions/categories'
 
 /**
  * Query keys for categories
