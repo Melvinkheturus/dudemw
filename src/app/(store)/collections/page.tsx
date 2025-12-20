@@ -5,7 +5,7 @@ import { generateBreadcrumbSchema } from '@/lib/utils/seo'
 export default async function CollectionsPage() {
   // Fetch all active collections
   const collectionsResult = await CollectionService.getCollections(true)
-  const collections = collectionsResult.success ? collectionsResult.data : []
+  const collections = collectionsResult.success && collectionsResult.data ? collectionsResult.data : []
 
   // Generate structured data for SEO
   const breadcrumbSchema = generateBreadcrumbSchema([
