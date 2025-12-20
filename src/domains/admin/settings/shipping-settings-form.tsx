@@ -15,17 +15,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Save, Plus, Edit, Trash2, Truck, ChevronDown, Check } from "lucide-react"
+import { Save, Plus, Edit, Trash2, Truck, ChevronDown, Check, Loader2 } from "lucide-react"
 import { toast } from "sonner"
-
-interface ShippingRule {
-  id: string
-  zone: string
-  minQuantity: number
-  maxQuantity: number | null // null means unlimited
-  rate: number
-  enabled: boolean
-}
+import { SettingsService } from "@/lib/services/settings"
+import { ShippingRule, CreateShippingRuleInput, SystemPreferences } from "@/lib/types/settings"
 
 const ZONES = [
   { value: "tamil_nadu", label: "Tamil Nadu" },
@@ -34,21 +27,21 @@ const ZONES = [
   { value: "east_india", label: "East India" },
   { value: "west_india", label: "West India" },
   { value: "all_india", label: "All India" },
-]
+] as const
 
 export function ShippingSettingsForm() {
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
   const [rules, setRules] = useState<ShippingRule[]>([])
-  const [freeShippingEnabled, setFreeShippingEnabled] = useState(false)
-  const [freeShippingThreshold, setFreeShippingThreshold] = useState("2000")
+  const [preferences, setPreferences] = useState<SystemPreferences | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingRule, setEditingRule] = useState<ShippingRule | null>(null)
   const [zoneDropdownOpen, setZoneDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [formData, setFormData] = useState({
-    zone: "tamil_nadu",
-    minQuantity: 1,
-    maxQuantity: "" as string | number,
+    zone: "tamil_nadu" as ShippingRule['zone'],
+    min_quantity: 1,
+    max_quantity: "" as string | number,
     rate: 60,
   })
 
@@ -63,11 +56,38 @@ export function ShippingSettingsForm() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  const loadData = async () => {
+    setIsLoading(true)
+    try {
+      const [rulesResult, prefsResult] = await Promise.all([
+        SettingsService.getShippingRules(),
+        SettingsService.getSystemPreferences()
+      ])
+
+      if (rulesResult.success && rulesResult.data) {
+        setRules(rulesResult.data)
+      }
+
+      if (prefsResult.success && prefsResult.data) {
+        setPreferences(prefsResult.data)
+      }
+    } catch (error) {
+      console.error('Error loading shipping data:', error)
+      toast.error('Failed to load shipping settings')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const resetForm = () => {
     setFormData({
       zone: "tamil_nadu",
-      minQuantity: 1,
-      maxQuantity: "",
+      min_quantity: 1,
+      max_quantity: "",
       rate: 60,
     })
     setEditingRule(null)
@@ -79,8 +99,8 @@ export function ShippingSettingsForm() {
       setEditingRule(rule)
       setFormData({
         zone: rule.zone,
-        minQuantity: rule.minQuantity,
-        maxQuantity: rule.maxQuantity ?? "",
+        min_quantity: rule.min_quantity,
+        max_quantity: rule.max_quantity ?? "",
         rate: rule.rate,
       })
     } else {
@@ -89,55 +109,119 @@ export function ShippingSettingsForm() {
     setIsDialogOpen(true)
   }
 
-  const handleSaveRule = () => {
+  const handleSaveRule = async () => {
     if (!formData.zone || formData.rate <= 0) {
       toast.error("Please fill all required fields")
       return
     }
 
-    const maxQty = formData.maxQuantity === "" ? null : Number(formData.maxQuantity)
+    setIsSaving(true)
+    try {
+      const maxQty = formData.max_quantity === "" ? null : Number(formData.max_quantity)
 
-    if (editingRule) {
-      // Update existing rule
-      setRules(prev => prev.map(rule =>
-        rule.id === editingRule.id
-          ? {
-            ...rule,
-            zone: formData.zone,
-            minQuantity: formData.minQuantity,
-            maxQuantity: maxQty,
-            rate: formData.rate,
-          }
-          : rule
-      ))
-      toast.success("Rule updated successfully")
-    } else {
-      // Add new rule
-      const newRule: ShippingRule = {
-        id: Date.now().toString(),
-        zone: formData.zone,
-        minQuantity: formData.minQuantity,
-        maxQuantity: maxQty,
-        rate: formData.rate,
-        enabled: true,
+      if (editingRule) {
+        // Update existing rule
+        const result = await SettingsService.updateShippingRule(editingRule.id, {
+          zone: formData.zone,
+          min_quantity: formData.min_quantity,
+          max_quantity: maxQty,
+          rate: formData.rate,
+        })
+
+        if (result.success) {
+          toast.success("Rule updated successfully")
+          await loadData()
+        } else {
+          toast.error(result.error || 'Failed to update rule')
+        }
+      } else {
+        // Add new rule
+        const result = await SettingsService.createShippingRule({
+          zone: formData.zone,
+          min_quantity: formData.min_quantity,
+          max_quantity: maxQty,
+          rate: formData.rate,
+          is_enabled: true,
+        } as CreateShippingRuleInput)
+
+        if (result.success) {
+          toast.success("Rule added successfully")
+          await loadData()
+        } else {
+          toast.error(result.error || 'Failed to add rule')
+        }
       }
-      setRules(prev => [...prev, newRule])
-      toast.success("Rule added successfully")
+
+      setIsDialogOpen(false)
+      resetForm()
+    } catch (error) {
+      console.error('Error saving shipping rule:', error)
+      toast.error('Failed to save shipping rule')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleDeleteRule = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this shipping rule?')) {
+      return
     }
 
-    setIsDialogOpen(false)
-    resetForm()
+    try {
+      const result = await SettingsService.deleteShippingRule(id)
+      if (result.success) {
+        toast.success("Rule deleted")
+        await loadData()
+      } else {
+        toast.error(result.error || 'Failed to delete rule')
+      }
+    } catch (error) {
+      console.error('Error deleting rule:', error)
+      toast.error('Failed to delete rule')
+    }
   }
 
-  const handleDeleteRule = (id: string) => {
-    setRules(prev => prev.filter(rule => rule.id !== id))
-    toast.success("Rule deleted")
+  const toggleRule = async (id: string) => {
+    const rule = rules.find(r => r.id === id)
+    if (!rule) return
+
+    try {
+      const result = await SettingsService.updateShippingRule(id, {
+        is_enabled: !rule.is_enabled
+      })
+
+      if (result.success) {
+        await loadData()
+      } else {
+        toast.error('Failed to update rule')
+      }
+    } catch (error) {
+      console.error('Error toggling rule:', error)
+      toast.error('Failed to update rule')
+    }
   }
 
-  const toggleRule = (id: string) => {
-    setRules(prev => prev.map(rule =>
-      rule.id === id ? { ...rule, enabled: !rule.enabled } : rule
-    ))
+  const handleUpdateFreeShipping = async () => {
+    if (!preferences) return
+
+    setIsSaving(true)
+    try {
+      const result = await SettingsService.updateSystemPreferences(preferences.id, {
+        free_shipping_enabled: preferences.free_shipping_enabled,
+        free_shipping_threshold: preferences.free_shipping_threshold,
+      })
+
+      if (result.success) {
+        toast.success('Free shipping settings saved')
+      } else {
+        toast.error('Failed to save free shipping settings')
+      }
+    } catch (error) {
+      console.error('Error saving free shipping:', error)
+      toast.error('Failed to save free shipping settings')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const getZoneLabel = (zoneValue: string) => {
@@ -145,26 +229,26 @@ export function ShippingSettingsForm() {
   }
 
   const getConditionText = (rule: ShippingRule) => {
-    if (rule.maxQuantity === null) {
-      return `${rule.minQuantity}+ items`
+    if (rule.max_quantity === null) {
+      return `${rule.min_quantity}+ items`
     }
-    if (rule.minQuantity === rule.maxQuantity) {
-      return `${rule.minQuantity} item${rule.minQuantity > 1 ? 's' : ''}`
+    if (rule.min_quantity === rule.max_quantity) {
+      return `${rule.min_quantity} item${rule.min_quantity > 1 ? 's' : ''}`
     }
-    return `${rule.minQuantity}-${rule.maxQuantity} items`
+    return `${rule.min_quantity}-${rule.max_quantity} items`
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    toast.success("Shipping settings saved")
-    setIsLoading(false)
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-red-600" />
+      </div>
+    )
   }
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-6">
         {/* Shipping Rules */}
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between">
@@ -209,14 +293,14 @@ export function ShippingSettingsForm() {
                 {rules.map((rule) => (
                   <div
                     key={rule.id}
-                    className={`flex items-center justify-between p-4 rounded-xl border ${rule.enabled
+                    className={`flex items-center justify-between p-4 rounded-xl border ${rule.is_enabled
                       ? "bg-white border-gray-200"
                       : "bg-gray-50 border-gray-100 opacity-60"
                       }`}
                   >
                     <div className="flex items-center space-x-4">
                       <Switch
-                        checked={rule.enabled}
+                        checked={rule.is_enabled}
                         onCheckedChange={() => toggleRule(rule.id)}
                       />
                       <div>
@@ -265,57 +349,79 @@ export function ShippingSettingsForm() {
         </Card>
 
         {/* Free Shipping */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-xl">Free Shipping</CardTitle>
-            <CardDescription>
-              Configure free shipping thresholds
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 border border-gray-100">
-              <div className="space-y-0.5">
-                <Label className="text-base font-semibold text-gray-900">Enable Free Shipping</Label>
-                <p className="text-sm text-gray-600">
-                  Offer free shipping above a minimum order value
-                </p>
-              </div>
-              <Switch
-                checked={freeShippingEnabled}
-                onCheckedChange={setFreeShippingEnabled}
-              />
-            </div>
-
-            {freeShippingEnabled && (
-              <div className="grid gap-4 md:grid-cols-2 w-full">
-                <div className="space-y-2">
-                  <Label htmlFor="freeShippingThreshold">Minimum Order Value (₹)</Label>
-                  <Input
-                    id="freeShippingThreshold"
-                    type="number"
-                    value={freeShippingThreshold}
-                    onChange={(e) => setFreeShippingThreshold(e.target.value)}
-                    placeholder="2000"
-                  />
+        {preferences && (
+          <Card className="border-0 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-xl">Free Shipping</CardTitle>
+              <CardDescription>
+                Configure free shipping thresholds
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 border border-gray-100">
+                <div className="space-y-0.5">
+                  <Label className="text-base font-semibold text-gray-900">Enable Free Shipping</Label>
+                  <p className="text-sm text-gray-600">
+                    Offer free shipping above a minimum order value
+                  </p>
                 </div>
-                <div className="space-y-2">
-                  <Label>Applicable Zones</Label>
-                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <span className="text-gray-700">All zones</span>
+                <Switch
+                  checked={preferences.free_shipping_enabled}
+                  onCheckedChange={(checked) => 
+                    setPreferences({ ...preferences, free_shipping_enabled: checked })
+                  }
+                />
+              </div>
+
+              {preferences.free_shipping_enabled && (
+                <div className="grid gap-4 md:grid-cols-2 w-full">
+                  <div className="space-y-2">
+                    <Label htmlFor="freeShippingThreshold">Minimum Order Value (₹)</Label>
+                    <Input
+                      id="freeShippingThreshold"
+                      type="number"
+                      value={preferences.free_shipping_threshold || ""}
+                      onChange={(e) => 
+                        setPreferences({ 
+                          ...preferences, 
+                          free_shipping_threshold: parseFloat(e.target.value) || null 
+                        })
+                      }
+                      placeholder="2000"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Applicable Zones</Label>
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <span className="text-gray-700">All zones</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
 
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isLoading} className="bg-red-600 hover:bg-red-700 text-white">
-            <Save className="mr-2 h-4 w-4" />
-            {isLoading ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
-      </form>
+              <div className="flex justify-end pt-4">
+                <Button 
+                  onClick={handleUpdateFreeShipping} 
+                  disabled={isSaving}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save Free Shipping
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Add/Edit Rule Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -349,7 +455,7 @@ export function ShippingSettingsForm() {
                         key={zone.value}
                         type="button"
                         onClick={() => {
-                          setFormData(prev => ({ ...prev, zone: zone.value }))
+                          setFormData(prev => ({ ...prev, zone: zone.value as ShippingRule['zone'] }))
                           setZoneDropdownOpen(false)
                         }}
                         className={`flex w-full items-center justify-between px-3 py-2.5 text-sm hover:bg-red-50 ${formData.zone === zone.value ? "bg-red-50 text-red-700" : "text-gray-700"
@@ -373,8 +479,8 @@ export function ShippingSettingsForm() {
                   id="minQuantity"
                   type="number"
                   min={1}
-                  value={formData.minQuantity}
-                  onChange={(e) => setFormData(prev => ({ ...prev, minQuantity: parseInt(e.target.value) || 1 }))}
+                  value={formData.min_quantity}
+                  onChange={(e) => setFormData(prev => ({ ...prev, min_quantity: parseInt(e.target.value) || 1 }))}
                 />
               </div>
               <div className="space-y-2">
@@ -383,8 +489,8 @@ export function ShippingSettingsForm() {
                   id="maxQuantity"
                   type="number"
                   min={1}
-                  value={formData.maxQuantity}
-                  onChange={(e) => setFormData(prev => ({ ...prev, maxQuantity: e.target.value ? parseInt(e.target.value) : "" }))}
+                  value={formData.max_quantity}
+                  onChange={(e) => setFormData(prev => ({ ...prev, max_quantity: e.target.value ? parseInt(e.target.value) : "" }))}
                   placeholder="Unlimited"
                 />
                 <p className="text-xs text-gray-500">Leave empty for unlimited</p>
@@ -406,18 +512,30 @@ export function ShippingSettingsForm() {
             <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
               <p className="text-sm text-blue-700">
                 <strong>Preview:</strong> {getZoneLabel(formData.zone)} orders with{" "}
-                {formData.maxQuantity ? `${formData.minQuantity}-${formData.maxQuantity}` : `${formData.minQuantity}+`} items
+                {formData.max_quantity ? `${formData.min_quantity}-${formData.max_quantity}` : `${formData.min_quantity}+`} items
                 will be charged <strong>₹{formData.rate}</strong>
               </p>
             </div>
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>
               Cancel
             </Button>
-            <Button type="button" onClick={handleSaveRule} className="bg-red-600 hover:bg-red-700 text-white">
-              {editingRule ? "Save Changes" : "Add Rule"}
+            <Button 
+              type="button" 
+              onClick={handleSaveRule} 
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                editingRule ? "Save Changes" : "Add Rule"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
