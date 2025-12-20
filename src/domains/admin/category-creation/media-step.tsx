@@ -122,10 +122,10 @@ export function MediaStep({ formData, onFormDataChange }: MediaStepProps) {
                 Homepage Thumbnail *
               </Label>
               <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 bg-gray-50/50">
-                {formData.homepage_thumbnail_url ? (
+                {(previewUrls.homepage_thumbnail || formData.homepage_thumbnail_url) ? (
                   <div className="relative group">
                     <Image
-                      src={formData.homepage_thumbnail_url}
+                      src={previewUrls.homepage_thumbnail || formData.homepage_thumbnail_url}
                       alt="Homepage thumbnail"
                       width={300}
                       height={200}
@@ -144,34 +144,23 @@ export function MediaStep({ formData, onFormDataChange }: MediaStepProps) {
                 ) : (
                   <div className="text-center">
                     <ImageIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-sm font-medium text-gray-700 mb-2">Upload homepage thumbnail</p>
+                    <p className="text-sm font-medium text-gray-700 mb-2">Select homepage thumbnail</p>
                     <p className="text-xs text-gray-500 mb-4">Recommended: 800x600px, JPG or PNG</p>
                     <Input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => handleImageUpload(e, 'homepage_thumbnail')}
-                      disabled={uploadingThumbnail}
+                      onChange={(e) => handleFileSelect(e, 'homepage_thumbnail')}
                       className="hidden"
                       id="homepage-thumbnail"
                     />
                     <Button 
                       type="button" 
                       variant="outline" 
-                      disabled={uploadingThumbnail} 
                       className="w-full"
                       onClick={() => document.getElementById('homepage-thumbnail')?.click()}
                     >
-                      {uploadingThumbnail ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Uploading...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="h-4 w-4 mr-2" />
-                          Choose File
-                        </>
-                      )}
+                      <Upload className="h-4 w-4 mr-2" />
+                      Choose File
                     </Button>
                   </div>
                 )}
