@@ -151,6 +151,7 @@ export function MediaTab({ images, onImagesChange }: MediaTabProps) {
               type="button" 
               variant="outline" 
               className="mt-4"
+              disabled={uploading}
               onClick={() => {
                 const input = document.createElement('input')
                 input.type = 'file'
@@ -163,7 +164,14 @@ export function MediaTab({ images, onImagesChange }: MediaTabProps) {
                 input.click()
               }}
             >
-              Choose Files
+              {uploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                'Choose Files'
+              )}
             </Button>
           </div>
         </CardContent>
