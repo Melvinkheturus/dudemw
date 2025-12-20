@@ -1119,14 +1119,20 @@ export type Database = {
       }
       store_settings: {
         Row: {
+          address: string | null
+          city: string | null
+          country: string
           created_at: string | null
           currency: string
+          description: string | null
           gst_number: string | null
           id: string
-          invoice_prefix: string | null
+          invoice_prefix: string
           legal_name: string | null
           logo_url: string | null
+          postal_code: string | null
           privacy_url: string | null
+          state: string | null
           store_name: string
           support_email: string | null
           support_phone: string | null
@@ -1135,14 +1141,20 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          address?: string | null
+          city?: string | null
+          country?: string
           created_at?: string | null
           currency?: string
+          description?: string | null
           gst_number?: string | null
           id?: string
-          invoice_prefix?: string | null
+          invoice_prefix?: string
           legal_name?: string | null
           logo_url?: string | null
+          postal_code?: string | null
           privacy_url?: string | null
+          state?: string | null
           store_name?: string
           support_email?: string | null
           support_phone?: string | null
@@ -1151,14 +1163,20 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          address?: string | null
+          city?: string | null
+          country?: string
           created_at?: string | null
           currency?: string
+          description?: string | null
           gst_number?: string | null
           id?: string
-          invoice_prefix?: string | null
+          invoice_prefix?: string
           legal_name?: string | null
           logo_url?: string | null
+          postal_code?: string | null
           privacy_url?: string | null
+          state?: string | null
           store_name?: string
           support_email?: string | null
           support_phone?: string | null
