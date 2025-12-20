@@ -216,11 +216,15 @@ export default function CreateCategoryPage() {
       case 2:
         return !!formData.name.trim() && !!formData.description.trim()
       case 3:
+        const hasHomepageThumbnail = !!formData.homepage_thumbnail_url || !!formData.homepage_thumbnail_file
+        const hasPlpSquareThumbnail = !!formData.plp_square_thumbnail_url || !!formData.plp_square_thumbnail_file
         return !!formData.name.trim() && !!formData.description.trim() && 
-               !!formData.homepage_thumbnail_url && !!formData.plp_square_thumbnail_url
+               hasHomepageThumbnail && hasPlpSquareThumbnail
       case 4:
+        const hasHomepageThumbnail2 = !!formData.homepage_thumbnail_url || !!formData.homepage_thumbnail_file
+        const hasPlpSquareThumbnail2 = !!formData.plp_square_thumbnail_url || !!formData.plp_square_thumbnail_file
         return !!formData.name.trim() && !!formData.description.trim() && 
-               !!formData.homepage_thumbnail_url && !!formData.plp_square_thumbnail_url
+               hasHomepageThumbnail2 && hasPlpSquareThumbnail2
       default:
         return true
     }
