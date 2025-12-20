@@ -114,6 +114,9 @@ export function VariantDetailView({ product, variant }: VariantDetailViewProps) 
     if (!files || files.length === 0) return
 
     setIsUploading(true)
+    
+    // Create authenticated Supabase client with current user session
+    const supabase = createClient()
 
     try {
       for (const file of Array.from(files)) {
@@ -136,7 +139,8 @@ export function VariantDetailView({ product, variant }: VariantDetailViewProps) 
           .upload(filePath, file)
 
         if (uploadError) {
-          toast.error(`Failed to upload ${file.name}`)
+          console.error('Upload error:', uploadError)
+          toast.error(`Failed to upload ${file.name}: ${uploadError.message}`)
           continue
         }
 
@@ -166,6 +170,7 @@ export function VariantDetailView({ product, variant }: VariantDetailViewProps) 
         }
       }
     } catch (error) {
+      console.error('Error in image upload:', error)
       toast.error('Failed to upload images')
     } finally {
       setIsUploading(false)
