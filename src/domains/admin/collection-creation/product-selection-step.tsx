@@ -1,58 +1,40 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2, X, Package, Plus, ShoppingBag } from 'lucide-react'
+import { Input } from "@/components/ui/input"
+import { Loader2, X, Package, Search, ShoppingBag, ChevronDown, ChevronUp } from 'lucide-react'
 import { ProductService } from '@/lib/services/products'
 import { toast } from 'sonner'
-
-interface Product {
-  id: string
-  title: string
-  handle: string
-  price?: number
-  product_images?: Array<{
-    id: string
-    image_url: string
-    alt_text?: string
-    is_primary: boolean
-  }>
-  product_variants?: Array<{
-    id: string
-    name: string
-    sku: string
-    price: number
-    discount_price?: number
-    stock: number
-    active: boolean
-  }>
-}
+import type { Product, SelectedProductWithVariant } from './types'
 
 interface ProductVariant {
   id: string
-  name: string
+  name: string | null
   sku: string
   price: number
-  discount_price?: number
+  discount_price?: number | null
   stock: number
-  active: boolean
+  active: boolean | null
   product: Product
 }
 
 interface ProductSelectionStepProps {
-  selectedProducts: Map<string, Product>
-  onProductsChange: (products: Map<string, Product>) => void
+  selectedProducts: Map<string, SelectedProductWithVariant>
+  onProductsChange: (products: Map<string, SelectedProductWithVariant>) => void
 }
 
 export function ProductSelectionStep({ selectedProducts, onProductsChange }: ProductSelectionStepProps) {
   const [loading, setLoading] = useState(false)
   const [allProducts, setAllProducts] = useState<Product[]>([])
   const [availableVariants, setAvailableVariants] = useState<ProductVariant[]>([])
-  const [selectedVariantId, setSelectedVariantId] = useState<string>("")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set())
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   // Load all products when component mounts
   useEffect(() => {
@@ -81,11 +63,23 @@ export function ProductSelectionStep({ selectedProducts, onProductsChange }: Pro
     setAvailableVariants(variants)
   }, [allProducts, selectedProducts])
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   const loadAllProducts = async () => {
     try {
       setLoading(true)
       const result = await ProductService.getProducts({
-        limit: 1000, // Get all products
+        limit: 1000,
         sortBy: 'title',
         sortOrder: 'asc'
       })
@@ -103,17 +97,25 @@ export function ProductSelectionStep({ selectedProducts, onProductsChange }: Pro
     }
   }
 
-  const addProductByVariant = (variantId: string) => {
-    const variant = availableVariants.find(v => v.id === variantId)
-    if (!variant) return
-
+  const addProduct = (variant: ProductVariant) => {
     const product = variant.product
+    
+    if (selectedProducts.has(product.id)) {
+      toast.error('This product is already selected')
+      return
+    }
+
     const newSelected = new Map(selectedProducts)
-    newSelected.set(product.id, product)
+    newSelected.set(product.id, {
+      product: product,
+      selectedVariantId: variant.id // Set the selected variant as default
+    })
     onProductsChange(newSelected)
     
-    // Clear selection
-    setSelectedVariantId("")
+    // Clear search, close dropdown, and show success message
+    setSearchQuery("")
+    setIsDropdownOpen(false)
+    toast.success(`Added "${product.title}" with SKU ${variant.sku}`)
   }
 
   const removeSelectedProduct = (productId: string) => {
@@ -121,6 +123,41 @@ export function ProductSelectionStep({ selectedProducts, onProductsChange }: Pro
     newSelected.delete(productId)
     onProductsChange(newSelected)
   }
+
+  const updateSelectedVariant = (productId: string, variantId: string) => {
+    const selectedProduct = selectedProducts.get(productId)
+    if (!selectedProduct) return
+
+    const newSelected = new Map(selectedProducts)
+    newSelected.set(productId, {
+      ...selectedProduct,
+      selectedVariantId: variantId
+    })
+    onProductsChange(newSelected)
+    
+    const variant = selectedProduct.product.product_variants?.find(v => v.id === variantId)
+    if (variant) {
+      toast.success(`Updated main SKU to ${variant.sku}`)
+    }
+  }
+
+  const toggleProductExpansion = (productId: string) => {
+    const newExpanded = new Set(expandedProducts)
+    if (newExpanded.has(productId)) {
+      newExpanded.delete(productId)
+    } else {
+      newExpanded.add(productId)
+    }
+    setExpandedProducts(newExpanded)
+  }
+
+  // Filter variants based on search query
+  const filteredVariants = availableVariants.filter(variant => {
+    const query = searchQuery.toLowerCase()
+    return (
+      variant.product.title.toLowerCase().includes(query)
+    )
+  })
 
   return (
     <div className="space-y-6">
@@ -145,180 +182,271 @@ export function ProductSelectionStep({ selectedProducts, onProductsChange }: Pro
             </div>
           )}
 
-          {/* Product Selection Dropdown */}
-          <div className="space-y-2">
-            <Label>Add Products by SKU</Label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <Select 
-                  value={selectedVariantId} 
-                  onValueChange={setSelectedVariantId}
+          {/* Product Search Dropdown */}
+          <div className="space-y-4">
+            <Label>Add Products</Label>
+            <div className="relative" ref={dropdownRef}>
+              {/* Search Input */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  ref={inputRef}
+                  type="text"
+                  placeholder={loading ? "Loading products..." : "Search products by name..."}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsDropdownOpen(true)}
                   disabled={loading}
+                  className="pl-10 pr-10 h-12 bg-white border-gray-300 focus:border-red-500 focus:ring-red-100"
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  <SelectTrigger className="w-full h-12 bg-white border-gray-200 hover:border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-100 transition-all duration-200">
-                    <SelectValue placeholder={
-                      loading 
-                        ? "Loading products..." 
-                        : availableVariants.length === 0 
-                          ? "No products available" 
-                          : "Select a product by SKU..."
-                    } />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-80 w-full min-w-[400px]">
-                    {loading ? (
-                      <div className="flex items-center justify-center py-8">
-                        <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-                        <span className="ml-2 text-sm text-gray-500">Loading products...</span>
-                      </div>
-                    ) : availableVariants.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
-                        <Package className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                        <p className="text-sm">No available products</p>
-                      </div>
-                    ) : (
-                      availableVariants.map(variant => {
-                        const primaryImage = variant.product.product_images?.find(img => img.is_primary)
-                        const displayPrice = variant.discount_price || variant.price
-                        
-                        return (
-                          <SelectItem 
-                            key={variant.id} 
-                            value={variant.id}
-                            className="cursor-pointer hover:bg-gray-50 focus:bg-gray-50 p-3 border-b border-gray-100 last:border-b-0"
-                          >
-                            <div className="flex items-center gap-3 w-full">
-                              {primaryImage && (
-                                <div className="flex-shrink-0">
-                                  <img
-                                    src={primaryImage.image_url}
-                                    alt={primaryImage.alt_text || variant.product.title}
-                                    className="w-10 h-10 object-cover rounded-lg border border-gray-200"
-                                  />
-                                </div>
-                              )}
-                              
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <Badge variant="outline" className="text-xs font-mono bg-gray-50 text-gray-700 border-gray-300">
-                                    {variant.sku}
-                                  </Badge>
-                                  <span className="text-sm font-semibold text-gray-900 truncate">
-                                    {variant.product.title}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-3 text-xs text-gray-500">
-                                  <span className="font-medium">
-                                    {variant.name}
-                                  </span>
-                                  <span className="text-green-600 font-semibold">
-                                    ₹{displayPrice.toFixed(2)}
-                                  </span>
-                                  <span className="text-gray-400">
-                                    Stock: {variant.stock}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </SelectItem>
-                        )
-                      })
-                    )}
-                  </SelectContent>
-                </Select>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
               </div>
-              
-              <Button
-                onClick={() => selectedVariantId && addProductByVariant(selectedVariantId)}
-                disabled={!selectedVariantId || loading}
-                className="bg-red-600 hover:bg-red-700 text-white h-12 px-6 font-medium shadow-sm hover:shadow-md transition-all duration-200"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add
-              </Button>
+
+              {/* Dropdown List */}
+              {isDropdownOpen && (
+                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-80 overflow-y-auto">
+                  {loading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                      <span className="ml-2 text-sm text-gray-500">Loading products...</span>
+                    </div>
+                  ) : filteredVariants.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <Package className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                      <p className="text-sm">
+                        {searchQuery ? 'No products match your search' : 'No available products'}
+                      </p>
+                    </div>
+                  ) : (
+                    // Group variants by product to avoid duplicates
+                    Array.from(
+                      new Map(
+                        filteredVariants.map(variant => [variant.product.id, variant])
+                      ).values()
+                    ).map(variant => {
+                      const primaryImage = variant.product.product_images?.find(img => img.is_primary)
+                      const variantCount = variant.product.product_variants?.filter(v => v.active)?.length || 0
+                      
+                      return (
+                        <button
+                          key={variant.product.id}
+                          type="button"
+                          onClick={() => addProduct(variant)}
+                          className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 text-left transition-colors"
+                        >
+                          {/* Product Image - Square */}
+                          {primaryImage ? (
+                            <img
+                              src={primaryImage.image_url}
+                              alt={variant.product.title}
+                              className="w-12 h-12 object-cover rounded border border-gray-200 flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-gray-100 rounded border border-gray-200 flex-shrink-0 flex items-center justify-center">
+                              <Package className="h-6 w-6 text-gray-400" />
+                            </div>
+                          )}
+                          
+                          {/* Product Info */}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {variant.product.title}
+                            </p>
+                            <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                              <span>{variantCount} variant{variantCount !== 1 ? 's' : ''} available</span>
+                              {variant.product.price && (
+                                <>
+                                  <span>•</span>
+                                  <span className="text-green-600 font-medium">
+                                    From ₹{variant.product.price.toFixed(2)}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      )
+                    })
+                  )}
+                </div>
+              )}
             </div>
             <p className="text-xs text-gray-500">
-              Select a product variant by its SKU and click Add to include it in this collection.
+              Search for products by name. Click to add, then select the main SKU in the accordion below.
             </p>
           </div>
 
           {/* Selected Products Display */}
-          {selectedProducts.size > 0 ? (
+          {selectedProducts.size > 0 && (
             <div className="space-y-3">
-              <Label>Selected Products ({selectedProducts.size})</Label>
-              <div className="grid gap-3 max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
-                {Array.from(selectedProducts.values()).map(product => {
+              <div className="flex items-center justify-between">
+                <Label>Selected Products ({selectedProducts.size})</Label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onProductsChange(new Map())}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  Clear All
+                </Button>
+              </div>
+              <div className="space-y-2 max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
+                {Array.from(selectedProducts.values()).map(selectedProductWithVariant => {
+                  const { product, selectedVariantId } = selectedProductWithVariant
                   const primaryImage = product.product_images?.find(img => img.is_primary)
+                  const selectedVariant = product.product_variants?.find(v => v.id === selectedVariantId)
+                  const displayPrice = selectedVariant ? (selectedVariant.discount_price || selectedVariant.price) : product.price
+                  const hasMultipleVariants = product.product_variants && product.product_variants.length > 1
+                  const isExpanded = expandedProducts.has(product.id)
                   
                   return (
                     <div
                       key={product.id}
-                      className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow"
+                      className="bg-white border border-gray-200 rounded-lg overflow-hidden"
                     >
-                      {primaryImage && (
-                        <img
-                          src={primaryImage.image_url}
-                          alt={primaryImage.alt_text || product.title}
-                          className="w-12 h-12 object-cover rounded border border-gray-200 flex-shrink-0"
-                        />
-                      )}
-                      
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {product.title}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate">
-                          {product.handle}
-                        </p>
-                        {product.price && (
-                          <p className="text-sm font-medium text-green-600">
-                            ₹{product.price.toFixed(2)}
-                          </p>
+                      {/* Product Header */}
+                      <div className="flex items-center gap-3 p-3">
+                        {primaryImage ? (
+                          <img
+                            src={primaryImage.image_url}
+                            alt={primaryImage.alt_text || product.title}
+                            className="w-12 h-12 object-cover rounded border border-gray-200 flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-gray-100 rounded border border-gray-200 flex-shrink-0 flex items-center justify-center">
+                            <Package className="h-6 w-6 text-gray-400" />
+                          </div>
                         )}
+                        
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {product.title}
+                          </p>
+                          {displayPrice && (
+                            <p className="text-sm font-medium text-green-600">
+                              ₹{displayPrice.toFixed(2)}
+                            </p>
+                          )}
+                          {/* Current selected SKU */}
+                          {selectedVariant && (
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs font-mono bg-red-100 text-red-800 px-1.5 py-0.5 rounded">
+                                {selectedVariant.sku}
+                              </span>
+                              <span className="text-xs text-red-700 font-medium">MAIN</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          {/* Accordion Toggle Button */}
+                          {hasMultipleVariants && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleProductExpansion(product.id)}
+                              className="text-gray-500 hover:text-gray-700"
+                            >
+                              {isExpanded ? (
+                                <ChevronUp className="h-4 w-4" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4" />
+                              )}
+                            </Button>
+                          )}
+                          
+                          {/* Remove Button */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeSelectedProduct(product.id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                      
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeSelectedProduct(product.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+
+                      {/* Accordion Content - Variant Selection */}
+                      {hasMultipleVariants && isExpanded && (
+                        <div className="border-t border-gray-200 p-3 bg-gray-50">
+                          <Label className="text-xs font-medium text-gray-600 mb-2 block">
+                            Select main SKU to display on product card:
+                          </Label>
+                          <div className="space-y-2">
+                            {product.product_variants
+                              ?.filter(variant => variant.active)
+                              .map(variant => {
+                                const variantPrice = variant.discount_price || variant.price
+                                const isSelected = variant.id === selectedVariantId
+                                
+                                return (
+                                  <button
+                                    key={variant.id}
+                                    type="button"
+                                    onClick={() => updateSelectedVariant(product.id, variant.id)}
+                                    className={`flex items-center justify-between w-full p-2 rounded border text-left transition-colors ${
+                                      isSelected 
+                                        ? 'border-red-500 bg-red-50 text-red-900' 
+                                        : 'border-gray-200 hover:border-gray-300 hover:bg-white'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${
+                                        isSelected ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-700'
+                                      }`}>
+                                        {variant.sku}
+                                      </span>
+                                      <span className="text-sm">
+                                        {variant.name || 'Default'}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                                      <span className="font-medium text-green-600">
+                                        ₹{variantPrice.toFixed(2)}
+                                      </span>
+                                      <span>Stock: {variant.stock}</span>
+                                      {isSelected && (
+                                        <span className="text-red-600 font-medium">MAIN</span>
+                                      )}
+                                    </div>
+                                  </button>
+                                )
+                              })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Single variant info */}
+                      {!hasMultipleVariants && selectedVariant && (
+                        <div className="border-t border-gray-200 p-3 bg-gray-50">
+                          <div className="flex items-center justify-between text-sm text-gray-600">
+                            <span>Single variant product</span>
+                            <span>Stock: {selectedVariant.stock}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )
                 })}
               </div>
             </div>
-          ) : (
+          )}
+
+          {/* Empty State */}
+          {selectedProducts.size === 0 && (
             <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
               <Package className="h-12 w-12 mx-auto text-gray-400 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No products selected</h3>
-              <p className="text-gray-600 mb-4">Use the dropdown above to browse and add products by SKU</p>
+              <p className="text-gray-600 mb-4">Use the search above to browse and add products</p>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Help Card */}
-      <Card className="border-blue-200 bg-blue-50/50">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-3">
-            <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <span className="text-blue-600 text-xs font-bold">i</span>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-blue-900">
-                Product Selection Tips
-              </p>
-              <ul className="text-sm text-blue-800 space-y-1">
-                <li>• Browse all available products by their SKU in the dropdown</li>
-                <li>• Each option shows SKU, product name, variant, price, and stock</li>
-                <li>• Only active product variants with stock are shown</li>
-                <li>• Select products that fit well together thematically</li>
-                <li>• Collections work best with 3-20 products for optimal display</li>
-              </ul>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>

@@ -247,17 +247,7 @@ export function OrganizationTab({ organizationData, onOrganizationDataChange }: 
             </div>
           )}
 
-          {/* Tag Suggestions */}
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <h4 className="font-medium text-blue-900 mb-2">Tag Usage</h4>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>• <strong>Material:</strong> cotton, polyester, wool, silk</li>
-              <li>• <strong>Style:</strong> casual, formal, vintage, modern</li>
-              <li>• <strong>Season:</strong> summer, winter, spring, fall</li>
-              <li>• <strong>Occasion:</strong> work, party, gym, travel</li>
-              <li>• <strong>Features:</strong> waterproof, breathable, stretch</li>
-            </ul>
-          </div>
+
         </CardContent>
       </Card>
     </div>

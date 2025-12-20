@@ -6,29 +6,8 @@ import { Save } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { ProgressSteps, BasicInfoStep, ProductSelectionStep, PreviewStep } from "@/domains/admin/collection-creation"
+import { ProgressSteps, BasicInfoStep, ProductSelectionStep, PreviewStep, type Product, type CollectionFormData } from "@/domains/admin/collection-creation"
 import { createClient } from '@/lib/supabase/client'
-
-interface Product {
-  id: string
-  title: string
-  handle: string
-  price?: number
-  product_images?: Array<{
-    id: string
-    image_url: string
-    alt_text?: string
-    is_primary: boolean
-  }>
-}
-
-interface CollectionFormData {
-  title: string
-  slug: string
-  description: string
-  is_active: boolean
-  selectedProducts: Map<string, Product>
-}
 
 export default function CreateCollectionPage() {
   const router = useRouter()
@@ -36,7 +15,6 @@ export default function CreateCollectionPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState<CollectionFormData>({
     title: "",
-    slug: "",
     description: "",
     is_active: true,
     selectedProducts: new Map()
@@ -49,18 +27,8 @@ export default function CreateCollectionPage() {
     setFormData(prev => ({ ...prev, ...updates }))
   }
 
-  const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-  }
-
   const handleTitleChange = (title: string) => {
-    updateFormData({
-      title,
-      slug: generateSlug(title)
-    })
+    updateFormData({ title })
   }
 
   const handleSubmit = async (isDraft = false) => {
@@ -88,7 +56,7 @@ export default function CreateCollectionPage() {
         .from('collections')
         .insert({
           title: formData.title,
-          slug: formData.slug,
+          slug: formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
           description: formData.description,
           type: 'manual',
           is_active: isDraft ? false : formData.is_active,
@@ -102,11 +70,12 @@ export default function CreateCollectionPage() {
         throw collectionError
       }
 
-      // Add products to collection
-      const collectionProducts = Array.from(formData.selectedProducts.keys()).map((productId, index) => ({
+      // Add products to collection with selected variants
+      const collectionProducts = Array.from(formData.selectedProducts.entries()).map(([productId, selectedProductWithVariant], index) => ({
         collection_id: collection.id,
         product_id: productId,
-        sort_order: index + 1
+        sort_order: index + 1,
+        selected_variant_id: selectedProductWithVariant.selectedVariantId // Store which variant to display
       }))
 
       const { error: productsError } = await supabase

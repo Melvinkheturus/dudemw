@@ -1,5 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase/supabase'
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client'
+
+const supabase = createClient()
 
 export interface ProductAnalytics {
   product_id: string

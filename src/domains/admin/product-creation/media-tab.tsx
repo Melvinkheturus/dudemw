@@ -195,35 +195,6 @@ export function MediaTab({ images, onImagesChange }: MediaTabProps) {
           </CardContent>
         </Card>
       )}
-
-      {/* Image Guidelines */}
-      <Card className="border-0 shadow-sm bg-gradient-to-b from-white to-blue-50 border-blue-100/50">
-        <CardHeader>
-          <CardTitle className="text-lg font-bold text-gray-900">Image Guidelines</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <h4 className="font-medium text-gray-900 mb-2">Best Practices</h4>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Use high-resolution images (1200x1200px minimum)</li>
-                <li>• Show product from multiple angles</li>
-                <li>• Include lifestyle and detail shots</li>
-                <li>• Use consistent lighting and background</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-medium text-gray-900 mb-2">Technical Requirements</h4>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Formats: JPG, PNG, GIF</li>
-                <li>• Max file size: 10MB per image</li>
-                <li>• Square aspect ratio recommended</li>
-                <li>• Alt text for accessibility</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

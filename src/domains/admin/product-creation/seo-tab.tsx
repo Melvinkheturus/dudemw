@@ -165,49 +165,7 @@ export function SEOTab({ seoData, onSEODataChange, productName, productDescripti
         </CardContent>
       </Card>
 
-      {/* SEO Tips */}
-      <Card className="border-0 shadow-sm bg-gradient-to-b from-white to-red-50 border-red-100/50 hover:shadow-md transition-all duration-200">
-        <CardHeader>
-          <CardTitle className="text-xl font-bold text-gray-900">SEO Best Practices</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
-            <div className="p-3 border border-gray-200 rounded-lg">
-              <h4 className="font-medium mb-2">Meta Title Tips</h4>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Keep under 60 characters</li>
-                <li>• Include main keywords</li>
-                <li>• Make it compelling and clickable</li>
-                <li>• Include brand name if space allows</li>
-              </ul>
-            </div>
-            <div className="p-3 border border-gray-200 rounded-lg">
-              <h4 className="font-medium mb-2">Meta Description Tips</h4>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Keep under 160 characters</li>
-                <li>• Include key features and benefits</li>
-                <li>• Use action words</li>
-                <li>• Match search intent</li>
-              </ul>
-            </div>
-            <div className="p-3 border border-gray-200 rounded-lg">
-              <h4 className="font-medium mb-2">URL Handle Tips</h4>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Use lowercase letters only</li>
-                <li>• Separate words with hyphens</li>
-                <li>• Keep it short and descriptive</li>
-                <li>• Avoid special characters</li>
-              </ul>
-            </div>
-            <div className="p-3 border border-gray-200 rounded-lg">
-              <h4 className="font-medium mb-2">General SEO</h4>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Use relevant keywords naturally</li>
-                <li>• Write for humans, not just search engines</li>
-                <li>• Keep content unique and valuable</li>
-                <li>• Update regularly for freshness</li>
-              </ul>
-            </div>
+
           </div>
         </CardContent>
       </Card>

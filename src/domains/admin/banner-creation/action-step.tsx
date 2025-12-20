@@ -127,18 +127,7 @@ export function ActionStep({ actionType, actionTarget, actionName, category, pla
               </div>
 
               {/* Preview of where banner will appear */}
-              {category && (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm font-medium text-blue-800 mb-2">
-                    Banner Placement Preview
-                  </p>
-                  <div className="text-xs text-blue-700 space-y-1">
-                    <p>• URL: <span className="font-mono">/categories/{category}</span></p>
-                    <p>• Position: Top of the category page, below navigation</p>
-                    <p>• Visibility: All visitors to the {category} category</p>
-                  </div>
-                </div>
-              )}
+
             </div>
           ) : (
             /* Action Selection for Carousel Banners */
