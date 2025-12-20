@@ -77,7 +77,7 @@ export function StoreSettingsForm() {
 
     setIsLoading(true)
     try {
-      const result = await SettingsService.updateStoreSettings(settings.id, formData)
+      const result = await SettingsClientService.updateStoreSettings(settings.id, formData)
       if (result.success) {
         toast.success('Store settings updated successfully')
         fetchSettings()
