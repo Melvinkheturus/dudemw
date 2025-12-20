@@ -52,7 +52,7 @@ CREATE POLICY
 
 ---
 
-### Step 3: Refresh Your Browser Session
+### Step 2: Refresh Your Browser Session
 
 Even though we fixed the database, your browser has cached the old session.
 
