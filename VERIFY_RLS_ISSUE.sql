@@ -6,7 +6,7 @@
 
 DO $$ 
 DECLARE
-    user_id UUID := 'a703c06b-4739-4c16-8cd6-dd181eb677f9';
+    v_user_id UUID := 'a703c06b-4739-4c16-8cd6-dd181eb677f9';
     meta_role TEXT;
     profile_role TEXT;
     has_admin_function BOOLEAN;
@@ -20,7 +20,7 @@ BEGIN
     -- Check auth.users metadata
     SELECT raw_user_meta_data->>'role' INTO meta_role
     FROM auth.users
-    WHERE id = user_id;
+    WHERE id = v_user_id;
     
     RAISE NOTICE '1. Role in auth.users.raw_user_meta_data:';
     RAISE NOTICE '   Value: %', COALESCE(meta_role, 'NULL (NOT SET)');
@@ -35,7 +35,7 @@ BEGIN
     -- Check admin_profiles table
     SELECT role INTO profile_role
     FROM admin_profiles
-    WHERE user_id = user_id;
+    WHERE admin_profiles.user_id = v_user_id;
     
     RAISE NOTICE '2. Role in admin_profiles table:';
     RAISE NOTICE '   Value: %', COALESCE(profile_role, 'NULL (NOT SET)');
