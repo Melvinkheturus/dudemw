@@ -42,7 +42,7 @@ export default function EditCategoryPage() {
 
   const fetchCategory = async () => {
     try {
-      const result = await CategoryService.getCategory(categoryId)
+      const result = await getCategoryAction(categoryId)
       if (result.success && result.data) {
         setFormData({
           name: result.data.name,
