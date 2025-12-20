@@ -120,3 +120,58 @@ export async function getCategoryAction(id: string) {
   }
 }
 
+/**
+ * Server action to get all categories
+ */
+export async function getCategoriesAction() {
+  'use server'
+  
+  try {
+    const result = await CategoryService.getCategories()
+    return result
+  } catch (error: any) {
+    console.error('Server action error getting categories:', error)
+    return {
+      success: false,
+      error: error?.message || 'Failed to get categories'
+    }
+  }
+}
+
+/**
+ * Server action to get category tree
+ */
+export async function getCategoryTreeAction() {
+  'use server'
+  
+  try {
+    const result = await CategoryService.getCategoryTree()
+    return result
+  } catch (error: any) {
+    console.error('Server action error getting category tree:', error)
+    return {
+      success: false,
+      error: error?.message || 'Failed to get category tree'
+    }
+  }
+}
+
+/**
+ * Server action to get category statistics
+ */
+export async function getCategoryStatsAction() {
+  'use server'
+  
+  try {
+    const result = await CategoryService.getCategoryStats()
+    return result
+  } catch (error: any) {
+    console.error('Server action error getting category stats:', error)
+    return {
+      success: false,
+      error: error?.message || 'Failed to get category stats'
+    }
+  }
+}
+
+
