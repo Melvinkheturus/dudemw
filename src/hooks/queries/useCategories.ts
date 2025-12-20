@@ -63,7 +63,7 @@ export function useCategoryStats(
   return useQuery({
     queryKey: categoryKeys.stats(),
     queryFn: async () => {
-      const result = await CategoryService.getCategoryStats()
+      const result = await getCategoryStatsAction()
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch category stats')
       }
