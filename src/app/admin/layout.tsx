@@ -32,18 +32,16 @@ export default function AdminLayout({
   const router = useRouter()
   const pathname = usePathname()
   const supabase = createClient()
-  
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+
   // Auth routes that don't need the admin layout
   const authRoutes = ['/admin/login', '/admin/setup', '/admin/recover', '/admin/pending', '/admin/logout']
   const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
   
   // Settings routes that have their own complete layout
   const isSettingsRoute = pathname.startsWith('/admin/settings')
-  
-  // ALL HOOKS MUST BE CALLED UNCONDITIONALLY BEFORE ANY RETURNS
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
 
   // Client-side auth verification (backup to middleware)
   useEffect(() => {
@@ -69,27 +67,22 @@ export default function AdminLayout({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
 
-  // RENDER LOGIC - ALL HOOKS CALLED ABOVE, NOW SAFE TO HAVE CONDITIONAL RETURNS
-  
-  // If it's an auth route, just render the children without the admin layout
+  // Render auth routes without layout
   if (isAuthRoute) {
     return <>{children}</>
   }
   
-  // If it's a settings route, render children without the admin layout wrapper
-  // Settings has its own complete layout
+  // Render settings routes without admin layout wrapper (has its own layout)
   if (isSettingsRoute) {
-    if (isCheckingAuth) {
-      return <LoadingScreen />
-    }
-    return <>{children}</>
+    return isCheckingAuth ? <LoadingScreen /> : <>{children}</>
   }
 
-  // Show loading state while checking auth
+  // Show loading for protected routes
   if (isCheckingAuth) {
     return <LoadingScreen />
   }
 
+  // Render admin layout for other admin routes
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-red-50/30">
       {/* Desktop Sidebar */}
