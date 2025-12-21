@@ -1,4 +1,13 @@
 import { supabaseAdmin } from '@/lib/supabase/supabase'
+import { createClient } from '@/lib/supabase/client'
+
+// Helper to get appropriate client - use client-side supabase for browser, admin for server
+const getSupabaseClient = () => {
+  if (typeof window !== 'undefined') {
+    return createClient()
+  }
+  return supabaseAdmin
+}
 
 export interface DashboardStats {
   revenue: {
@@ -53,6 +62,7 @@ export class AnalyticsService {
    */
   static async getDashboardStats(): Promise<{ success: boolean; data?: DashboardStats; error?: string }> {
     try {
+      const supabase = getSupabaseClient()
       const now = new Date()
       const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -60,19 +70,20 @@ export class AnalyticsService {
       const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0)
 
       // Revenue stats
-      const { data: allOrders } = await supabaseAdmin
+      const { data: allOrders } = await supabase
         .from('orders')
         .select('total_amount, created_at, order_status')
 
       const totalRevenue = allOrders?.reduce((sum, o) => sum + (o.total_amount || 0), 0) || 0
       const todayRevenue = allOrders
-        ?.filter(o => new Date(o.created_at) >= startOfToday)
+        ?.filter(o => o.created_at && new Date(o.created_at) >= startOfToday)
         .reduce((sum, o) => sum + (o.total_amount || 0), 0) || 0
       const thisMonthRevenue = allOrders
-        ?.filter(o => new Date(o.created_at) >= startOfMonth)
+        ?.filter(o => o.created_at && new Date(o.created_at) >= startOfMonth)
         .reduce((sum, o) => sum + (o.total_amount || 0), 0) || 0
       const lastMonthRevenue = allOrders
         ?.filter(o => {
+          if (!o.created_at) return false
           const date = new Date(o.created_at)
           return date >= startOfLastMonth && date <= endOfLastMonth
         })
@@ -156,8 +167,9 @@ export class AnalyticsService {
 
       // Group by date
       const chartData: { [key: string]: number } = {}
-      
+
       orders?.forEach(order => {
+        if (!order.created_at) return
         const date = new Date(order.created_at)
         let key: string
 
@@ -203,8 +215,9 @@ export class AnalyticsService {
 
       // Group by date
       const chartData: { [key: string]: number } = {}
-      
+
       orders?.forEach(order => {
+        if (!order.created_at) return
         const date = new Date(order.created_at).toISOString().split('T')[0]
         chartData[date] = (chartData[date] || 0) + 1
       })
@@ -337,7 +350,7 @@ export class AnalyticsService {
 
       // Group by date
       const chartData: { [key: string]: number } = {}
-      
+
       authUsers?.users
         .filter(user => new Date(user.created_at) >= startDate)
         .forEach(user => {
@@ -389,7 +402,7 @@ export class AnalyticsService {
 
       const csvData = orders?.map(order => ({
         'Order ID': order.id,
-        'Date': new Date(order.created_at).toLocaleDateString(),
+        'Date': order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A',
         'Customer Email': order.user_id || 'Guest',
         'Total Amount': `₹${order.total_amount}`,
         'Status': order.order_status,

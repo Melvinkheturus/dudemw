@@ -39,12 +39,13 @@ export default function HeroClient({ banners }: HeroClientProps) {
           {banners.map((banner) => (
             <SwiperSlide key={banner.id}>
               <Link href={banner.link_url || '#'} className="block">
-                <div className="relative min-h-[600px] md:min-h-[700px]">
+                <div className="relative min-h-[700px] md:min-h-[900px]">
                   <Image
-                    src={banner.image_url}
-                    alt={banner.title}
+                    src={banner.image_url || ''}
+                    alt={banner.internal_title}
                     fill
                     priority
+                    unoptimized
                     className="object-cover object-center"
                   />
 
@@ -57,7 +58,7 @@ export default function HeroClient({ banners }: HeroClientProps) {
               <div className="absolute bottom-0 left-0 z-10 px-8 pb-20 md:px-12 md:pb-24 lg:px-16">
                 {/* Main Title */}
                 <h1 className="font-heading text-6xl leading-[0.9] tracking-tighter text-white md:text-7xl lg:text-8xl">
-                  {banner.title}
+                  {banner.internal_title}
                 </h1>
 
                 {/* CTA Button */}

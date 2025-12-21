@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/supabase'
+import { createClient } from '@/lib/supabase/client'
 import {
   InventoryItem,
   InventoryLog,
@@ -10,14 +11,23 @@ import {
   StockForecast,
 } from '@/lib/types/inventory'
 
+// Helper to get appropriate client - use client-side supabase for browser, admin for server
+const getSupabaseClient = () => {
+  if (typeof window !== 'undefined') {
+    return createClient()
+  }
+  return supabaseAdmin
+}
+
 export class InventoryService {
   /**
    * Get inventory items with filtering
    */
   static async getInventoryItems(filters?: InventoryFilters, page: number = 1, limit: number = 50) {
     try {
+      const supabase = getSupabaseClient()
       // Fetch all inventory items with proper joins
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabase
         .from('inventory_items')
         .select(`
           id,
@@ -166,11 +176,11 @@ export class InventoryService {
       // Log the adjustment
       await this.logInventoryChange({
         variant_id: adjustment.variant_id,
-        change_amount: adjustment.adjust_type === 'set' 
-          ? newQuantity - inventoryItem.quantity 
-          : adjustment.adjust_type === 'add' 
-          ? adjustment.quantity 
-          : -adjustment.quantity,
+        change_amount: adjustment.adjust_type === 'set'
+          ? newQuantity - inventoryItem.quantity
+          : adjustment.adjust_type === 'add'
+            ? adjustment.quantity
+            : -adjustment.quantity,
         reason: adjustment.reason,
         previous_quantity: inventoryItem.quantity,
         new_quantity: newQuantity,
@@ -224,7 +234,8 @@ export class InventoryService {
    */
   private static async logInventoryChange(log: Partial<InventoryLog>) {
     try {
-      const { error } = await supabaseAdmin.from('inventory_logs').insert({
+      // Using type assertion for unregistered table
+      const { error } = await (supabaseAdmin as any).from('inventory_logs').insert({
         variant_id: log.variant_id!,
         change_amount: log.change_amount!,
         reason: log.reason!,
@@ -245,7 +256,8 @@ export class InventoryService {
    */
   static async getInventoryHistory(variantId: string, limit: number = 50) {
     try {
-      const { data, error } = await supabaseAdmin
+      // Using type assertion for unregistered table
+      const { data, error } = await (supabaseAdmin as any)
         .from('inventory_logs')
         .select('*')
         .eq('variant_id', variantId)
@@ -428,8 +440,8 @@ export class InventoryService {
 
       // Calculate days until stockout
       const currentStock = inventoryItem.quantity || 0
-      const daysUntilStockout = averageDailySales > 0 
-        ? Math.floor(currentStock / averageDailySales) 
+      const daysUntilStockout = averageDailySales > 0
+        ? Math.floor(currentStock / averageDailySales)
         : 999
 
       // Suggest reorder date (when stock reaches 20%)

@@ -1,11 +1,21 @@
 import { supabaseAdmin } from '@/lib/supabase/supabase'
+import { createClient } from '@/lib/supabase/client'
 import { OrderWithDetails, OrderFilters, PaginationInfo } from '@/lib/types/orders'
+
+// Helper to get appropriate client - use client-side supabase for browser, admin for server
+const getSupabaseClient = () => {
+  if (typeof window !== 'undefined') {
+    return createClient()
+  }
+  return supabaseAdmin
+}
 
 export class OrderService {
   // Get orders with filtering and pagination
   static async getOrders(filters?: OrderFilters, page: number = 1, limit: number = 20) {
     try {
-      let query = supabaseAdmin
+      const supabase = getSupabaseClient()
+      let query = supabase
         .from('orders')
         .select(`
           *,
@@ -73,9 +83,9 @@ export class OrderService {
 
       if (error) throw error
 
-      return { 
-        success: true, 
-        data: data as OrderWithDetails[], 
+      return {
+        success: true,
+        data: data as OrderWithDetails[],
         total: count || 0,
         pagination: {
           page,
@@ -93,7 +103,8 @@ export class OrderService {
   // Get single order by ID
   static async getOrder(id: string) {
     try {
-      const { data, error } = await supabaseAdmin
+      const supabase = getSupabaseClient()
+      const { data, error } = await supabase
         .from('orders')
         .select(`
           *,
@@ -138,7 +149,8 @@ export class OrderService {
   // Get order statistics
   static async getOrderStats() {
     try {
-      const { data: orders, error } = await supabaseAdmin
+      const supabase = getSupabaseClient()
+      const { data: orders, error } = await supabase
         .from('orders')
         .select('order_status, total_amount, created_at')
 

@@ -5,6 +5,7 @@ import { AuthProvider } from "@/domains/auth/context";
 import { CartProvider } from "@/domains/cart";
 import { ToastProvider } from "@/lib/layout/feedback/ToastContext";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { OfferBarProvider } from "@/contexts/OfferBarContext";
 import "./globals.css";
 import Footer from "@/lib/layout/layout/Footer";
 import ConditionalNavbar from "@/lib/layout/layout/ConditionalNavbar";
@@ -109,17 +110,19 @@ export default function RootLayout({
       <AuthProvider>
         <CartProvider>
           <ToastProvider>
-            <html lang="en">
-              <body
-                className={`${satoshi.variable} ${manrope.variable} antialiased flex flex-col min-h-screen`}
-              >
-                <ConditionalNavbar />
-                <main className="flex-1 pt-[52px] lg:pt-[60px] [.pdp-page_&]:pt-0 [.pdp-page_&]:lg:pt-[60px] [.admin-page_&]:pt-0">
-                  <PageTransition>{children}</PageTransition>
-                </main>
-                <Footer />
-              </body>
-            </html>
+            <OfferBarProvider>
+              <html lang="en">
+                <body
+                  className={`${satoshi.variable} ${manrope.variable} antialiased flex flex-col min-h-screen`}
+                >
+                  <ConditionalNavbar />
+                  <main className="flex-1 pt-[52px] lg:pt-[60px] [.pdp-page_&]:pt-0 [.pdp-page_&]:lg:pt-[60px] [.admin-page_&]:pt-0">
+                    <PageTransition>{children}</PageTransition>
+                  </main>
+                  <Footer />
+                </body>
+              </html>
+            </OfferBarProvider>
           </ToastProvider>
         </CartProvider>
       </AuthProvider>

@@ -14,9 +14,7 @@ import HorizontalProductScroll from "../cards/HorizontalProductScroll"
 import MobileFilterButton from "../listing/MobileFilterButton"
 import { FilterProvider } from "../../hooks/FilterContext"
 import { Product } from "@/domains/product"
-import { ProductService } from '@/lib/services/products'
-import { CollectionService } from '@/lib/services/collections'
-import { supabase } from '@/lib/supabase/supabase'
+import { createClient } from '@/lib/supabase/client'
 import { transformProducts } from '@/domains/product/utils/productUtils'
 
 interface ProductsPageProps {
@@ -44,21 +42,18 @@ export default function ProductsPage({ searchParams, category }: ProductsPagePro
 
   // State for products
   const [products, setProducts] = useState<Product[]>([])
-  const [newDrops, setNewDrops] = useState<Product[]>([])
-  const [bestSellers, setBestSellers] = useState<Product[]>([])
-  const [trendingProducts, setTrendingProducts] = useState<Product[]>([])
+  const [collections, setCollections] = useState<{ title: string; slug: string; products: Product[] }[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Fetch products using ProductService
+  // Fetch products and collections
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       setLoading(true)
       try {
+        const supabase = createClient()
         let allProducts: Product[] = []
-        let newArrivals: Product[] = []
-        let bestsellers: Product[] = []
 
-        // Fetch data based on variant using ProductService
+        // Fetch data based on variant
         if (categoryParam) {
           // Get category ID first
           const { data: categoryData } = await supabase
@@ -66,70 +61,141 @@ export default function ProductsPage({ searchParams, category }: ProductsPagePro
             .select('id')
             .eq('slug', categoryParam)
             .single()
-          
+
           if (categoryData) {
-            const result = await ProductService.getProducts({
-              categoryId: categoryData.id,
-              status: 'active'
-            })
-            allProducts = result.success ? transformProducts(result.data) : []
+            // Fetch products by category via product_categories junction
+            const { data: productCats } = await supabase
+              .from('product_categories')
+              .select('product_id')
+              .eq('category_id', categoryData.id)
+
+            if (productCats && productCats.length > 0) {
+              const productIds = productCats.map(pc => pc.product_id)
+              const { data: products } = await supabase
+                .from('products')
+                .select('*, product_images(*)')
+                .in('id', productIds)
+                .eq('status', 'published')
+
+              allProducts = transformProducts(products || [])
+            }
           }
         } else if (collection) {
           // Fetch products from collection
-          const result = await CollectionService.getCollectionProducts(collection)
-          allProducts = result.success ? transformProducts(result.data) : []
+          const { data: collectionProducts } = await supabase
+            .from('collection_products')
+            .select(`
+              *,
+              product:products (
+                *,
+                product_images (*)
+              )
+            `)
+            .eq('collection_id', collection)
+            .order('sort_order', { ascending: true })
+
+          const products = collectionProducts?.map(cp => cp.product).filter(Boolean) || []
+          allProducts = transformProducts(products)
         } else if (query) {
           // Search products
-          const result = await ProductService.getProducts({
-            search: query,
-            status: 'active'
-          })
-          allProducts = result.success ? transformProducts(result.data) : []
+          const { data: products } = await supabase
+            .from('products')
+            .select('*, product_images(*)')
+            .eq('status', 'published')
+            .ilike('title', `%${query}%`)
+
+          allProducts = transformProducts(products || [])
         } else {
-          // Get all products
-          const result = await ProductService.getProducts({
-            status: 'active'
-          })
-          allProducts = result.success ? transformProducts(result.data) : []
+          // Get all active products
+          const { data: products } = await supabase
+            .from('products')
+            .select('*, product_images(*)')
+            .eq('status', 'published')
+            .order('created_at', { ascending: false })
+
+          allProducts = transformProducts(products || [])
         }
 
-        // Fetch new arrivals using ProductService
-        const newArrivalsResult = await ProductService.getNewArrivals(5)
-        newArrivals = newArrivalsResult.success ? transformProducts(newArrivalsResult.data) : []
-
-        // Fetch bestsellers using ProductService
-        const bestsellersResult = await ProductService.getBestSellers(5)
-        bestsellers = bestsellersResult.success ? transformProducts(bestsellersResult.data) : []
-
         setProducts(allProducts)
-        setNewDrops(newArrivals)
-        setBestSellers(bestsellers)
-        
-        // Mix of new drops and best sellers for trending (ensure unique products)
-        const trendingCandidates = [
-          ...newArrivals.slice(0, 3),
-          ...bestsellers.slice(0, 2),
-        ]
-        
-        // Remove duplicates by ID
-        const uniqueTrending = trendingCandidates.filter((product, index, self) => 
-          index === self.findIndex(p => p.id === product.id)
-        )
-        
-        setTrendingProducts(uniqueTrending)
+
+        // For "All Products" variant, fetch collections from DB
+        if (!categoryParam && !collection && !query) {
+          // Fetch active collections from database
+          const { data: dbCollections } = await supabase
+            .from('collections')
+            .select('id, title, slug')
+            .eq('is_active', true)
+            .order('created_at', { ascending: false })
+            .limit(4)
+
+          const collectionsWithProducts: { title: string; slug: string; products: Product[] }[] = []
+
+          if (dbCollections && dbCollections.length > 0) {
+            // Fetch products for each collection
+            for (const col of dbCollections) {
+              const { data: colProducts } = await supabase
+                .from('collection_products')
+                .select(`
+                  *,
+                  product:products (
+                    *,
+                    product_images (*)
+                  )
+                `)
+                .eq('collection_id', col.id)
+                .order('sort_order', { ascending: true })
+                .limit(8)
+
+              const products = colProducts?.map(cp => cp.product).filter(Boolean) || []
+              if (products.length > 0) {
+                collectionsWithProducts.push({
+                  title: col.title,
+                  slug: col.slug,
+                  products: transformProducts(products).slice(0, 8)
+                })
+              }
+            }
+          }
+
+          // Fallback: If no collections with products, create sections from product flags
+          if (collectionsWithProducts.length === 0 && allProducts.length > 0) {
+            const newDrops = allProducts.filter(p => p.is_new_drop).slice(0, 8)
+            const bestsellers = allProducts.filter(p => p.is_bestseller).slice(0, 8)
+            const featured = allProducts.filter(p => p.is_featured).slice(0, 8)
+
+            if (newDrops.length > 0) {
+              collectionsWithProducts.push({ title: 'New Drops', slug: 'new-drops', products: newDrops })
+            }
+            if (bestsellers.length > 0) {
+              collectionsWithProducts.push({ title: 'Best Sellers', slug: 'best-sellers', products: bestsellers })
+            }
+            if (featured.length > 0) {
+              collectionsWithProducts.push({ title: 'Featured', slug: 'featured', products: featured })
+            }
+
+            // If still empty, just show recent products
+            if (collectionsWithProducts.length === 0) {
+              collectionsWithProducts.push({
+                title: 'Latest Products',
+                slug: 'latest',
+                products: allProducts.slice(0, 8)
+              })
+            }
+          }
+
+          setCollections(collectionsWithProducts)
+        }
       } catch (error) {
         console.error('Failed to fetch products:', error)
         setProducts([])
-        setNewDrops([])
-        setBestSellers([])
-        setTrendingProducts([])
+        setCollections([])
       } finally {
         setLoading(false)
       }
     }
 
-    fetchProducts()
-  }, [query, category, page])
+    fetchData()
+  }, [query, category, page, categoryParam, collection])
 
   const total = products.length
   const hasMore = false // Implement pagination logic if needed
@@ -140,28 +206,30 @@ export default function ProductsPage({ searchParams, category }: ProductsPagePro
       {/* 1. ALL PRODUCTS VARIANT */}
       {isAllProducts && (
         <>
-          <BannerCarousel />
+          <BannerCarousel placement="product-listing-carousel" />
           <CategoryLite />
 
-          {/* Curated Product Sections - Horizontal Scroll */}
+          {/* Dynamic Collection Sections from DB */}
           <section className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-12">
-            <HorizontalProductScroll
-              title="New Drops"
-              products={newDrops}
-              badge="NEW"
-              badgeColor="red"
-            />
-            <HorizontalProductScroll
-              title="Best Sellers"
-              products={bestSellers}
-              badge="BESTSELLER"
-              badgeColor="black"
-            />
-            <HorizontalProductScroll
-              title="Trending Now"
-              products={trendingProducts}
-              badgeColor="red"
-            />
+            {collections.length > 0 ? (
+              collections.map((col, index) => (
+                <HorizontalProductScroll
+                  key={col.slug}
+                  title={col.title}
+                  products={col.products}
+                  badge={index === 0 ? 'NEW' : undefined}
+                  badgeColor={index === 0 ? 'red' : 'black'}
+                />
+              ))
+            ) : (
+              /* Fallback if no collections */
+              products.length > 0 && (
+                <HorizontalProductScroll
+                  title="Our Products"
+                  products={products.slice(0, 8)}
+                />
+              )
+            )}
 
             {/* Divider */}
             <div className="my-8 border-t-2 border-gray-200 md:my-12" />

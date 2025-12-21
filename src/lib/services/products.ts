@@ -1,7 +1,15 @@
 import { supabaseAdmin } from '@/lib/supabase/supabase'
 import { createClient } from '@/lib/supabase/client'
 
-const supabase = createClient()
+// Helper to get appropriate client - use client-side supabase for browser, admin for server
+const getSupabaseClient = () => {
+  if (typeof window !== 'undefined') {
+    // Client-side: use browser client
+    return createClient()
+  }
+  // Server-side: use admin client
+  return supabaseAdmin
+}
 
 export interface ProductAnalytics {
   product_id: string
@@ -50,6 +58,7 @@ export class ProductService {
     sortOrder?: 'asc' | 'desc'
   }) {
     try {
+      const supabase = getSupabaseClient()
       let query = supabase
         .from('products')
         .select(`
@@ -169,6 +178,7 @@ export class ProductService {
    */
   static async getProduct(identifier: string, bySlug = false) {
     try {
+      const supabase = getSupabaseClient()
       let query = supabase
         .from('products')
         .select(`
@@ -267,6 +277,7 @@ export class ProductService {
    */
   static async getFeaturedProducts(limit = 8) {
     try {
+      const supabase = getSupabaseClient()
       const { data, error } = await supabase
         .from('products')
         .select(`
@@ -279,7 +290,7 @@ export class ProductService {
           )
         `)
         .eq('is_featured', true)
-        .eq('status', 'active')
+        .eq('status', 'published')
         .limit(limit)
         .order('created_at', { ascending: false })
 
@@ -300,6 +311,7 @@ export class ProductService {
       const thirtyDaysAgo = new Date()
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
+      const supabase = getSupabaseClient()
       const { data, error } = await supabase
         .from('products')
         .select(`
@@ -311,7 +323,7 @@ export class ProductService {
             is_primary
           )
         `)
-        .eq('status', 'active')
+        .eq('status', 'published')
         .gte('created_at', thirtyDaysAgo.toISOString())
         .limit(limit)
         .order('created_at', { ascending: false })
@@ -330,6 +342,7 @@ export class ProductService {
    */
   static async getBestSellers(limit = 8) {
     try {
+      const supabase = getSupabaseClient()
       // First get top selling product IDs from analytics
       const { data: analytics, error: analyticsError } = await supabase
         .from('product_analytics')
@@ -344,7 +357,7 @@ export class ProductService {
         return this.getNewArrivals(limit)
       }
 
-      const productIds = analytics.map(a => a.product_id)
+      const productIds = analytics.map((a: { product_id: string }) => a.product_id)
 
       const { data, error } = await supabase
         .from('products')
@@ -358,7 +371,7 @@ export class ProductService {
           )
         `)
         .in('id', productIds)
-        .eq('status', 'active')
+        .eq('status', 'published')
 
       if (error) throw error
 

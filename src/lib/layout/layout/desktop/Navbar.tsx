@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import MegaMenu from "../megamenu/MegaMenu"
 import { useCart } from "@/domains/cart"
+import { useOfferBar } from "@/contexts/OfferBarContext"
 
 export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -12,6 +13,7 @@ export default function Navbar() {
   const [placeholderText, setPlaceholderText] = useState("")
   const [placeholderIndex, setPlaceholderIndex] = useState(0)
   const { itemCount } = useCart()
+  const { isOfferBarVisible } = useOfferBar()
 
   const placeholders = [
     "Search for t-shirts...",
@@ -44,7 +46,7 @@ export default function Navbar() {
 
   return (
     <div>
-      <nav className="fixed left-0 right-0 top-7 z-40 bg-white/95 backdrop-blur-sm">
+      <nav className={`fixed left-0 right-0 z-40 bg-white/95 backdrop-blur-sm transition-all duration-300 ${isOfferBarVisible ? 'top-7' : 'top-0'}`}>
         <div className="mx-auto max-w-[1600px] px-6 py-3">
           <div className="flex items-center gap-8">
             {/* Logo - Icon + Typography */}
@@ -205,9 +207,8 @@ export default function Navbar() {
 
       {/* Mega Menu - Full Width */}
       <div
-        className={`fixed left-0 right-0 top-[calc(28px+52px)] z-50 ${
-          showMegaMenu ? 'block' : 'hidden'
-        }`}
+        className={`fixed left-0 right-0 z-50 transition-all duration-300 ${isOfferBarVisible ? 'top-[calc(28px+52px)]' : 'top-[52px]'} ${showMegaMenu ? 'block' : 'hidden'
+          }`}
         onMouseEnter={() => setShowMegaMenu(true)}
         onMouseLeave={() => setShowMegaMenu(false)}
       >

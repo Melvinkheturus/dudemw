@@ -4,16 +4,18 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import Sidebar from "./Sidebar"
+import { useOfferBar } from "@/contexts/OfferBarContext"
 
 export default function MobileNavbar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const { isOfferBarVisible } = useOfferBar()
 
   return (
     <>
       {/* Top Navbar */}
-      <nav className="fixed left-0 right-0 top-7 z-40 bg-white/95 backdrop-blur-sm lg:hidden">
+      <nav className={`fixed left-0 right-0 z-40 bg-white/95 backdrop-blur-sm lg:hidden transition-all duration-300 ${isOfferBarVisible ? 'top-7' : 'top-0'}`}>
         <div className="flex items-center justify-between px-4 py-2">
           {/* Hamburger Menu */}
           <button

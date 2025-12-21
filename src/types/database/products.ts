@@ -117,6 +117,7 @@ export interface ProductVariantsTable {
         position: number | null
         display_order: number | null
         options: Json | null
+        image_url: string | null
         created_at: string | null
         updated_at: string | null
     }
@@ -133,6 +134,7 @@ export interface ProductVariantsTable {
         position?: number | null
         display_order?: number | null
         options?: Json | null
+        image_url?: string | null
         created_at?: string | null
         updated_at?: string | null
     }
@@ -149,6 +151,7 @@ export interface ProductVariantsTable {
         position?: number | null
         display_order?: number | null
         options?: Json | null
+        image_url?: string | null
         created_at?: string | null
         updated_at?: string | null
     }

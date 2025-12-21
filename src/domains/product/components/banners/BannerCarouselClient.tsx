@@ -53,8 +53,9 @@ export default function BannerCarouselClient({ banners }: BannerCarouselClientPr
                 <div className="relative aspect-video md:h-[400px] md:aspect-auto">
                   <Image
                     src={banner.image_url || '/images/categories/T-Shirt.png'}
-                    alt={banner.title}
+                    alt={banner.internal_title || 'Banner'}
                     fill
+                    unoptimized
                     className="object-cover object-center"
                     onError={(e) => {
                       console.warn('Banner image failed to load:', banner.image_url);
@@ -71,7 +72,7 @@ export default function BannerCarouselClient({ banners }: BannerCarouselClientPr
               <div className="absolute bottom-0 left-0 top-0 z-10 flex flex-col justify-center px-6 md:px-12 lg:px-16">
                 {/* Main Title */}
                 <h2 className="font-heading text-4xl leading-tight tracking-tight text-white md:text-5xl lg:text-6xl">
-                  {banner.title}
+                  {banner.internal_title}
                 </h2>
 
                 {/* CTA Button */}

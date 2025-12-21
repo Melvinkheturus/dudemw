@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
 import { Play, ArrowRight } from "lucide-react"
-import { Category } from "@/lib/services/categories"
+import { Category } from "@/domains/product/types"
 
 interface EnhancedCategoryCardProps {
   category: Category
@@ -38,9 +38,8 @@ export function EnhancedCategoryCard({ category, index }: EnhancedCategoryCardPr
             src={thumbnailUrl}
             alt={category.name}
             fill
-            className={`object-cover transition-all duration-500 ${
-              showVideo ? 'opacity-0' : 'opacity-100 group-hover:scale-110'
-            }`}
+            className={`object-cover transition-all duration-500 ${showVideo ? 'opacity-0' : 'opacity-100 group-hover:scale-110'
+              }`}
           />
 
           {/* Video (if available) */}
@@ -80,17 +79,15 @@ export function EnhancedCategoryCard({ category, index }: EnhancedCategoryCardPr
                 {category.description}
               </p>
             )}
-            
+
             {/* CTA Button */}
             <div className="flex items-center space-x-2 text-sm font-medium">
-              <span className={`transition-all duration-300 ${
-                isHovered ? 'text-red-400' : 'text-white'
-              }`}>
+              <span className={`transition-all duration-300 ${isHovered ? 'text-red-400' : 'text-white'
+                }`}>
                 {isHovered ? 'SHOP NOW' : 'EXPLORE'}
               </span>
-              <ArrowRight className={`w-4 h-4 transition-all duration-300 ${
-                isHovered ? 'text-red-400 translate-x-1' : 'text-white'
-              }`} />
+              <ArrowRight className={`w-4 h-4 transition-all duration-300 ${isHovered ? 'text-red-400 translate-x-1' : 'text-white'
+                }`} />
             </div>
           </div>
         </div>

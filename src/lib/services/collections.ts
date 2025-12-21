@@ -1,5 +1,4 @@
-import { supabase } from '@/lib/supabase/client'
-import { supabaseAdmin } from '@/lib/supabase/supabase'
+import { supabaseAdmin as supabase } from '@/lib/supabase/supabase'
 
 export interface Collection {
   id: string
@@ -81,7 +80,7 @@ export class CollectionService {
         if (error.code === 'PGRST116') {
           return { success: false, error: 'Collection not found', notFound: true }
         }
-        
+
         console.error('Error fetching collection:', {
           message: error.message,
           details: error.details,
@@ -179,8 +178,8 @@ export class CollectionService {
         success: true,
         data: {
           ...collection,
-          products: productsResult.data,
-          product_count: productsResult.data.length
+          products: productsResult.data || [],
+          product_count: (productsResult.data || []).length
         }
       }
     } catch (error: any) {

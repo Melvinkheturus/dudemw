@@ -9,6 +9,7 @@ import AddToCartButton from './AddToCartButton'
 import FloatingBottomBar from './FloatingBottomBar'
 
 import { Product } from '@/domains/product'
+import { getProductImage } from '@/domains/product/utils/getProductImage'
 
 interface DesktopProductViewProps {
   product: Product
@@ -20,16 +21,17 @@ export default function DesktopProductView({ product }: DesktopProductViewProps)
   const [selectedImage, setSelectedImage] = useState(0)
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [showFloatingBar, setShowFloatingBar] = useState(false)
-  const [currentImage, setCurrentImage] = useState((product.images && product.images[0]) || '')
+  const [currentImage, setCurrentImage] = useState(getProductImage(null, product.images))
 
   useEffect(() => {
     // Show floating bar when size is selected
     setShowFloatingBar(!!selectedSize)
   }, [selectedSize])
 
-  // Update main image when color changes
+  // Update main image when color or image selection changes
   useEffect(() => {
-    setCurrentImage((product.images && product.images[selectedImage]) || '')
+    const selectedImg = product.images && product.images[selectedImage]
+    setCurrentImage(getProductImage(null, selectedImg ? [selectedImg] : product.images))
   }, [selectedColor, selectedImage, product.images])
 
   const handleColorSelect = (color: string) => {
@@ -97,8 +99,8 @@ export default function DesktopProductView({ product }: DesktopProductViewProps)
                           onMouseEnter={() => setSelectedImage(idx)}
                           onClick={() => setSelectedImage(idx)}
                           className={`relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all bg-white hover:scale-105 ${selectedImage === idx
-                              ? 'border-black'
-                              : 'border-gray-300 hover:border-gray-500'
+                            ? 'border-black'
+                            : 'border-gray-300 hover:border-gray-500'
                             }`}
                         >
                           <Image

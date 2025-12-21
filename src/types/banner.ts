@@ -1,4 +1,4 @@
-import { Database } from './database.types'
+import { Database } from './database'
 
 // Base types from database
 export type Banner = Database['public']['Tables']['banners']['Row']

@@ -22,27 +22,62 @@ function CategorySection({ category }: CategorySectionProps) {
     const fetchProducts = async () => {
       try {
         const supabase = createClient()
+
+        // First try to fetch products by category_id
         const { data: categoryData } = await supabase
           .from('categories')
           .select('id')
           .eq('slug', category.slug)
           .single()
-        
+
         let categoryProducts: Product[] = []
+
         if (categoryData) {
-          const { data } = await supabase
+          // Try fetching by category_id first
+          const { data: catProducts } = await supabase
             .from('products')
             .select('*')
             .eq('category_id', categoryData.id)
-            .eq('in_stock', true)
+            .eq('status', 'published')
             .limit(8)
-          categoryProducts = (data || []).map(product => ({
+
+          if (catProducts && catProducts.length > 0) {
+            categoryProducts = catProducts.map(product => ({
+              ...product,
+              price: product.price ?? 0,
+              slug: product.slug ?? product.id,
+              images: product.images as string[] | null,
+              sizes: product.sizes as string[] | null,
+              colors: product.colors as string[] | null,
+              in_stock: product.in_stock ?? false,
+              is_bestseller: product.is_bestseller ?? false,
+              is_new_drop: product.is_new_drop ?? false
+            }))
+          }
+        }
+
+        // If no products found by category, fetch latest products as fallback
+        if (categoryProducts.length === 0) {
+          const { data: latestProducts } = await supabase
+            .from('products')
+            .select('*')
+            .eq('status', 'published')
+            .order('created_at', { ascending: false })
+            .limit(8)
+
+          categoryProducts = (latestProducts || []).map(product => ({
             ...product,
+            price: product.price ?? 0,
+            slug: product.slug ?? product.id,
+            images: product.images as string[] | null,
+            sizes: product.sizes as string[] | null,
+            colors: product.colors as string[] | null,
             in_stock: product.in_stock ?? false,
             is_bestseller: product.is_bestseller ?? false,
             is_new_drop: product.is_new_drop ?? false
           }))
         }
+
         setProducts(categoryProducts)
       } catch (error) {
         console.error('Failed to fetch category products:', error)
@@ -51,7 +86,7 @@ function CategorySection({ category }: CategorySectionProps) {
         setLoading(false)
       }
     }
-    
+
     fetchProducts()
   }, [category.slug])
 
@@ -81,6 +116,7 @@ function CategorySection({ category }: CategorySectionProps) {
                     src={product.images[0]}
                     alt={product.title}
                     fill
+                    unoptimized
                     className="object-cover transition-transform duration-300 group-hover:scale-110"
                   />
                 )}
@@ -100,7 +136,7 @@ function CategorySection({ category }: CategorySectionProps) {
           ))
         ) : (
           <div className="col-span-4 py-8 text-center text-gray-500">
-            No products available in this category
+            No products available
           </div>
         )}
       </div>
@@ -135,7 +171,7 @@ export default function MegaMenu({ onClose }: MegaMenuProps) {
         setIsLoading(false)
       }
     }
-    
+
     fetchData()
   }, [])
 
@@ -210,19 +246,17 @@ export default function MegaMenu({ onClose }: MegaMenuProps) {
                   <li key={category.id}>
                     <button
                       onClick={() => scrollToSection(category.slug)}
-                      className={`w-full text-left font-body text-lg font-medium transition-all ${
-                        activeSection === category.slug
-                          ? "font-bold text-red-600"
-                          : "text-black hover:text-red-600"
-                      }`}
+                      className={`w-full text-left font-body text-lg font-medium transition-all ${activeSection === category.slug
+                        ? "font-bold text-red-600"
+                        : "text-black hover:text-red-600"
+                        }`}
                     >
                       {category.name}
                       <span
-                        className={`mt-1 block h-0.5 transition-all ${
-                          activeSection === category.slug
-                            ? "w-full bg-red-600"
-                            : "bg-transparent"
-                        }`}
+                        className={`mt-1 block h-0.5 transition-all ${activeSection === category.slug
+                          ? "w-full bg-red-600"
+                          : "bg-transparent"
+                          }`}
                       />
                     </button>
                   </li>

@@ -6,13 +6,19 @@ export interface CategoriesTable {
         name: string
         slug: string
         description: string | null
+        image: string | null
         image_url: string | null
+        icon_url: string | null
+        homepage_thumbnail_url: string | null
+        homepage_video_url: string | null
+        plp_square_thumbnail_url: string | null
         parent_id: string | null
         is_active: boolean | null
         status: string | null
         display_order: number | null
         meta_title: string | null
         meta_description: string | null
+        selected_banner_id: string | null
         created_at: string | null
         updated_at: string | null
     }
@@ -21,13 +27,19 @@ export interface CategoriesTable {
         name: string
         slug: string
         description?: string | null
+        image?: string | null
         image_url?: string | null
+        icon_url?: string | null
+        homepage_thumbnail_url?: string | null
+        homepage_video_url?: string | null
+        plp_square_thumbnail_url?: string | null
         parent_id?: string | null
         is_active?: boolean | null
         status?: string | null
         display_order?: number | null
         meta_title?: string | null
         meta_description?: string | null
+        selected_banner_id?: string | null
         created_at?: string | null
         updated_at?: string | null
     }
@@ -36,13 +48,19 @@ export interface CategoriesTable {
         name?: string
         slug?: string
         description?: string | null
+        image?: string | null
         image_url?: string | null
+        icon_url?: string | null
+        homepage_thumbnail_url?: string | null
+        homepage_video_url?: string | null
+        plp_square_thumbnail_url?: string | null
         parent_id?: string | null
         is_active?: boolean | null
         status?: string | null
         display_order?: number | null
         meta_title?: string | null
         meta_description?: string | null
+        selected_banner_id?: string | null
         created_at?: string | null
         updated_at?: string | null
     }

@@ -44,6 +44,11 @@ const config: Config = {
         md: "0.45rem",
         sm: "0.25rem",
       },
+      fontFamily: {
+        heading: ["var(--font-heading)", "sans-serif"],
+        body: ["var(--font-body)", "sans-serif"],
+        sans: ["var(--font-body)", "sans-serif"],
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },

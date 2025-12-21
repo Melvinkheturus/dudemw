@@ -7,6 +7,7 @@ import { Heart, ShoppingCart } from "lucide-react"
 import { useCart, useCartSound, type CartItem } from "@/domains/cart"
 import { useWishlist } from "@/domains/wishlist"
 import { Product } from "@/domains/product"
+import { getProductImage } from "@/domains/product/utils/getProductImage"
 
 interface ProductCardProps {
   product: Product
@@ -40,8 +41,8 @@ export default function ProductCard({ product, badge, badgeColor = "red" }: Prod
   // Short description
   const shortDesc = product.description?.slice(0, 50) || "Premium quality • Multiple sizes available"
 
-  // Use product images or placeholder
-  const imageUrl = product.images?.[0] || '/images/placeholder-product.jpg'
+  // Use product images with fallback logic
+  const imageUrl = getProductImage(null, product.images)
 
   // Handle add to cart
   const handleAddToCart = () => {

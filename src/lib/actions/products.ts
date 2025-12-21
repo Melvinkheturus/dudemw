@@ -1,7 +1,7 @@
 "use server"
 
 import { supabaseAdmin } from '@/lib/supabase/supabase'
-import { Database } from '@/types/database.types'
+import { Database } from '@/types/database'
 import { revalidatePath } from 'next/cache'
 
 // Image upload function
@@ -47,27 +47,27 @@ export async function createProduct(productData: {
   description?: string
   highlights?: string[]
   status: 'draft' | 'active' | 'archived'
-  
+
   // Pricing
   price?: number
   compare_price?: number
   cost?: number
   taxable?: boolean
-  
+
   // Inventory
   track_inventory?: boolean
   allow_backorders?: boolean
   low_stock_threshold?: number
   global_stock?: number
-  
+
   // SEO
   meta_title?: string
   meta_description?: string
   url_handle?: string
-  
+
   // Images
   images?: { url: string; alt: string; isPrimary: boolean }[]
-  
+
   // Options and Variants
   options?: { name: string; values: { name: string; hexColor?: string }[] }[]
   variants?: {
@@ -79,7 +79,7 @@ export async function createProduct(productData: {
     active: boolean
     combinations: { [optionName: string]: string }
   }[]
-  
+
   // Organization
   categoryIds?: string[]
   collectionIds?: string[]
@@ -123,14 +123,14 @@ export async function createProduct(productData: {
     // Create product images
     if (productData.images && productData.images.length > 0) {
       const imageInserts = []
-      
+
       for (const [index, img] of productData.images.entries()) {
         // Skip blob URLs - images should be uploaded before calling this function
         if (img.url.startsWith('blob:')) {
           console.warn('Blob URL detected, skipping:', img.url)
           continue
         }
-        
+
         imageInserts.push({
           product_id: productId,
           image_url: img.url,
@@ -282,7 +282,7 @@ export async function createProduct(productData: {
     if (productData.tags && productData.tags.length > 0) {
       for (const tagName of productData.tags) {
         const tagSlug = tagName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-        
+
         // Upsert tag
         const { data: tag, error: tagError } = await supabaseAdmin
           .from('product_tags')
@@ -379,9 +379,9 @@ export async function getProducts(filters?: {
     let filteredData = data
     if (filters?.stockStatus && filters.stockStatus !== 'all') {
       filteredData = data?.filter(product => {
-        const totalStock = product.global_stock || 
+        const totalStock = product.global_stock ||
           product.product_variants?.reduce((sum: number, variant: any) => sum + (variant.stock || 0), 0) || 0
-        
+
         switch (filters.stockStatus) {
           case 'in-stock':
             return totalStock > 0
@@ -517,26 +517,123 @@ export async function getProduct(id: string) {
         stack: error.stack
       } : error
     })
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to fetch product' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch product'
     }
   }
 }
 
-export async function updateProduct(id: string, updates: ProductUpdate) {
+// Update Product function extended to handle relationships
+export async function updateProduct(id: string, updates: ProductUpdate & {
+  categoryIds?: string[]
+  collectionIds?: string[]
+  tags?: string[]
+  newImage?: string
+}) {
   try {
+    // Separate relationships from product fields
+    const { categoryIds, collectionIds, tags, newImage, ...productFields } = updates
+
+    // 1. Update product fields
     const { data, error } = await supabaseAdmin
       .from('products')
-      .update(updates)
+      .update(productFields)
       .eq('id', id)
       .select()
       .single()
 
     if (error) throw error
 
+    // 2. Update Categories
+    if (categoryIds !== undefined) {
+      // Delete existing
+      await supabaseAdmin
+        .from('product_categories')
+        .delete()
+        .eq('product_id', id)
+
+      // Insert new
+      if (categoryIds.length > 0) {
+        const categoryInserts = categoryIds.map((categoryId: string) => ({
+          product_id: id,
+          category_id: categoryId,
+        }))
+
+        const { error: catError } = await supabaseAdmin
+          .from('product_categories')
+          .insert(categoryInserts)
+
+        if (catError) throw catError
+      }
+    }
+
+    // 3. Update Collections
+    if (collectionIds !== undefined) {
+      // Delete existing
+      await supabaseAdmin
+        .from('product_collections')
+        .delete()
+        .eq('product_id', id)
+
+      // Insert new
+      if (collectionIds.length > 0) {
+        const collectionInserts = collectionIds.map((collectionId: string, index: number) => ({
+          product_id: id,
+          collection_id: collectionId,
+          position: index,
+        }))
+
+        const { error: colError } = await supabaseAdmin
+          .from('product_collections')
+          .insert(collectionInserts)
+
+        if (colError) throw colError
+      }
+    }
+
+    // 4. Update Tags (Optional - can be added if needed based on UI)
+    // For now skipping to keep scope focused on user request
+
+    // 5. Handle New Image
+    if (newImage) {
+      // First, unset existing primary images
+      await supabaseAdmin
+        .from('product_images')
+        .update({ is_primary: false })
+        .eq('product_id', id)
+
+      // Insert new image as primary
+      const { error: imageError } = await supabaseAdmin
+        .from('product_images')
+        .insert({
+          product_id: id,
+          image_url: newImage,
+          alt_text: productFields.title || 'Product Image', // Fallback to title
+          is_primary: true,
+          sort_order: 0
+        })
+
+      if (imageError) throw imageError
+    }
+
+    // Revalidate Admin Paths
     revalidatePath('/admin/products')
     revalidatePath(`/admin/products/${id}`)
+
+    // Revalidate Storefront Paths
+    // We need the slug to revalidate the specific product page. Use updated slug if available, otherwise fetch current.
+    let slug = productFields.slug || productFields.url_handle
+    if (!slug) {
+      // If slug wasn't updated, we already have the product data from step 1 (returned in 'data')
+      slug = data.slug
+    }
+
+    if (slug) {
+      revalidatePath(`/products/${slug}`)
+      revalidatePath('/products') // Revalidate listing page
+      revalidatePath('/') // Revalidate home page (featured/new arrivals)
+    }
     return { success: true, data }
   } catch (error) {
     console.error('Error updating product:', error)

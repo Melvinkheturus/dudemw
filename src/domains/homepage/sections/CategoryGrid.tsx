@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { Category } from "@/lib/services/categories"
+import { Category } from "@/domains/product/types"
 import { supabase } from '@/lib/supabase/supabase'
 
 const colorOptions = [
@@ -123,8 +123,9 @@ export default function CategoryGrid() {
           >
             {categories.map((category, index) => {
               const categoryColor = colorOptions[index % colorOptions.length]
-              const categoryImage = category.image_url || '/images/placeholder-category.jpg'
-              const categoryHref = `/collections/${category.slug}`
+              const categoryImage = category.homepage_thumbnail_url || category.plp_square_thumbnail_url || category.image_url || '/images/placeholder-category.jpg'
+              console.log('Category Image Debug:', { name: category.name, url: categoryImage, original: category.homepage_thumbnail_url })
+              const categoryHref = `/categories/${category.slug}`
 
               return (
                 <motion.div
@@ -155,6 +156,7 @@ export default function CategoryGrid() {
                           src={categoryImage}
                           alt={category.name}
                           fill
+                          unoptimized
                           className="object-cover transition-transform duration-700 group-hover:scale-110"
                         />
                         {/* Reduced Gradient Overlay */}

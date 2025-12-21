@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Image from "next/image"
 import { Category } from "@/domains/product"
 import { createClient } from '@/lib/supabase/client'
 
@@ -8,31 +9,52 @@ interface CategoryTitleBannerProps {
   handle?: string
 }
 
+interface CategoryBanner {
+  id: string
+  image_url: string | null
+  internal_title: string
+}
+
 export default function CategoryTitleBanner({ handle }: CategoryTitleBannerProps) {
   const [category, setCategory] = useState<Category | null>(null)
+  const [banner, setBanner] = useState<CategoryBanner | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function fetchCategory() {
+    async function fetchData() {
       if (!handle) {
         setLoading(false)
         return
       }
       try {
         const supabase = createClient()
-        const { data } = await supabase
+
+        // Fetch category first
+        const { data: categoryData } = await supabase
           .from('categories')
           .select('*')
           .eq('slug', handle)
           .single()
-        setCategory(data || null)
+
+        setCategory(categoryData || null)
+
+        // Fetch category-specific banner
+        const { data: bannerData } = await supabase
+          .from('banners')
+          .select('id, image_url, internal_title')
+          .eq('placement', 'category-banner')
+          .eq('category', handle)
+          .eq('status', 'active')
+          .single()
+
+        setBanner(bannerData || null)
       } catch (error) {
-        console.error('Failed to fetch category:', error)
+        console.error('Failed to fetch category data:', error)
       } finally {
         setLoading(false)
       }
     }
-    fetchCategory()
+    fetchData()
   }, [handle])
 
   if (loading) {
@@ -52,7 +74,8 @@ export default function CategoryTitleBanner({ handle }: CategoryTitleBannerProps
   }
 
   const title = category.name.toUpperCase()
-  const bannerImage = category.image || '/images/placeholder-banner.jpg'
+  // Use banner image if available, fallback to category image
+  const bannerImage = banner?.image_url || category.image_url || category.homepage_thumbnail_url || '/images/placeholder-banner.jpg'
   const description = category.description || 'Elevate Your Everyday Style'
 
   return (
@@ -61,13 +84,15 @@ export default function CategoryTitleBanner({ handle }: CategoryTitleBannerProps
       <div className="relative mx-auto max-w-[1600px] overflow-hidden rounded-none shadow-2xl md:rounded-3xl">
         <div className="relative h-[400px] md:h-[500px]">
           {/* Background Image */}
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${bannerImage})` }}
-          >
-            {/* Dark overlay for better text visibility */}
-            <div className="absolute inset-0 bg-black/40" />
-          </div>
+          <Image
+            src={bannerImage}
+            alt={title}
+            fill
+            unoptimized
+            className="object-cover object-center"
+          />
+          {/* Dark overlay for better text visibility */}
+          <div className="absolute inset-0 bg-black/40" />
 
           {/* Content - Centered at Bottom */}
           <div className="absolute inset-x-0 bottom-0 pb-12 md:pb-16">

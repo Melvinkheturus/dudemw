@@ -1,24 +1,69 @@
 "use client"
 
-import { useState } from "react"
-import { Flame, Zap, Target, Sparkles, Rocket, BadgeCheck } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Flame, Zap, Target, Sparkles, Rocket, BadgeCheck, Gift, Star, Truck, Shield, LucideIcon } from "lucide-react"
+import { createClient } from '@/lib/supabase/client'
+import { useOfferBar } from '@/contexts/OfferBarContext'
+
+// Icon mapping for dynamic icon selection
+const iconMap: Record<string, LucideIcon> = {
+  Flame, Zap, Target, Sparkles, Rocket, BadgeCheck, Gift, Star, Truck, Shield
+}
+
+interface MarqueeItem {
+  id: string
+  text: string
+  icon?: string
+}
 
 export default function OfferBar() {
   const [isVisible, setIsVisible] = useState(true)
+  const [offers, setOffers] = useState<MarqueeItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const { setIsOfferBarVisible } = useOfferBar()
 
-  const offers = [
-    { icon: Flame, text: "FREE SHIPPING ON ORDERS ABOVE ₹999" },
-    { icon: Zap, text: "FLAT 10% OFF ON FIRST PURCHASE - USE CODE: APIO10" },
-    { icon: Target, text: "3 SHIRTS COMBO @ ₹999 - LIMITED STOCK" },
-    { icon: Sparkles, text: "MADE IN INDIA FOR THE WORLD" },
-    { icon: Rocket, text: "ORDERS SHIP WITHIN 24 HOURS" },
-    { icon: BadgeCheck, text: "EASY 7-DAY RETURNS & EXCHANGE" },
-  ]
+  useEffect(() => {
+    const fetchMarqueeBanner = async () => {
+      try {
+        const supabase = createClient()
+        const { data: banner } = await supabase
+          .from('banners')
+          .select('marquee_data')
+          .eq('placement', 'top-marquee-banner')
+          .eq('status', 'active')
+          .single()
+
+        if (banner?.marquee_data) {
+          // Parse marquee_data (could be string or already an array)
+          const marqueeItems = typeof banner.marquee_data === 'string'
+            ? JSON.parse(banner.marquee_data)
+            : banner.marquee_data
+
+          if (marqueeItems && marqueeItems.length > 0) {
+            setOffers(marqueeItems)
+            setIsOfferBarVisible(true)
+          } else {
+            setIsOfferBarVisible(false)
+          }
+        } else {
+          // No data in DB - hide the offer bar
+          setIsOfferBarVisible(false)
+        }
+      } catch (error) {
+        console.error('Failed to fetch marquee banner:', error)
+        // No fallback - just hide the offer bar
+        setIsOfferBarVisible(false)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchMarqueeBanner()
+  }, [setIsOfferBarVisible])
 
   // Duplicate offers for seamless loop
   const duplicatedOffers = [...offers, ...offers]
 
-  if (!isVisible) return null
+  if (!isVisible || loading || offers.length === 0) return null
 
   return (
     <>
@@ -27,10 +72,10 @@ export default function OfferBar() {
           {/* Marquee Container */}
           <div className="flex animate-marquee items-center gap-8 whitespace-nowrap">
             {duplicatedOffers.map((offer, idx) => {
-              const Icon = offer.icon
+              const Icon = iconMap[offer.icon || 'Flame'] || Flame
               return (
                 <span
-                  key={idx}
+                  key={`${offer.id}-${idx}`}
                   className="flex items-center gap-2 font-body text-xs font-medium tracking-wide md:text-sm"
                 >
                   <Icon className="h-3 w-3 md:h-4 md:w-4" />

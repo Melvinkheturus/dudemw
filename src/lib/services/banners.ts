@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/supabase'
+import { createClient } from '@/lib/supabase/client'
 import {
   Banner,
   BannerCreate,
@@ -8,13 +9,22 @@ import {
   BannerStatus,
 } from '@/lib/types/banners'
 
+// Helper to get appropriate client - use client-side supabase for browser, admin for server
+const getSupabaseClient = () => {
+  if (typeof window !== 'undefined') {
+    return createClient()
+  }
+  return supabaseAdmin
+}
+
 export class BannerService {
   /**
    * Get all banners with filtering
    */
   static async getBanners(filters?: BannerFilters) {
     try {
-      let query = supabaseAdmin
+      const supabase = getSupabaseClient()
+      let query = supabase
         .from('banners')
         .select('*')
         .order('position', { ascending: true })
@@ -300,7 +310,8 @@ export class BannerService {
    */
   static async trackImpression(bannerId: string) {
     try {
-      const { error } = await supabaseAdmin
+      // Using type assertion for unregistered RPC function
+      const { error } = await (supabaseAdmin as any)
         .rpc('increment_banner_impressions', { banner_id: bannerId })
 
       if (error) throw error
@@ -318,7 +329,8 @@ export class BannerService {
    */
   static async trackClick(bannerId: string) {
     try {
-      const { error } = await supabaseAdmin
+      // Using type assertion for unregistered RPC function
+      const { error } = await (supabaseAdmin as any)
         .rpc('increment_banner_clicks', { banner_id: bannerId })
 
       if (error) throw error

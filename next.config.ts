@@ -7,10 +7,10 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ['@supabase/supabase-js'],
-  
+
   // Disable source maps in development to avoid warnings
   productionBrowserSourceMaps: false,
-  
+
   images: {
     remotePatterns: [
       {
@@ -19,12 +19,18 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/storage/v1/object/public/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'qyvpihdiyuowkyideltd.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
     ],
   },
 
   // Turbopack configuration (empty config to acknowledge Turbopack awareness)
   turbopack: {},
-  
+
   // Webpack optimizations for bundle size (used when running with --webpack flag)
   webpack: (config, { isServer }) => {
     // Reduce bundle size by tree-shaking

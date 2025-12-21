@@ -5,7 +5,12 @@ import { createClient } from '@/lib/supabase/client'
 import type { Banner } from "@/types/banner"
 import BannerCarouselClient from "./BannerCarouselClient"
 
-export default function BannerCarousel() {
+interface BannerCarouselProps {
+  // Defaults to homepage-carousel, use product-listing-carousel for PLP
+  placement?: 'homepage-carousel' | 'product-listing-carousel'
+}
+
+export default function BannerCarousel({ placement = 'homepage-carousel' }: BannerCarouselProps) {
   const [banners, setBanners] = useState<Banner[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -16,8 +21,9 @@ export default function BannerCarousel() {
         const { data } = await supabase
           .from('banners')
           .select('*')
-          .eq('is_active', true)
-          .order('sort_order')
+          .eq('placement', placement)
+          .eq('status', 'active')
+          .order('position')
         setBanners(data || [])
       } catch (error) {
         console.error("Failed to fetch banners:", error)
@@ -26,7 +32,7 @@ export default function BannerCarousel() {
       }
     }
     fetchBanners()
-  }, [])
+  }, [placement])
 
   if (isLoading) {
     return (

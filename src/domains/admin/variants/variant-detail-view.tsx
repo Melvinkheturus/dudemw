@@ -208,6 +208,9 @@ export function VariantDetailView({ product, variant }: VariantDetailViewProps) 
         // Create authenticated Supabase client
         const supabase = createClient()
 
+        // Get the primary variant image URL (first image) for fallback logic
+        const primaryImageUrl = variantImages.length > 0 ? variantImages[0].url : null
+
         const { error } = await supabase
           .from('product_variants')
           .update({
@@ -218,6 +221,7 @@ export function VariantDetailView({ product, variant }: VariantDetailViewProps) 
             active: formData.active,
             track_quantity: formData.manage_inventory,
             allow_backorders: formData.allow_backorders,
+            image_url: primaryImageUrl, // Sync primary image for fallback logic
           })
           .eq('id', variant.id)
 

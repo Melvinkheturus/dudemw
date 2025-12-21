@@ -17,7 +17,8 @@ export default function CategoryLite() {
         const { data } = await supabase
           .from('categories')
           .select('*')
-          .order('name')
+          .eq('status', 'active')
+          .order('display_order')
         setCategories(data || [])
       } catch (error) {
         console.error('Failed to fetch categories:', error)
@@ -47,8 +48,8 @@ export default function CategoryLite() {
         {/* Mobile: Horizontal Scroll */}
         <div className="flex gap-6 overflow-x-auto px-4 pb-2 scrollbar-hide md:hidden">
           {categories.map((category) => {
-            const categoryImage = category.image || '/images/placeholder-category.jpg'
-            const categoryHref = `/collections/${category.slug}`
+            const categoryImage = category.image_url || category.plp_square_thumbnail_url || '/images/placeholder-category.jpg'
+            const categoryHref = `/categories/${category.slug}`
 
             return (
               <Link
@@ -76,8 +77,8 @@ export default function CategoryLite() {
         {/* Desktop: Grid */}
         <div className="hidden grid-cols-6 gap-6 px-4 md:grid">
           {categories.map((category) => {
-            const categoryImage = category.image || '/images/placeholder-category.jpg'
-            const categoryHref = `/collections/${category.slug}`
+            const categoryImage = category.image_url || category.plp_square_thumbnail_url || '/images/placeholder-category.jpg'
+            const categoryHref = `/categories/${category.slug}`
 
             return (
               <Link

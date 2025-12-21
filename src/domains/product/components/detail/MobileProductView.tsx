@@ -9,6 +9,7 @@ import AddToCartButton from './AddToCartButton'
 import FloatingBottomBar from './FloatingBottomBar'
 
 import { Product } from '@/domains/product'
+import { getProductImage } from '@/domains/product/utils/getProductImage'
 
 interface MobileProductViewProps {
   product: Product
@@ -46,21 +47,22 @@ const convertToProductColors = (colors: string[], productImages: string[]) => {
 
 export default function MobileProductView({ product }: MobileProductViewProps) {
   const productColors = convertToProductColors(product.colors || [], product.images || [])
-  const [selectedColor, setSelectedColor] = useState(productColors[0] || { name: 'Black', hex: '#000000', image: (product.images && product.images[0]) || '' })
+  const [selectedColor, setSelectedColor] = useState(productColors[0] || { name: 'Black', hex: '#000000', image: getProductImage(null, product.images) })
   const [selectedSize, setSelectedSize] = useState('')
   const [selectedImage, setSelectedImage] = useState(0)
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [showFloatingBar, setShowFloatingBar] = useState(false)
-  const [currentImage, setCurrentImage] = useState((product.images && product.images[0]) || '')
+  const [currentImage, setCurrentImage] = useState(getProductImage(null, product.images))
 
   useEffect(() => {
     // Show floating bar when size is selected
     setShowFloatingBar(!!selectedSize)
   }, [selectedSize])
 
-  // Update main image when color changes
+  // Update main image when color or image selection changes
   useEffect(() => {
-    setCurrentImage((product.images && product.images[selectedImage]) || '')
+    const selectedImg = product.images && product.images[selectedImage]
+    setCurrentImage(getProductImage(null, selectedImg ? [selectedImg] : product.images))
   }, [selectedColor, selectedImage, product.images])
 
   const handleColorSelect = (color: { name: string; hex: string; image: string }) => {
@@ -81,7 +83,7 @@ export default function MobileProductView({ product }: MobileProductViewProps) {
   return (
     <div className="lg:hidden bg-white min-h-screen pb-24">
       {/* Image Card Only */}
-      <motion.div 
+      <motion.div
         className="px-4 pt-6"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -95,10 +97,10 @@ export default function MobileProductView({ product }: MobileProductViewProps) {
             className="object-cover"
             priority
           />
-          
+
           {/* Back and Like Icons - Overlaid on Image */}
           <div className="absolute top-4 left-0 right-0 z-20 flex items-center justify-between px-4">
-            <button 
+            <button
               onClick={() => window.history.back()}
               className="w-10 h-10 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white transition-all shadow-md"
             >
@@ -106,16 +108,14 @@ export default function MobileProductView({ product }: MobileProductViewProps) {
             </button>
             <button
               onClick={() => setIsWishlisted(!isWishlisted)}
-              className={`w-10 h-10 backdrop-blur-md rounded-full flex items-center justify-center transition-all shadow-md ${
-                isWishlisted 
-                  ? 'bg-red-600 hover:bg-red-700' 
-                  : 'bg-white/90 hover:bg-white'
-              }`}
+              className={`w-10 h-10 backdrop-blur-md rounded-full flex items-center justify-center transition-all shadow-md ${isWishlisted
+                ? 'bg-red-600 hover:bg-red-700'
+                : 'bg-white/90 hover:bg-white'
+                }`}
             >
               <Heart
-                className={`w-5 h-5 ${
-                  isWishlisted ? 'fill-white text-white' : 'text-gray-900'
-                }`}
+                className={`w-5 h-5 ${isWishlisted ? 'fill-white text-white' : 'text-gray-900'
+                  }`}
               />
             </button>
           </div>
@@ -127,11 +127,10 @@ export default function MobileProductView({ product }: MobileProductViewProps) {
                 <button
                   key={idx}
                   onClick={() => setSelectedImage(idx)}
-                  className={`relative flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${
-                    selectedImage === idx
-                      ? 'border-white scale-105'
-                      : 'border-white/40'
-                  }`}
+                  className={`relative flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === idx
+                    ? 'border-white scale-105'
+                    : 'border-white/40'
+                    }`}
                 >
                   <Image
                     src={img}
@@ -147,7 +146,7 @@ export default function MobileProductView({ product }: MobileProductViewProps) {
       </motion.div>
 
       {/* Title and Description - Outside Card */}
-      <motion.div 
+      <motion.div
         className="px-4 pt-4"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -164,7 +163,7 @@ export default function MobileProductView({ product }: MobileProductViewProps) {
       </motion.div>
 
       {/* Product Details - Cardless */}
-      <motion.div 
+      <motion.div
         className="px-4"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -189,7 +188,7 @@ export default function MobileProductView({ product }: MobileProductViewProps) {
 
         {/* Add to Cart and Share Buttons */}
         <div className="flex gap-3 mb-4">
-          <AddToCartButton 
+          <AddToCartButton
             productId={product.id}
             productTitle={product.title}
             productPrice={product.price}

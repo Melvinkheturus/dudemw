@@ -1,50 +1,7 @@
 import { notFound } from 'next/navigation'
 import { generateBreadcrumbSchema } from '@/lib/utils/seo'
 import { ProductsPage } from '@/domains/product'
-
-// Define available categories
-const CATEGORIES = {
-  'shirts': {
-    title: 'Shirts',
-    description: 'Premium shirts for every occasion',
-    keywords: ['shirts', 'formal shirts', 'casual shirts', 'dress shirts'],
-  },
-  'pants': {
-    title: 'Pants',
-    description: 'Comfortable and stylish pants',
-    keywords: ['pants', 'trousers', 'chinos', 'formal pants'],
-  },
-  'hoodies': {
-    title: 'Hoodies',
-    description: 'Cozy hoodies and sweatshirts',
-    keywords: ['hoodies', 'sweatshirts', 'casual wear', 'streetwear'],
-  },
-  'jeans': {
-    title: 'Jeans',
-    description: 'Premium denim for modern men',
-    keywords: ['jeans', 'denim', 'casual pants', 'streetwear'],
-  },
-  't-shirts': {
-    title: 'T-Shirts',
-    description: 'Comfortable and stylish t-shirts',
-    keywords: ['t-shirts', 'tees', 'casual wear', 'cotton shirts'],
-  },
-  'jackets': {
-    title: 'Jackets',
-    description: 'Stylish jackets and outerwear',
-    keywords: ['jackets', 'outerwear', 'blazers', 'coats'],
-  },
-  'shorts': {
-    title: 'Shorts',
-    description: 'Comfortable shorts for casual wear',
-    keywords: ['shorts', 'casual wear', 'summer wear', 'bermuda'],
-  },
-  'accessories': {
-    title: 'Accessories',
-    description: 'Complete your look with our accessories',
-    keywords: ['accessories', 'belts', 'wallets', 'bags', 'caps'],
-  },
-}
+import { CategoryService } from '@/lib/services/categories'
 
 export default async function CategoryPage({
   params,
@@ -56,18 +13,20 @@ export default async function CategoryPage({
   const { slug } = await params
   const resolvedSearchParams = await searchParams
 
-  // Check if category exists
-  const category = CATEGORIES[slug as keyof typeof CATEGORIES]
+  // Fetch category from database
+  const categoryResult = await CategoryService.getCategoryBySlug(slug)
 
-  if (!category) {
+  if (!categoryResult.success || !categoryResult.data) {
     notFound()
   }
+
+  const category = categoryResult.data
 
   // Generate structured data for SEO
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: 'Home', url: '/' },
     { name: 'Products', url: '/products' },
-    { name: category.title, url: `/categories/${slug}` },
+    { name: category.name, url: `/categories/${slug}` },
   ])
 
   return (
@@ -78,7 +37,7 @@ export default async function CategoryPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
 
-      {/* Use ProductsPage with category filter - no separate page needed */}
+      {/* Use ProductsPage with category filter */}
       <ProductsPage
         searchParams={{
           ...resolvedSearchParams,
@@ -97,28 +56,30 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const category = CATEGORIES[slug as keyof typeof CATEGORIES]
+  const categoryResult = await CategoryService.getCategoryBySlug(slug)
 
-  if (!category) {
+  if (!categoryResult.success || !categoryResult.data) {
     return {
       title: 'Category Not Found',
     }
   }
 
+  const category = categoryResult.data
+
   return {
-    title: `${category.title} - Dude Menswear`,
-    description: category.description,
-    keywords: ['menswear', 'fashion', ...category.keywords, 'clothing', 'men'],
+    title: `${category.name} - Dude Menswear`,
+    description: category.description || `Shop ${category.name} at Dude Menswear`,
+    keywords: ['menswear', 'fashion', category.name.toLowerCase(), 'clothing', 'men'],
     openGraph: {
       type: 'website',
-      title: `${category.title} - Dude Menswear`,
-      description: category.description,
+      title: `${category.name} - Dude Menswear`,
+      description: category.description || `Shop ${category.name} collection`,
       siteName: 'Dude Menswear',
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${category.title} - Dude Menswear`,
-      description: category.description,
+      title: `${category.name} - Dude Menswear`,
+      description: category.description || `Shop ${category.name} collection`,
     },
     alternates: {
       canonical: `/categories/${slug}`,
@@ -126,9 +87,15 @@ export async function generateMetadata({
   }
 }
 
-// Generate static params for known categories
+// Generate static params for categories from database
 export async function generateStaticParams() {
-  return Object.keys(CATEGORIES).map((slug) => ({
-    slug,
+  const categoriesResult = await CategoryService.getCategories()
+
+  if (!categoriesResult.success || !categoriesResult.data) {
+    return []
+  }
+
+  return categoriesResult.data.map((category: any) => ({
+    slug: category.slug,
   }))
 }
