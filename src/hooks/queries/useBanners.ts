@@ -14,7 +14,7 @@ export const bannerKeys = {
 }
 
 /**
- * Hook to fetch banners list
+ * Hook to fetch banners list and stats
  */
 export function useBanners(
   filters?: any,
@@ -23,11 +23,20 @@ export function useBanners(
   return useQuery({
     queryKey: bannerKeys.list(filters),
     queryFn: async () => {
-      const result = await BannerService.getBanners(filters)
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch banners')
+      // Fetch both banners and stats
+      const [bannersResult, statsResult] = await Promise.all([
+        BannerService.getBanners(filters),
+        BannerService.getBannerStats()
+      ])
+
+      if (!bannersResult.success) {
+        throw new Error(bannersResult.error || 'Failed to fetch banners')
       }
-      return result.data
+
+      return {
+        banners: bannersResult.data || [],
+        stats: statsResult.success ? statsResult.data : undefined
+      }
     },
     ...options,
   })

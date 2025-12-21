@@ -69,7 +69,7 @@ export class BannerService {
         return {
           ...banner,
           status,
-          ctr: banner.impressions > 0 
+          ctr: banner.impressions > 0
             ? ((banner.clicks / banner.impressions) * 100).toFixed(2)
             : '0.00'
         } as Banner
@@ -112,7 +112,7 @@ export class BannerService {
     try {
       // Set default status based on scheduling
       let status: BannerStatus = input.status || 'active'
-      
+
       if (input.start_date) {
         const startDate = new Date(input.start_date)
         const now = new Date()
@@ -123,16 +123,18 @@ export class BannerService {
 
       const bannerData = {
         internal_title: input.internal_title,
-        image_url: input.image_url,
+        image_url: input.image_url || null,
         placement: input.placement,
-        action_type: input.action_type,
-        action_target: input.action_target,
-        action_name: input.action_name,
+        action_type: input.action_type || null,
+        action_target: input.action_target || null,
+        action_name: input.action_name || null,
         start_date: input.start_date || null,
         end_date: input.end_date || null,
         position: input.position || null,
         category: input.category || null,
         cta_text: input.cta_text || null,
+        carousel_data: input.carousel_data || null,
+        marquee_data: input.marquee_data || null,
         status,
         clicks: 0,
         impressions: 0,
@@ -220,7 +222,7 @@ export class BannerService {
 
       const { data, error } = await supabaseAdmin
         .from('banners')
-        .update({ 
+        .update({
           status: newStatus,
           updated_at: new Date().toISOString()
         })
@@ -369,7 +371,7 @@ export class BannerService {
       if (urlParts.length < 2) {
         throw new Error('Invalid image URL')
       }
-      
+
       const filePath = `banners/${urlParts[1]}`
 
       const { error } = await supabaseAdmin.storage
@@ -391,7 +393,7 @@ export class BannerService {
   static async getActiveBanners(placement?: string) {
     try {
       const now = new Date().toISOString()
-      
+
       let query = supabaseAdmin
         .from('banners')
         .select('*')

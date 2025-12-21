@@ -24,6 +24,7 @@ export interface CSVRow {
   variant_manage_inventory: boolean | string
   variant_allow_backorder: boolean | string
   variant_price: number | string
+  variant_cost: number | string // Cost price for inventory
   variant_quantity: number | string
   variant_inventory_stock: number | string
 
@@ -112,6 +113,7 @@ export interface NormalizedCSVRow {
   variant_manage_inventory: boolean
   variant_allow_backorder: boolean
   variant_price: number
+  variant_cost?: number // Cost price for inventory
   variant_quantity: number
 
   // Taxonomy
@@ -151,6 +153,7 @@ export interface VariantData {
   title: string
   sku: string
   price: number
+  cost?: number
   quantity: number
   manage_inventory: boolean
   allow_backorder: boolean

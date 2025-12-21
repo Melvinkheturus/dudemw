@@ -74,8 +74,8 @@ export default function CreateCollectionPage() {
       const collectionProducts = Array.from(formData.selectedProducts.entries()).map(([productId, selectedProductWithVariant], index) => ({
         collection_id: collection.id,
         product_id: productId,
-        sort_order: index + 1,
-        selected_variant_id: selectedProductWithVariant.selectedVariantId // Store which variant to display
+        sort_order: index + 1
+        // Note: selected_variant_id is tracked in UI but collection_products table only stores product_id
       }))
 
       const { error: productsError } = await supabase
@@ -90,11 +90,11 @@ export default function CreateCollectionPage() {
       }
 
       toast.success(
-        isDraft 
+        isDraft
           ? `Collection saved as draft with ${formData.selectedProducts.size} products`
           : `Collection created successfully with ${formData.selectedProducts.size} products`
       )
-      
+
       router.push('/admin/collections')
     } catch (error: any) {
       console.error('Error creating collection:', error)
@@ -141,14 +141,14 @@ export default function CreateCollectionPage() {
         </div>
 
         {/* Progress Steps */}
-        <ProgressSteps 
-          currentStep={currentStep} 
+        <ProgressSteps
+          currentStep={currentStep}
           totalSteps={totalSteps}
         />
 
         {/* Step Content */}
         {currentStep === 1 && (
-          <BasicInfoStep 
+          <BasicInfoStep
             formData={formData}
             onTitleChange={handleTitleChange}
             onFormDataChange={updateFormData}
@@ -156,7 +156,7 @@ export default function CreateCollectionPage() {
         )}
 
         {currentStep === 2 && (
-          <ProductSelectionStep 
+          <ProductSelectionStep
             selectedProducts={formData.selectedProducts}
             onProductsChange={(selectedProducts) => updateFormData({ selectedProducts })}
           />
@@ -168,25 +168,25 @@ export default function CreateCollectionPage() {
 
         {/* Navigation */}
         <div className="flex justify-between">
-          <Button 
+          <Button
             variant="outline"
             onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
             disabled={currentStep === 1}
           >
             Previous
           </Button>
-          
+
           {/* Show publish buttons on final step, otherwise show Next button */}
           {currentStep === totalSteps ? (
             <div className="flex items-center space-x-3">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => handleSubmit(true)}
                 disabled={isLoading}
               >
                 Save as Draft
               </Button>
-              <Button 
+              <Button
                 className="bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/25"
                 onClick={() => handleSubmit(false)}
                 disabled={isLoading}
@@ -196,7 +196,7 @@ export default function CreateCollectionPage() {
               </Button>
             </div>
           ) : (
-            <Button 
+            <Button
               onClick={() => setCurrentStep(Math.min(totalSteps, currentStep + 1))}
               disabled={!canProceedToStep(currentStep + 1)}
               className="bg-red-600 hover:bg-red-700 text-white"

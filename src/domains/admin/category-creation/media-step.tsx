@@ -111,72 +111,118 @@ export function MediaStep({ formData, onFormDataChange, onValidationChange }: Me
         toast.error('Please select a valid video file')
         return
       }
+      // Store the video file directly (no cropping for video)
+      onFormDataChange({
+        [`${type}_file`]: file
+      })
+      toast.success('Homepage video selected successfully.')
+      return
     } else {
       if (!file.type.startsWith('image/')) {
         toast.error('Please select a valid image file')
         return
       }
 
-      // 3. Validate Orientation/Aspect Ratio
+      // 3. Auto-crop image to required aspect ratio
       try {
-        const validationType = type === 'plp_square_thumbnail' ? 'plp' : 'homepage'
-        const isValid = await validateImageRatio(file, validationType)
-        if (!isValid.valid) {
-          toast.error(isValid.error)
-          // Add to validation errors to block progression
-          setValidationErrors(prev => [
-            ...prev.filter(e => e.field !== type),
-            { field: type, message: isValid.error || 'Invalid aspect ratio' }
-          ])
-          return
-        } else {
-          // Remove validation error if it exists
-          setValidationErrors(prev => prev.filter(e => e.field !== type))
-        }
+        // Determine target ratio based on type
+        // Homepage: 4:3 (1.333), PLP: 1:1 (1.0)
+        const targetRatio = type === 'plp_square_thumbnail' ? 1.0 : (4 / 3)
+
+        toast.loading('Cropping image to fit...', { id: 'crop-toast' })
+        const croppedFile = await autoCropImage(file, targetRatio)
+        toast.dismiss('crop-toast')
+
+        // Clear any previous validation errors for this field
+        setValidationErrors(prev => prev.filter(e => e.field !== type))
+
+        // Store the cropped file
+        onFormDataChange({
+          [`${type}_file`]: croppedFile
+        })
+
+        toast.success(`${type.replace(/_/g, ' ')} auto-cropped and selected successfully.`)
       } catch (err) {
-        console.error('Validation error:', err)
+        toast.dismiss('crop-toast')
+        console.error('Cropping error:', err)
+        toast.error('Failed to process image. Please try again.')
       }
     }
-
-    // Store the file object
-    onFormDataChange({
-      [`${type}_file`]: file
-    })
-
-    toast.success(`${type.replace(/_/g, ' ')} selected successfully.`)
   }
 
-  const validateImageRatio = (file: File, type: 'homepage' | 'plp'): Promise<{ valid: boolean; error?: string }> => {
-    return new Promise((resolve) => {
+  /**
+   * Auto-crop image to the required aspect ratio using canvas
+   * Returns a new File with the cropped image
+   */
+  const autoCropImage = (file: File, targetRatio: number): Promise<File> => {
+    return new Promise((resolve, reject) => {
       const img = new (window as any).Image()
       const url = URL.createObjectURL(file)
+
       img.onload = () => {
         URL.revokeObjectURL(url)
-        const ratio = img.width / img.height
 
-        if (type === 'homepage') {
-          // 4:3 ratio is 1.333 (matching EnhancedCategoryCard aspect-[4/3])
-          if (ratio >= 1.25 && ratio <= 1.4) {
-            resolve({ valid: true })
-          } else {
-            resolve({
-              valid: false,
-              error: `Homepage media must be 4:3 landscape ratio. Current: ${img.width}x${img.height} (${ratio.toFixed(2)}:1)`
-            })
-          }
+        const currentRatio = img.width / img.height
+
+        let cropWidth: number
+        let cropHeight: number
+        let offsetX: number
+        let offsetY: number
+
+        if (currentRatio > targetRatio) {
+          // Image is wider than target - crop width (center horizontally)
+          cropHeight = img.height
+          cropWidth = Math.round(img.height * targetRatio)
+          offsetX = Math.round((img.width - cropWidth) / 2)
+          offsetY = 0
         } else {
-          // Square ratio is 1.0 (matching CategoryLiteCard aspect-square)
-          if (ratio >= 0.95 && ratio <= 1.05) {
-            resolve({ valid: true })
-          } else {
-            resolve({
-              valid: false,
-              error: `PLP thumbnail must be square (1:1 ratio). Current: ${img.width}x${img.height} (${ratio.toFixed(2)}:1)`
-            })
-          }
+          // Image is taller than target - crop height (center vertically)
+          cropWidth = img.width
+          cropHeight = Math.round(img.width / targetRatio)
+          offsetX = 0
+          offsetY = Math.round((img.height - cropHeight) / 2)
         }
+
+        // Create canvas and crop
+        const canvas = document.createElement('canvas')
+        canvas.width = cropWidth
+        canvas.height = cropHeight
+
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          reject(new Error('Could not get canvas context'))
+          return
+        }
+
+        // Draw the cropped portion
+        ctx.drawImage(
+          img,
+          offsetX, offsetY, cropWidth, cropHeight,  // Source rectangle
+          0, 0, cropWidth, cropHeight                // Destination rectangle
+        )
+
+        // Convert canvas to blob and create new File
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            reject(new Error('Failed to create cropped image'))
+            return
+          }
+
+          // Create a new File with the same name
+          const croppedFile = new File([blob], file.name, {
+            type: file.type || 'image/jpeg',
+            lastModified: Date.now()
+          })
+
+          resolve(croppedFile)
+        }, file.type || 'image/jpeg', 0.92) // 92% quality for JPEG
       }
-      img.onerror = () => resolve({ valid: false, error: 'Failed to load image for validation' })
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url)
+        reject(new Error('Failed to load image for cropping'))
+      }
+
       img.src = url
     })
   }
@@ -226,7 +272,7 @@ export function MediaStep({ formData, onFormDataChange, onValidationChange }: Me
                   <div className="text-center p-6 aspect-[4/3] flex flex-col items-center justify-center">
                     <ImageIcon className="h-12 w-12 text-gray-400 mb-4" />
                     <p className="text-sm font-medium text-gray-700 mb-2">Select homepage thumbnail</p>
-                    <p className="text-xs text-gray-500 mb-4">Required: Landscape 4:3<br />(e.g., 800x600px, Max 5MB)</p>
+                    <p className="text-xs text-gray-500 mb-4">Auto-cropped to 4:3 landscape<br />(Max 5MB)</p>
                     <Input
                       type="file"
                       accept="image/*"
@@ -337,7 +383,7 @@ export function MediaStep({ formData, onFormDataChange, onValidationChange }: Me
                   <div className="text-center p-6 w-full h-full flex flex-col items-center justify-center">
                     <ImageIcon className="h-10 w-10 text-gray-400 mb-3" />
                     <p className="text-sm font-medium text-gray-700 mb-1">Select square</p>
-                    <p className="text-[10px] text-gray-500 mb-3">1:1 ratio<br />(e.g. 400px)</p>
+                    <p className="text-[10px] text-gray-500 mb-3">Auto-cropped<br />to 1:1 square</p>
                     <Input
                       type="file"
                       accept="image/*"

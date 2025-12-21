@@ -97,6 +97,9 @@ export class CSVImportService {
     const variantQuantity = parseNumber(
       row.variant_quantity || row.variant_inventory_stock || row['inventory quantity'] || 0
     )
+    const variantCost = parseNumber(
+      row.variant_cost || (row as any).cost_price || (row as any)['Cost Price'] || 0
+    )
     const manageInventory = parseBoolean(row.variant_manage_inventory || row['Variant Manage Inventory'] || true)
     const allowBackorder = parseBoolean(row.variant_allow_backorder || false)
 
@@ -261,6 +264,7 @@ export class CSVImportService {
       variant_manage_inventory: manageInventory,
       variant_allow_backorder: allowBackorder,
       variant_price: variantPrice,
+      variant_cost: variantCost > 0 ? variantCost : undefined,
       variant_quantity: variantQuantity,
       collections: collections.length > 0 ? collections : undefined,
       categories: categories.length > 0 ? categories : undefined,
@@ -430,6 +434,7 @@ export class CSVImportService {
         title: row.product_variant_title,
         sku: row.product_variant_sku,
         price: row.variant_price,
+        cost: row.variant_cost,
         quantity: row.variant_quantity,
         manage_inventory: row.variant_manage_inventory,
         allow_backorder: row.variant_allow_backorder,
@@ -713,6 +718,7 @@ export class CSVImportService {
               sku: variant.sku,
               quantity: variant.quantity,
               available_quantity: variant.quantity,
+              cost: variant.cost || null,
               track_quantity: variant.manage_inventory,
               allow_backorders: variant.allow_backorder,
             }], { onConflict: 'variant_id' })
@@ -748,6 +754,7 @@ export class CSVImportService {
               sku: variant.sku,
               quantity: variant.quantity,
               available_quantity: variant.quantity,
+              cost: variant.cost || null,
               track_quantity: variant.manage_inventory,
               allow_backorders: variant.allow_backorder,
             }])

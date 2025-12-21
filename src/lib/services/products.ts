@@ -128,22 +128,22 @@ export class ProductService {
       let filteredData = data
 
       if (filters?.categoryId) {
-        filteredData = filteredData?.filter(product => 
+        filteredData = filteredData?.filter(product =>
           product.product_categories?.some((pc: any) => pc.categories?.id === filters.categoryId)
         )
       }
 
       if (filters?.collectionId) {
-        filteredData = filteredData?.filter(product => 
+        filteredData = filteredData?.filter(product =>
           product.product_collections?.some((pc: any) => pc.collections?.id === filters.collectionId)
         )
       }
 
       if (filters?.stockStatus && filters.stockStatus !== 'all') {
         filteredData = filteredData?.filter(product => {
-          const totalStock = product.global_stock || 
+          const totalStock = product.global_stock ||
             product.product_variants?.reduce((sum: number, variant: any) => sum + (variant.stock || 0), 0) || 0
-          
+
           switch (filters.stockStatus) {
             case 'in-stock':
               return totalStock > 0
@@ -576,7 +576,7 @@ export class ProductService {
           'Stock': product.global_stock || variant?.stock || 0,
           'Category': category?.name || '',
           'Status': product.status || 'draft',
-          'Created At': new Date(product.created_at).toLocaleDateString()
+          'Created At': product.created_at ? new Date(product.created_at).toLocaleDateString() : ''
         }
       })
 
@@ -603,7 +603,7 @@ export class ProductService {
         await supabaseAdmin
           .from('product_analytics')
           .update({
-            view_count: analytics.view_count + 1,
+            view_count: (analytics.view_count || 0) + 1,
             last_viewed_at: new Date().toISOString()
           })
           .eq('product_id', productId)
@@ -643,7 +643,7 @@ export class ProductService {
         await supabaseAdmin
           .from('product_analytics')
           .update({
-            add_to_cart_count: analytics.add_to_cart_count + 1
+            add_to_cart_count: (analytics.add_to_cart_count || 0) + 1
           })
           .eq('product_id', productId)
       }
@@ -678,11 +678,13 @@ export class ProductService {
       }
 
       // Calculate conversion rate
-      if (analytics.view_count > 0) {
-        analytics.conversion_rate = (analytics.purchase_count / analytics.view_count) * 100
-      }
+      const viewCount = analytics.view_count || 0
+      const purchaseCount = analytics.purchase_count || 0
+      const conversionRate = viewCount > 0 ? (purchaseCount / viewCount) * 100 : 0
 
-      return { success: true, data: analytics }
+      return { success: true, data: { ...analytics, conversion_rate: conversionRate } }
+
+
     } catch (error) {
       console.error('Error fetching product analytics:', error)
       return { success: false, error: 'Failed to fetch analytics' }

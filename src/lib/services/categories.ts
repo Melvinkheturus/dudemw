@@ -125,7 +125,7 @@ export class CategoryService {
         categoryMap.set(cat.id, {
           ...cat,
           children: [],
-          status: cat.status || 'active',
+          status: (cat as any).status || 'active',
           product_count: cat.product_categories?.[0]?.count || 0
         } as CategoryWithChildren)
       })
@@ -353,13 +353,7 @@ export class CategoryService {
         }
       }
 
-      // Validate image dimensions for non-icon types
-      if (type !== 'icon') {
-        const dimensions = await this.validateImageDimensions(file, type)
-        if (!dimensions.valid) {
-          return { success: false, error: dimensions.error }
-        }
-      }
+      // Note: Dimension validation removed - images are now auto-cropped to correct ratio in media-step.tsx before upload
 
       // Create fresh authenticated client to get current user session
       const supabase = createClient()
@@ -472,7 +466,7 @@ export class CategoryService {
       for (const update of updates) {
         await supabaseAdmin
           .from('categories')
-          .update({ display_order: update.display_order })
+          .update({ display_order: update.display_order } as any)
           .eq('id', update.id)
       }
 
@@ -494,7 +488,7 @@ export class CategoryService {
         .select('id, status')
 
       if (categoriesError) {
-        const errorMsg = categoriesError?.message || categoriesError?.error_description || JSON.stringify(categoriesError)
+        const errorMsg = categoriesError?.message || JSON.stringify(categoriesError)
         console.error('Error fetching categories for stats:', errorMsg, categoriesError)
         throw new Error(`Failed to fetch categories: ${errorMsg}`)
       }
@@ -511,7 +505,7 @@ export class CategoryService {
 
       // Calculate stats
       const total = categories?.length || 0
-      const active = categories?.filter(c => c.status === 'active').length || 0
+      const active = categories?.filter(c => (c as any).status === 'active').length || 0
       const inactive = total - active
 
       // Count products per category
