@@ -112,7 +112,7 @@ export function useImportInventory() {
 export function useExportInventory() {
   return useMutation({
     mutationFn: async () => {
-      const result = await CSVService.exportInventoryCSV()
+      const result = await CSVService.exportInventoryToCSV()
       if (!result.success) {
         throw new Error(result.error || 'Failed to export inventory')
       }
