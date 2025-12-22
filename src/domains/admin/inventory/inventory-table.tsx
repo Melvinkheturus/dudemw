@@ -480,7 +480,7 @@ export function InventoryTable({ inventory, isLoading, onRefresh }: InventoryTab
                   <TableRow key={viewMode === 'product' ? (item as ProductSummary).id : (item as InventoryItem).id}>
                     {columns.map((column) => (
                       <React.Fragment key={column.key}>
-                        {column.render(item as any, index)}
+                        {column.render(item as any)}
                       </React.Fragment>
                     ))}
                   </TableRow>
