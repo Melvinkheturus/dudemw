@@ -26,6 +26,15 @@ import { revalidatePath } from 'next/cache'
 export async function adminLoginAction(email: string, password: string) {
   try {
     console.log('[Admin Login] Starting login for:', email)
+    
+    // Check environment variables
+    console.log('[Admin Login] Environment check:', {
+      hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      nodeEnv: process.env.NODE_ENV
+    })
+    
     const supabase = await createServerSupabase()
     
     // Sign in with Supabase Auth
