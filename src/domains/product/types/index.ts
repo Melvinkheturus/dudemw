@@ -34,6 +34,21 @@ export interface ProductVariant {
   updated_at?: string | null
 }
 
+export interface ProductOptionValue {
+  id: string
+  name: string
+  hex_color?: string
+  position: number
+}
+
+export interface ProductOption {
+  id: string
+  product_id: string
+  name: string
+  position: number
+  product_option_values: ProductOptionValue[]
+}
+
 export interface Product {
   id: string
   title: string
@@ -67,6 +82,7 @@ export interface Product {
   product_images?: ProductImage[] | null
   product_categories?: ProductCategory[] | null
   product_variants?: ProductVariant[] | null
+  product_options?: ProductOption[] | null
 }
 
 export interface Category {

@@ -1,4 +1,4 @@
-import { Database } from '@/types/database.types'
+import { Database } from '@/types/database'
 
 // Base types from database
 export type OrderInsert = Database['public']['Tables']['orders']['Insert']

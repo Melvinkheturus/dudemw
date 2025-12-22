@@ -46,16 +46,14 @@ export type ShippingRate = {
   id: string
   zone_id: string
   name: string
-  rate_type: 'flat' | 'weight_based' | 'price_based'
+  rate_type: string | null // 'flat' | 'weight_based' | 'price_based'
   base_rate: number
+  per_kg_rate: number | null
   min_weight: number | null
   max_weight: number | null
-  min_price: number | null
-  max_price: number | null
-  free_shipping_threshold: number | null
-  estimated_days_min: number | null
-  estimated_days_max: number | null
-  is_active: boolean
+  min_delivery_days: number | null
+  max_delivery_days: number | null
+  is_enabled: boolean
   created_at: string
   updated_at: string
 }

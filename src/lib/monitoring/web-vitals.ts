@@ -5,9 +5,9 @@
  * https://web.dev/vitals/
  */
 
-import { onCLS, onFCP, onFID, onINP, onLCP, onTTFB, Metric } from 'web-vitals'
+import { onCLS, onFCP, onINP, onLCP, onTTFB, Metric } from 'web-vitals'
 
-type MetricName = 'CLS' | 'FCP' | 'FID' | 'INP' | 'LCP' | 'TTFB'
+type MetricName = 'CLS' | 'FCP' | 'INP' | 'LCP' | 'TTFB'
 
 interface PerformanceReport {
   name: MetricName
@@ -71,7 +71,7 @@ function formatValue(name: MetricName, value: number): string {
 function logMetricEnhanced(metric: Metric) {
   const rating = getRatingColor(metric.rating)
   const value = formatValue(metric.name as MetricName, metric.value)
-  
+
   console.log(
     `${rating} ${metric.name}: ${value} (${metric.rating})`,
     `\n   Delta: ${formatValue(metric.name as MetricName, metric.delta)}`,
@@ -88,7 +88,6 @@ export function initWebVitals() {
   // Track all Core Web Vitals
   onCLS(logMetric)
   onFCP(logMetric)
-  onFID(logMetric)
   onINP(logMetric)
   onLCP(logMetric)
   onTTFB(logMetric)
@@ -107,7 +106,6 @@ export function initWebVitalsEnhanced() {
 
   onCLS(logMetricEnhanced)
   onFCP(logMetricEnhanced)
-  onFID(logMetricEnhanced)
   onINP(logMetricEnhanced)
   onLCP(logMetricEnhanced)
   onTTFB(logMetricEnhanced)
@@ -122,7 +120,6 @@ export function reportWebVitals(onPerfEntry?: (metric: Metric) => void) {
   if (onPerfEntry && onPerfEntry instanceof Function) {
     onCLS(onPerfEntry)
     onFCP(onPerfEntry)
-    onFID(onPerfEntry)
     onINP(onPerfEntry)
     onLCP(onPerfEntry)
     onTTFB(onPerfEntry)
@@ -136,10 +133,6 @@ export const PERFORMANCE_THRESHOLDS = {
   LCP: {
     good: 2500,
     needsImprovement: 4000,
-  },
-  FID: {
-    good: 100,
-    needsImprovement: 300,
   },
   CLS: {
     good: 0.1,

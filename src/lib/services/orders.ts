@@ -85,7 +85,7 @@ export class OrderService {
 
       return {
         success: true,
-        data: data as OrderWithDetails[],
+        data: data as unknown as OrderWithDetails[],
         total: count || 0,
         pagination: {
           page,
@@ -119,7 +119,7 @@ export class OrderService {
               sku,
               products!product_variants_product_id_fkey (
                 id,
-                name,
+                title,
                 slug
               )
             )
@@ -130,7 +130,7 @@ export class OrderService {
 
       if (error) throw error
 
-      return { success: true, data: data as OrderWithDetails }
+      return { success: true, data: data as unknown as OrderWithDetails }
     } catch (error) {
       console.error('Error fetching order:', error)
       return { success: false, error: 'Failed to fetch order' }
@@ -162,6 +162,42 @@ export class OrderService {
     } catch (error) {
       console.error('Error fetching order stats:', error)
       return { success: false, error: 'Failed to fetch order statistics' }
+    }
+  }
+
+  // Update order status
+  static async updateOrderStatus(id: string, status: string) {
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('orders')
+        .update({ order_status: status, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) throw error
+      return { success: true, data }
+    } catch (error) {
+      console.error('Error updating order status:', error)
+      return { success: false, error: 'Failed to update order status' }
+    }
+  }
+
+  // Cancel order
+  static async cancelOrder(id: string) {
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('orders')
+        .update({ order_status: 'cancelled', updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) throw error
+      return { success: true, data }
+    } catch (error) {
+      console.error('Error cancelling order:', error)
+      return { success: false, error: 'Failed to cancel order' }
     }
   }
 }

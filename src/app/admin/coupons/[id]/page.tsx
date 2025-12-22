@@ -56,11 +56,11 @@ export default function CouponDetailPage() {
             const { data, error } = await supabase
                 .from('coupons')
                 .select('*')
-                .eq('id', params.id)
+                .eq('id', params.id as string)
                 .single()
 
             if (error) throw error
-            setCoupon(data)
+            setCoupon(data as unknown as Coupon)
         } catch (error: any) {
             console.error('Error fetching coupon:', error)
             toast.error('Failed to load coupon')

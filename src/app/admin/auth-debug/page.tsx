@@ -14,11 +14,11 @@ export default function AuthDebugPage() {
   const checkAuth = async () => {
     setLoading(true)
     const supabase = createClient()
-    
+
     try {
       // Get current session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      
+
       if (sessionError) {
         setAuthState({ error: sessionError.message })
         setLoading(false)
@@ -33,7 +33,7 @@ export default function AuthDebugPage() {
 
       // Get user details
       const { data: { user }, error: userError } = await supabase.auth.getUser()
-      
+
       if (userError) {
         setAuthState({ error: userError.message })
         setLoading(false)
@@ -44,7 +44,7 @@ export default function AuthDebugPage() {
       const { data: adminProfile, error: profileError } = await supabase
         .from('admin_profiles')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user?.id || '')
         .single()
 
       // Check if can access storage
@@ -55,9 +55,8 @@ export default function AuthDebugPage() {
       // Test the is_storage_admin() function
       let canUpload = null
       try {
-        const { data: uploadCheck, error: uploadError } = await supabase
-          .rpc('is_storage_admin')
-        
+        const { data: uploadCheck, error: uploadError } = await (supabase.rpc as any)('is_storage_admin')
+
         canUpload = uploadError ? { error: uploadError.message } : { result: uploadCheck }
       } catch (err: any) {
         canUpload = { error: err.message }
@@ -97,15 +96,15 @@ export default function AuthDebugPage() {
 
   const testUpload = async () => {
     const supabase = createClient()
-    
+
     // Create a small test file
     const testFile = new File(['test'], 'test.txt', { type: 'text/plain' })
-    
+
     try {
       const { data, error } = await supabase.storage
         .from('categories')
         .upload(`test-${Date.now()}.txt`, testFile)
-      
+
       if (error) {
         alert(`❌ Upload Failed: ${error.message}`)
       } else {
@@ -129,7 +128,7 @@ export default function AuthDebugPage() {
   }
 
   // Check admin role from admin_profiles (super admin system)
-  const hasAdminRole = authState?.adminProfile?.is_active && 
+  const hasAdminRole = authState?.adminProfile?.is_active &&
     ['super_admin', 'admin', 'manager'].includes(authState?.adminProfile?.role)
 
   return (
@@ -175,7 +174,7 @@ export default function AuthDebugPage() {
               </p>
             </div>
           )}
-          
+
           {authState?.error && (
             <div className="p-4 bg-red-50 rounded-lg border border-red-200">
               <div className="flex items-center gap-2 text-red-800">
@@ -240,7 +239,7 @@ export default function AuthDebugPage() {
                 {!hasAdminRole && (
                   <div className="p-3 bg-red-50 rounded border border-red-200">
                     <p className="text-sm text-red-600">
-                      ⚠️ Your admin profile is inactive or doesn't have upload permissions. 
+                      ⚠️ Your admin profile is inactive or doesn't have upload permissions.
                       Run the SQL fix script to update RLS policies.
                     </p>
                   </div>
@@ -320,7 +319,7 @@ export default function AuthDebugPage() {
             <div>
               <label className="text-sm font-medium text-gray-500">Expires At</label>
               <p className="text-sm text-gray-600 mt-1">
-                {authState.session.expires_at 
+                {authState.session.expires_at
                   ? new Date(authState.session.expires_at * 1000).toLocaleString()
                   : 'Unknown'}
               </p>
@@ -373,8 +372,8 @@ export default function AuthDebugPage() {
 
       {/* Upload Permission Check (is_storage_admin function) */}
       {authState?.canUploadFunction && (
-        <Card className={authState.canUploadFunction.result 
-          ? "border-2 border-green-200 bg-green-50" 
+        <Card className={authState.canUploadFunction.result
+          ? "border-2 border-green-200 bg-green-50"
           : "border-2 border-red-200 bg-red-50"
         }>
           <CardHeader>

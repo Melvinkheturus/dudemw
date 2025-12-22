@@ -253,18 +253,18 @@ export function CouponDialog({ mode: initialMode, coupon, onSuccess, trigger, op
     try {
       const couponData = {
         code: formData.code.toUpperCase().trim(),
-        discount_type: formData.discount_type,
-        discount_value: parseFloat(formData.discount_value),
-        usage_limit: formData.usage_limit ? parseInt(formData.usage_limit) : null,
+        type: formData.discount_type,
+        value: parseFloat(formData.discount_value),
+        max_uses: formData.usage_limit ? parseInt(formData.usage_limit) : null,
         is_active: formData.is_active,
-        expires_at: expiryDateRange ? expiryDateRange.end.toDate(getLocalTimeZone()).toISOString() : null,
+        end_date: expiryDateRange ? expiryDateRange.end.toDate(getLocalTimeZone()).toISOString() : null,
         updated_at: new Date().toISOString(),
       }
 
       if (mode === 'create') {
         const { error } = await supabase
           .from('coupons')
-          .insert([{ ...couponData, usage_count: 0 }])
+          .insert([{ ...couponData }])
 
         if (error) {
           if (error.code === '23505') {

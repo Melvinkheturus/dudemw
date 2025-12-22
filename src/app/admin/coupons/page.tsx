@@ -36,7 +36,7 @@ export default function CouponsPage() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setCoupons((data || []).map(c => ({
+      setCoupons((data as any[] || []).map(c => ({
         ...c,
         usage_count: c.usage_count ?? 0,
         is_active: c.is_active ?? true,

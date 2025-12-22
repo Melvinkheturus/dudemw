@@ -15,6 +15,12 @@ export interface OrdersTable {
         shipping_amount: number | null
         shipping_tracking_number: string | null
         shipping_provider: string | null
+        order_number: string | null
+        tracking_number: string | null
+        tracking_url: string | null
+        tracking_courier: string | null
+        shipped_at: string | null
+        estimated_delivery: string | null
         total_amount: number
         order_status: string | null
         payment_status: string | null
@@ -36,6 +42,12 @@ export interface OrdersTable {
         shipping_amount?: number | null
         shipping_tracking_number?: string | null
         shipping_provider?: string | null
+        order_number?: string | null
+        tracking_number?: string | null
+        tracking_url?: string | null
+        tracking_courier?: string | null
+        shipped_at?: string | null
+        estimated_delivery?: string | null
         total_amount: number
         order_status?: string | null
         payment_status?: string | null
@@ -57,6 +69,12 @@ export interface OrdersTable {
         shipping_amount?: number | null
         shipping_tracking_number?: string | null
         shipping_provider?: string | null
+        order_number?: string | null
+        tracking_number?: string | null
+        tracking_url?: string | null
+        tracking_courier?: string | null
+        shipped_at?: string | null
+        estimated_delivery?: string | null
         total_amount?: number
         order_status?: string | null
         payment_status?: string | null
@@ -64,7 +82,15 @@ export interface OrdersTable {
         created_at?: string | null
         updated_at?: string | null
     }
-    Relationships: []
+    Relationships: [
+        {
+            foreignKeyName: "orders_shipping_address_id_fkey"
+            columns: ["shipping_address_id"]
+            isOneToOne: false
+            referencedRelation: "addresses"
+            referencedColumns: ["id"]
+        },
+    ]
 }
 
 export interface OrderItemsTable {
@@ -236,4 +262,87 @@ export interface CouponsTable {
         updated_at?: string | null
     }
     Relationships: []
+}
+
+export interface CartItemsTable {
+    Row: {
+        id: string
+        user_id: string | null
+        guest_id: string | null
+        variant_id: string
+        quantity: number
+        created_at: string | null
+        updated_at: string | null
+    }
+    Insert: {
+        id?: string
+        user_id?: string | null
+        guest_id?: string | null
+        variant_id: string
+        quantity?: number
+        created_at?: string | null
+        updated_at?: string | null
+    }
+    Update: {
+        id?: string
+        user_id?: string | null
+        guest_id?: string | null
+        variant_id?: string
+        quantity?: number
+        created_at?: string | null
+        updated_at?: string | null
+    }
+    Relationships: [
+        {
+            foreignKeyName: "cart_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+        },
+        {
+            foreignKeyName: "cart_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+        },
+    ]
+}
+
+export interface WishlistTable {
+    Row: {
+        id: string
+        user_id: string
+        product_id: string
+        created_at: string | null
+    }
+    Insert: {
+        id?: string
+        user_id: string
+        product_id: string
+        created_at?: string | null
+    }
+    Update: {
+        id?: string
+        user_id?: string
+        product_id?: string
+        created_at?: string | null
+    }
+    Relationships: [
+        {
+            foreignKeyName: "wishlist_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+        },
+        {
+            foreignKeyName: "wishlist_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+        },
+    ]
 }

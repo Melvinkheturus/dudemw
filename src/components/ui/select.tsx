@@ -7,6 +7,7 @@ import type { SelectItemType } from "@/components/base/select/select"
 interface SelectItemProps {
   value: string
   children: React.ReactNode
+  disabled?: boolean
 }
 
 interface SelectContentProps {

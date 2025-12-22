@@ -5,8 +5,9 @@ let redis: Redis | null = null;
 
 try {
   if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    const redisUrl = process.env.UPSTASH_REDIS_REST_URL.replace(/["'\\\s]/g, '');
     redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
+      url: redisUrl,
       token: process.env.UPSTASH_REDIS_REST_TOKEN,
     });
   }

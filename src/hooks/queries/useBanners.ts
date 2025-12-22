@@ -73,11 +73,20 @@ export function useBannerStats(
   return useQuery({
     queryKey: bannerKeys.stats(bannerId),
     queryFn: async () => {
-      const result = await BannerService.getBannerStats(bannerId)
-      if (!result.success) {
+      const result = await BannerService.getBanner(bannerId)
+      if (!result.success || !result.data) {
         throw new Error(result.error || 'Failed to fetch banner stats')
       }
-      return result.data
+      return {
+        total: 1,
+        active: result.data.status === 'active' ? 1 : 0,
+        scheduled: result.data.status === 'scheduled' ? 1 : 0,
+        expired: result.data.status === 'expired' ? 1 : 0,
+        disabled: result.data.status === 'disabled' ? 1 : 0,
+        totalClicks: result.data.clicks || 0,
+        totalImpressions: result.data.impressions || 0,
+        averageCTR: parseFloat(String(result.data.ctr || 0))
+      }
     },
     enabled: !!bannerId,
     staleTime: 5 * 60 * 1000, // Stats are stale after 5 minutes

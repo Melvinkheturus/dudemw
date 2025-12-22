@@ -24,7 +24,7 @@ class CategoryService {
       throw new Error(`Failed to fetch categories: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []) as unknown as Category[];
   }
 
   async getCategoryTree(): Promise<CategoryWithChildren[]> {
@@ -43,16 +43,18 @@ class CategoryService {
 
     // First pass: create all category objects
     data?.forEach(category => {
-      categoryMap.set(category.id, { 
-        ...category, 
-        children: [] 
+      categoryMap.set(category.id, {
+        ...category,
+        status: category.status as "active" | "inactive" | undefined,
+        display_order: category.display_order ?? undefined,
+        children: []
       });
     });
 
     // Second pass: build tree structure
     data?.forEach(category => {
       const categoryWithChildren = categoryMap.get(category.id)!;
-      
+
       if (category.parent_id) {
         const parent = categoryMap.get(category.parent_id);
         if (parent) {
@@ -77,7 +79,7 @@ class CategoryService {
       throw new Error(`Failed to fetch category: ${error.message}`);
     }
 
-    return data;
+    return data as unknown as Category;
   }
 
   async getCategoryBySlug(slug: string): Promise<Category> {
@@ -91,7 +93,7 @@ class CategoryService {
       throw new Error(`Failed to fetch category: ${error.message}`);
     }
 
-    return data;
+    return data as unknown as Category;
   }
 
   async createCategory(data: CreateCategoryData): Promise<Category> {
@@ -105,7 +107,7 @@ class CategoryService {
       throw new Error(`Failed to create category: ${error.message}`);
     }
 
-    return category;
+    return category as unknown as Category;
   }
 
   async updateCategory(id: string, data: UpdateCategoryData): Promise<Category> {
@@ -120,7 +122,7 @@ class CategoryService {
       throw new Error(`Failed to update category: ${error.message}`);
     }
 
-    return category;
+    return category as unknown as Category;
   }
 
   async deleteCategory(id: string): Promise<void> {

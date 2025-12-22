@@ -148,7 +148,7 @@ export default function CreateProductPage() {
         subtitle: formData.subtitle,
         description: formData.description,
         highlights: formData.highlights,
-        status: isDraft ? ('draft' as const) : ('published' as const),
+        status: isDraft ? 'draft' as const : 'published' as const,
 
         // Pricing
         price: formData.variantMode === 'single' ? parseInt(formData.price) || 0 : undefined,

@@ -27,7 +27,7 @@ export function useCategories(
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch categories')
       }
-      return result.data
+      return (result as any).data
     },
     ...options,
   })
@@ -44,10 +44,10 @@ export function useCategory(
     queryKey: categoryKeys.detail(categoryId),
     queryFn: async () => {
       const result = await getCategoryAction(categoryId)
-      if (!result.success || !result.data) {
+      if (!result.success) {
         throw new Error(result.error || 'Failed to fetch category')
       }
-      return result.data
+      return (result as any).data
     },
     enabled: !!categoryId,
     ...options,
@@ -67,7 +67,7 @@ export function useCategoryStats(
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch category stats')
       }
-      return result.data
+      return (result as any).data
     },
     staleTime: 5 * 60 * 1000, // Stats are stale after 5 minutes
     ...options,

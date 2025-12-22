@@ -135,7 +135,7 @@ export class SupplierService {
 
       if (error) throw error
 
-      return { success: true, data: data as SupplierProduct }
+      return { success: true, data: data as unknown as SupplierProduct }
     } catch (error) {
       console.error('Error linking product to supplier:', error)
       return { success: false, error: 'Failed to link product to supplier' }

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/supabase';
-import { 
-  isValidAWBNumber, 
-  formatAWBNumber, 
-  formatTrackingInfo 
+import {
+  isValidAWBNumber,
+  formatAWBNumber,
+  formatTrackingInfo
 } from '@/lib/services/tracking';
 import { EmailService } from '@/lib/services/resend';
 
@@ -34,7 +34,10 @@ export async function POST(
     // Get order details
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
-      .select('*, order_number, email, shipping_address')
+      .select(`
+        *,
+        shipping_address:addresses(*)
+      `)
       .eq('id', orderId)
       .single();
 
@@ -56,8 +59,8 @@ export async function POST(
         tracking_number: formattedAwb,
         tracking_url: trackingInfo.trackingUrl,
         tracking_courier: 'ST Courier',
-        shipped_at: trackingInfo.shippedDate,
-        estimated_delivery: trackingInfo.estimatedDelivery,
+        shipped_at: trackingInfo.shippedDate instanceof Date ? trackingInfo.shippedDate.toISOString() : trackingInfo.shippedDate,
+        estimated_delivery: trackingInfo.estimatedDelivery instanceof Date ? trackingInfo.estimatedDelivery.toISOString() : trackingInfo.estimatedDelivery,
         updated_at: new Date().toISOString()
       })
       .eq('id', orderId);
@@ -72,13 +75,16 @@ export async function POST(
 
     // Send tracking email to customer
     try {
-      const customerName = order.shipping_address?.firstName || 'Customer';
-      await EmailService.sendOrderShipped(
-        order.email,
-        order.order_number,
-        formattedAwb,
-        trackingInfo.trackingUrl
-      );
+      const customerName = (order.shipping_address as any)?.name?.split(' ')[0] || 'Customer';
+      const customerEmail = order.guest_email || order.customer_email_snapshot;
+      if (customerEmail) {
+        await EmailService.sendOrderShipped(
+          customerEmail,
+          order.order_number || order.id,
+          formattedAwb,
+          trackingInfo.trackingUrl
+        );
+      }
     } catch (emailError) {
       console.error('Failed to send tracking email:', emailError);
       // Don't fail the request if email fails
@@ -96,9 +102,9 @@ export async function POST(
   } catch (error) {
     console.error('Tracking update error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to update tracking' 
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to update tracking'
       },
       { status: 500 }
     );
@@ -118,7 +124,7 @@ export async function GET(
 
     const { data: order, error } = await supabaseAdmin
       .from('orders')
-      .select('tracking_number, tracking_url, tracking_courier, shipped_at, estimated_delivery, status')
+      .select('tracking_number, tracking_url, tracking_courier, shipped_at, estimated_delivery, status:order_status')
       .eq('id', orderId)
       .single();
 
@@ -143,9 +149,9 @@ export async function GET(
   } catch (error) {
     console.error('Get tracking error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to get tracking' 
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get tracking'
       },
       { status: 500 }
     );

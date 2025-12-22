@@ -22,7 +22,7 @@ import { supabaseAdmin } from '@/lib/supabase/supabase'
 // ================================================
 
 export type CustomerType = 'guest' | 'registered'
-export type CustomerStatus = 'active' | 'inactive' | 'blocked'
+export type CustomerStatus = 'active' | 'inactive' | 'blocked' | 'merged'
 
 export interface Customer {
   id: string

@@ -22,14 +22,14 @@ import { toast } from 'sonner'
 interface Coupon {
     id: string
     code: string
-    discount_type: string
-    discount_value: number
-    usage_limit: number | null
-    usage_count: number
-    is_active: boolean
-    expires_at: string | null
-    created_at: string
-    updated_at: string
+    type: string
+    value: number
+    max_uses: number | null
+    current_uses: number | null
+    is_active: boolean | null
+    end_date: string | null
+    created_at: string | null
+    updated_at: string | null
 }
 
 export default function EditCouponPage() {
@@ -60,7 +60,7 @@ export default function EditCouponPage() {
             const { data, error } = await supabase
                 .from('coupons')
                 .select('*')
-                .eq('id', params.id)
+                .eq('id', params.id as string)
                 .single()
 
             if (error) throw error
@@ -68,11 +68,11 @@ export default function EditCouponPage() {
 
             // Populate form
             setCode(data.code)
-            setDiscountType(data.discount_type)
-            setDiscountValue(String(data.discount_value))
-            setUsageLimit(data.usage_limit ? String(data.usage_limit) : '')
-            setIsActive(data.is_active)
-            setExpiresAt(data.expires_at ? data.expires_at.split('T')[0] : '')
+            setDiscountType(data.type)
+            setDiscountValue(String(data.value))
+            setUsageLimit(data.max_uses ? String(data.max_uses) : '')
+            setIsActive(data.is_active ?? true)
+            setExpiresAt(data.end_date ? data.end_date.split('T')[0] : '')
         } catch (error: any) {
             console.error('Error fetching coupon:', error)
             toast.error('Failed to load coupon')
@@ -106,11 +106,11 @@ export default function EditCouponPage() {
                 .from('coupons')
                 .update({
                     code: code.toUpperCase().trim(),
-                    discount_type: discountType,
-                    discount_value: parseFloat(discountValue),
-                    usage_limit: usageLimit ? parseInt(usageLimit) : null,
+                    type: discountType,
+                    value: parseFloat(discountValue),
+                    max_uses: usageLimit ? parseInt(usageLimit) : null,
                     is_active: isActive,
-                    expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+                    end_date: expiresAt ? new Date(expiresAt).toISOString() : null,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', coupon.id)
@@ -290,12 +290,12 @@ export default function EditCouponPage() {
                             <div className="text-sm text-gray-500 space-y-2">
                                 <div className="flex justify-between">
                                     <span>Times Used:</span>
-                                    <span className="font-medium text-gray-900">{coupon.usage_count}</span>
+                                    <span className="font-medium text-gray-900">{coupon.current_uses || 0}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Created:</span>
                                     <span className="font-medium text-gray-900">
-                                        {new Date(coupon.created_at).toLocaleDateString('en-IN')}
+                                        {coupon.created_at ? new Date(coupon.created_at).toLocaleDateString('en-IN') : 'N/A'}
                                     </span>
                                 </div>
                             </div>

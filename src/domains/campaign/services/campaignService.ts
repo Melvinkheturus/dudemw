@@ -8,7 +8,7 @@ export async function getActiveCampaign(): Promise<Campaign | null> {
       .from('homepage_sections')
       .select('*')
       .eq('is_active', true)
-      .order('position', { ascending: true })
+      .order('sort_order', { ascending: true })
 
     if (error) {
       console.error('Error fetching homepage sections:', {
@@ -32,11 +32,11 @@ export async function getActiveCampaign(): Promise<Campaign | null> {
       status: 'active',
       sections: sections.map(section => ({
         id: section.id,
-        type: (section.layout as 'hero' | 'product-grid' | 'banner' | 'category-grid' | 'testimonials') || 'banner',
+        type: (section.content_type as 'hero' | 'product-grid' | 'banner' | 'category-grid' | 'testimonials') || 'banner',
         title: section.title || '',
         subtitle: '', // No subtitle field in database
         enabled: section.is_active || false,
-        order: section.position || 0,
+        order: section.sort_order || 0,
         config: {} // No config field in database
       })),
       createdAt: new Date().toISOString().split('T')[0],

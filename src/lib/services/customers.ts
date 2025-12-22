@@ -283,6 +283,8 @@ export class CustomerService {
         inactive: inactiveCount,
         newThisMonth,
         totalRevenue,
+        registered: totalCustomers,
+        guests: 0,
       }
 
       return { success: true, data: stats }

@@ -501,6 +501,82 @@ export class ProductService {
   }
 
   /**
+   * Create a new product
+   */
+  static async createProduct(productData: any) {
+    try {
+      const slug = productData.slug || productData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+
+      const { data: product, error } = await supabaseAdmin
+        .from('products')
+        .insert([{
+          title: productData.title,
+          slug,
+          description: productData.description,
+          price: productData.price || 0,
+          compare_price: productData.compare_price,
+          cost: productData.cost, // Make sure cost column exists
+          sku: productData.sku,
+          track_quantity: productData.track_quantity ?? true,
+          global_stock: productData.quantity || 0,
+          status: productData.status || 'draft',
+          is_featured: productData.is_featured || false,
+          meta_title: productData.seo?.meta_title,
+          meta_description: productData.seo?.meta_description
+        }])
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return { success: true, data: product }
+    } catch (error: any) {
+      console.error('Error creating product:', error)
+      return { success: false, error: error.message || 'Failed to create product' }
+    }
+  }
+
+  /**
+   * Update a product
+   */
+  static async updateProduct(productId: string, updates: any) {
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('products')
+        .update(updates)
+        .eq('id', productId)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return { success: true, data }
+    } catch (error: any) {
+      console.error('Error updating product:', error)
+      return { success: false, error: error.message || 'Failed to update product' }
+    }
+  }
+
+  /**
+   * Delete a product
+   */
+  static async deleteProduct(productId: string) {
+    try {
+      const { error } = await supabaseAdmin
+        .from('products')
+        .delete()
+        .eq('id', productId)
+
+      if (error) throw error
+
+      return { success: true }
+    } catch (error: any) {
+      console.error('Error deleting product:', error)
+      return { success: false, error: error.message || 'Failed to delete product' }
+    }
+  }
+
+  /**
    * Bulk import products from CSV data
    */
   static async bulkImport(products: BulkImportProduct[]) {

@@ -148,3 +148,117 @@ export interface CollectionProductsTable {
         }
     ]
 }
+
+export interface HomepageSectionsTable {
+    Row: {
+        id: string
+        title: string
+        content_type: string
+        metadata: Json | null
+        sort_order: number | null
+        is_active: boolean | null
+        created_at: string | null
+        updated_at: string | null
+    }
+    Insert: {
+        id?: string
+        title: string
+        content_type: string
+        metadata?: Json | null
+        sort_order?: number | null
+        is_active?: boolean | null
+        created_at?: string | null
+        updated_at?: string | null
+    }
+    Update: {
+        id?: string
+        title?: string
+        content_type?: string
+        metadata?: Json | null
+        sort_order?: number | null
+        is_active?: boolean | null
+        created_at?: string | null
+        updated_at?: string | null
+    }
+    Relationships: []
+}
+
+export interface CmsPagesTable {
+    Row: {
+        id: string
+        slug: string
+        title: string
+        content: string
+        is_published: boolean | null
+        created_at: string
+        updated_at: string
+    }
+    Insert: {
+        id?: string
+        slug: string
+        title: string
+        content: string
+        is_published?: boolean | null
+        created_at?: string
+        updated_at?: string
+    }
+    Update: {
+        id?: string
+        slug?: string
+        title?: string
+        content?: string
+        is_published?: boolean | null
+        created_at?: string
+        updated_at?: string
+    }
+    Relationships: []
+}
+
+export interface BlogPostsTable {
+    Row: {
+        id: string
+        title: string
+        slug: string
+        content: string
+        excerpt: string | null
+        author: string
+        category: string | null
+        tags: string[] | null
+        featured_image: string | null
+        is_published: boolean | null
+        published_at: string | null
+        created_at: string | null
+        updated_at: string | null
+    }
+    Insert: {
+        id?: string
+        title: string
+        slug: string
+        content: string
+        excerpt?: string | null
+        author: string
+        category?: string | null
+        tags?: string[] | null
+        featured_image?: string | null
+        is_published?: boolean | null
+        published_at?: string | null
+        created_at?: string | null
+        updated_at?: string | null
+    }
+    Update: {
+        id?: string
+        title?: string
+        slug?: string
+        content?: string
+        excerpt?: string | null
+        author?: string
+        category?: string | null
+        tags?: string[] | null
+        featured_image?: string | null
+        is_published?: boolean | null
+        published_at?: string | null
+        created_at?: string | null
+        updated_at?: string | null
+    }
+    Relationships: []
+}

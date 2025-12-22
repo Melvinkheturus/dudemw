@@ -17,12 +17,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import { 
-  Edit, 
-  ExternalLink, 
-  Package, 
-  DollarSign, 
-  Warehouse, 
+import {
+  Edit,
+  ExternalLink,
+  Package,
+  DollarSign,
+  Warehouse,
   Image as ImageIcon,
   List,
   MoreHorizontal,
@@ -210,26 +210,26 @@ interface GeneralTabProps {
 
 export function ProductDetailView({ product }: ProductDetailViewProps) {
   // FRONTEND RESPONSIBILITY: Display state, navigation, read-only calculations
-  
+
   // Calculate display values (read-only, no business logic)
   const primaryImage = product.product_images?.find((img: any) => img.is_primary) || product.product_images?.[0]
   const totalStock = product.product_variants?.reduce((sum: number, variant: any) => sum + (variant.stock || 0), 0) || 0
   const variantCount = product.product_variants?.length || 0
   const categoryName = product.product_categories?.[0]?.categories?.name || 'Uncategorized'
   const collectionNames = product.product_collections?.map((pc: any) => pc.collections?.title).filter(Boolean) || []
-  
+
   // Price range calculation (display only)
   const prices = product.product_variants?.map((v: any) => v.price) || [product.price]
   const minPrice = Math.min(...prices)
   const maxPrice = Math.max(...prices)
-  
+
   // Stock status (display only)
   const getStockStatus = () => {
     if (totalStock === 0) return { label: 'Out of Stock', color: 'destructive' as const }
     if (totalStock < 10) return { label: 'Low Stock', color: 'secondary' as const }
     return { label: 'In Stock', color: 'default' as const }
   }
-  
+
   const stockStatus = getStockStatus()
 
   return (
@@ -253,7 +253,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{product.title}</h1>
             <div className="flex items-center space-x-2 mt-1">
-              <Badge 
+              <Badge
                 variant={product.status === 'active' ? 'default' : 'secondary'}
                 className="capitalize"
               >
@@ -263,7 +263,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <Button variant="outline" asChild>
             <Link href={`/products/${product.slug}`}>
@@ -331,14 +331,14 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                   </Badge>
                 </div>
               </div>
-              
+
               {product.subtitle && (
                 <div>
                   <label className="text-sm font-medium text-gray-500">Subtitle</label>
                   <p className="text-gray-900 dark:text-white">{product.subtitle}</p>
                 </div>
               )}
-              
+
               {collectionNames.length > 0 && (
                 <div>
                   <label className="text-sm font-medium text-gray-500">Collections</label>
@@ -349,7 +349,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                   </div>
                 </div>
               )}
-              
+
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-500">Created:</span>
@@ -427,8 +427,8 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
               {variantCount > 0 ? (
                 <div className="space-y-3">
                   {product.product_variants?.slice(0, 3).map((variant: any) => (
-                    <Link 
-                      key={variant.id} 
+                    <Link
+                      key={variant.id}
                       href={`/admin/products/${product.id}/variants/${variant.id}`}
                       className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
@@ -473,23 +473,23 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                   <Badge variant={stockStatus.color}>{stockStatus.label}</Badge>
                 </div>
               </div>
-              
+
               <div className="flex justify-between items-center">
                 <span className="text-gray-500">Track Inventory</span>
                 <Badge variant={product.track_inventory ? 'default' : 'secondary'}>
                   {product.track_inventory ? 'ON' : 'OFF'}
                 </Badge>
               </div>
-              
+
               <div className="flex justify-between items-center">
                 <span className="text-gray-500">Backorders</span>
                 <Badge variant={product.allow_backorders ? 'default' : 'secondary'}>
                   {product.allow_backorders ? 'Allowed' : 'Not Allowed'}
                 </Badge>
               </div>
-              
+
               <Separator />
-              
+
               <div className="space-y-2">
                 <Button variant="outline" className="w-full" asChild>
                   <Link href="/admin/inventory">

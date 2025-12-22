@@ -30,7 +30,14 @@ export function useTaxSettings() {
           .single()
 
         if (settings) {
-          setTaxSettings(settings)
+          setTaxSettings({
+            id: settings.id,
+            tax_enabled: true,
+            price_includes_tax: settings.is_inclusive ?? true,
+            default_gst_rate: settings.tax_rate ?? 18,
+            store_state: (settings as any).store_state ?? "Tamil Nadu", // Assuming store_state is now in DB
+            gstin: (settings as any).gstin ?? "" // Assuming gstin is now in DB
+          })
         }
 
         // Fetch categories
@@ -80,11 +87,10 @@ export function useTaxSettings() {
         .from('tax_settings')
         .upsert({
           id: taxSettings.id || crypto.randomUUID(),
-          tax_enabled: taxSettings.tax_enabled,
-          price_includes_tax: taxSettings.price_includes_tax,
-          default_gst_rate: taxSettings.default_gst_rate,
-          store_state: taxSettings.store_state,
-          gstin: taxSettings.gstin,
+          tax_name: 'GST',
+          tax_rate: taxSettings.default_gst_rate,
+          is_inclusive: taxSettings.price_includes_tax,
+          apply_to_shipping: false,
           updated_at: new Date().toISOString()
         })
 

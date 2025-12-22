@@ -11,7 +11,7 @@ export function useUpdateStoreSettings() {
 
   return useMutation({
     mutationFn: async (settings: any) => {
-      const result = await SettingsService.updateStoreSettings(settings)
+      const result = await SettingsService.updateStoreSettings(settings.id, settings)
       if (!result.success) {
         throw new Error(result.error || 'Failed to update store settings')
       }
@@ -35,7 +35,7 @@ export function useUpdatePaymentSettings() {
 
   return useMutation({
     mutationFn: async (settings: any) => {
-      const result = await SettingsService.updatePaymentSettings(settings)
+      const result = await SettingsService.updatePaymentSettings(settings.id, settings)
       if (!result.success) {
         throw new Error(result.error || 'Failed to update payment settings')
       }
@@ -59,7 +59,7 @@ export function useUpdateTaxSettings() {
 
   return useMutation({
     mutationFn: async (settings: any) => {
-      const result = await SettingsService.updateTaxSettings(settings)
+      const result = await SettingsService.updateTaxSettings(settings.id, settings)
       if (!result.success) {
         throw new Error(result.error || 'Failed to update tax settings')
       }

@@ -32,6 +32,7 @@ export interface Banner {
   // Analytics
   impressions?: number
   clicks?: number
+  ctr?: number
 
   // Metadata
   created_at: string

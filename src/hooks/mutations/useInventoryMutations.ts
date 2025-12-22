@@ -15,20 +15,22 @@ export function useAdjustStock() {
       productId,
       variantId,
       quantity,
+      type,
       reason,
       notes,
     }: {
       productId: string
       variantId?: string | null
       quantity: number
+      type: 'add' | 'subtract' | 'set'
       reason: string
       notes?: string
     }) => {
       const result = await InventoryService.adjustStock({
-        variant_id: variantId || productId,
+        variant_id: variantId!,
         quantity,
-        reason,
-        adjust_type: quantity >= 0 ? 'add' : 'subtract'
+        adjust_type: type,
+        reason: notes || reason
       })
       if (!result.success) {
         throw new Error(result.error || 'Failed to adjust stock')
@@ -83,16 +85,17 @@ export function useImportInventory() {
     mutationFn: async (file: File) => {
       const text = await file.text()
       const result = await CSVService.parseInventoryCSV(text)
-      if (!result.success) {
+      if (!result.success || result.errors?.length) {
         throw new Error(result.errors?.[0] || 'Failed to parse CSV')
       }
-      
+
       // Now bulk adjust the stock
+      // CSV parser returns adjustments with proper shape
       const bulkResult = await InventoryService.bulkAdjustStock({ adjustments: result.data || [] })
       if (!bulkResult.success) {
-        throw new Error(bulkResult.error || 'Failed to import inventory')
+        throw new Error((bulkResult as any).error || 'Failed to import inventory')
       }
-      
+
       return bulkResult
     },
     onSuccess: () => {
@@ -112,11 +115,18 @@ export function useImportInventory() {
 export function useExportInventory() {
   return useMutation({
     mutationFn: async () => {
-      const result = await CSVService.exportInventoryToCSV()
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to export inventory')
+      // Fetch all inventory items for export
+      // Use a high limit to get everything
+      const inventoryResult = await InventoryService.getInventoryItems({}, 1, 10000)
+      if (!inventoryResult.success || !inventoryResult.data) {
+        throw new Error(inventoryResult.error || 'Failed to fetch inventory for export')
       }
-      return result
+
+      const csvString = CSVService.exportInventoryToCSV(inventoryResult.data)
+
+      // Trigger download or return content
+      // We'll return the content so the UI can handle the download
+      return { success: true, data: csvString }
     },
     onSuccess: () => {
       toast.success('Inventory exported successfully')

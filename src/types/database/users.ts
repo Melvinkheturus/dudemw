@@ -8,12 +8,12 @@ export interface CustomersTable {
         phone: string | null
         first_name: string | null
         last_name: string | null
-        customer_type: string
-        status: string | null
-        metadata: Json | null
+        customer_type: "guest" | "registered"
+        status: "active" | "inactive" | "blocked" | "merged"
+        metadata: any
         last_order_at: string | null
-        created_at: string | null
-        updated_at: string | null
+        created_at: string
+        updated_at: string
     }
     Insert: {
         id?: string
@@ -22,12 +22,12 @@ export interface CustomersTable {
         phone?: string | null
         first_name?: string | null
         last_name?: string | null
-        customer_type?: string
-        status?: string | null
-        metadata?: Json | null
+        customer_type?: "guest" | "registered"
+        status?: "active" | "inactive" | "blocked" | "merged"
+        metadata?: any
         last_order_at?: string | null
-        created_at?: string | null
-        updated_at?: string | null
+        created_at?: string
+        updated_at?: string
     }
     Update: {
         id?: string
@@ -36,9 +36,9 @@ export interface CustomersTable {
         phone?: string | null
         first_name?: string | null
         last_name?: string | null
-        customer_type?: string
-        status?: string | null
-        metadata?: Json | null
+        customer_type?: "guest" | "registered"
+        status?: "active" | "inactive" | "blocked" | "merged"
+        metadata?: any
         last_order_at?: string | null
         created_at?: string | null
         updated_at?: string | null
@@ -137,4 +137,136 @@ export interface AuditLogsTable {
         created_at?: string | null
     }
     Relationships: []
+}
+
+export interface CustomerActivityLogTable {
+    Row: {
+        id: string
+        customer_id: string
+        activity_type: string
+        description: string | null
+        metadata: Json | null
+        created_at: string | null
+    }
+    Insert: {
+        id?: string
+        customer_id: string
+        activity_type: string
+        description?: string | null
+        metadata?: Json | null
+        created_at?: string | null
+    }
+    Update: {
+        id?: string
+        customer_id?: string
+        activity_type?: string
+        description?: string | null
+        metadata?: Json | null
+        created_at?: string | null
+    }
+    Relationships: [
+        {
+            foreignKeyName: "customer_activity_log_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+        }
+    ]
+}
+
+export interface CustomerAddressesTable {
+    Row: {
+        id: string
+        customer_id: string
+        name: string
+        phone: string
+        email: string | null
+        address_line1: string
+        address_line2: string | null
+        country: string
+        address_type: "shipping" | "billing" | "both"
+        city: string
+        state: string
+        pincode: string
+        is_default: boolean
+        created_at: string
+        updated_at: string
+    }
+    Insert: {
+        id?: string
+        customer_id: string
+        name: string
+        phone: string
+        email?: string | null
+        address_line1: string
+        address_line2?: string | null
+        country: string
+        address_type: "shipping" | "billing" | "both"
+        city: string
+        state: string
+        pincode: string
+        is_default?: boolean | null
+        created_at?: string | null
+        updated_at?: string | null
+    }
+    Update: {
+        id?: string
+        customer_id?: string
+        name?: string
+        phone?: string
+        email?: string | null
+        address_line1?: string
+        address_line2?: string | null
+        country?: string
+        address_type?: "shipping" | "billing" | "both"
+        city?: string
+        state?: string
+        pincode?: string
+        is_default?: boolean | null
+        created_at?: string | null
+        updated_at?: string | null
+    }
+    Relationships: [
+        {
+            foreignKeyName: "customer_addresses_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+        }
+    ]
+}
+
+export interface CustomerNotesTable {
+    Row: {
+        id: string
+        customer_id: string
+        note: string
+        created_by: string
+        created_at: string | null
+    }
+    Insert: {
+        id?: string
+        customer_id: string
+        note: string
+        created_by: string
+        created_at?: string | null
+    }
+    Update: {
+        id?: string
+        customer_id?: string
+        note?: string
+        created_by?: string
+        created_at?: string | null
+    }
+    Relationships: [
+        {
+            foreignKeyName: "customer_notes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+        }
+    ]
 }

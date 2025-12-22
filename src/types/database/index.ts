@@ -15,13 +15,19 @@ import {
     ProductTagAssignmentsTable,
     ProductAnalyticsTable,
     InventoryItemsTable,
+    ReviewsTable,
 } from './products'
 
 import {
     CategoriesTable,
     CollectionsTable,
     CollectionProductsTable,
+    HomepageSectionsTable,
+    CmsPagesTable,
+    BlogPostsTable,
 } from './categories'
+import { InventoryTable } from './inventory'
+
 
 import {
     OrdersTable,
@@ -29,6 +35,8 @@ import {
     ReturnsTable,
     AddressesTable,
     CouponsTable,
+    CartItemsTable,
+    WishlistTable,
 } from './orders'
 
 import {
@@ -36,6 +44,9 @@ import {
     ProfilesTable,
     AdminProfilesTable,
     AuditLogsTable,
+    CustomerActivityLogTable,
+    CustomerAddressesTable,
+    CustomerNotesTable,
 } from './users'
 
 import {
@@ -46,12 +57,27 @@ import {
 import {
     StoreSettingsTable,
     SystemPreferencesTable,
+    PaymentSettingsTable,
+    TaxSettingsTable,
+    SystemSettingsTable,
+    InventorySettingsTable,
+    ShippingZonesTable,
+    ShippingRatesTable,
+    ShippingRulesTable,
+    StoreLocationsTable,
+    CategoryTaxRulesTable,
 } from './settings'
+
+import {
+    SuppliersTable,
+    SupplierProductsTable,
+} from './suppliers'
 
 // Main Database type for Supabase
 export type Database = {
     public: {
         Tables: {
+            // Products
             products: ProductsTable
             product_variants: ProductVariantsTable
             product_images: ProductImagesTable
@@ -64,22 +90,55 @@ export type Database = {
             product_tag_assignments: ProductTagAssignmentsTable
             product_analytics: ProductAnalyticsTable
             inventory_items: InventoryItemsTable
+            reviews: ReviewsTable
+
+            // Categories & Collections
             categories: CategoriesTable
             collections: CollectionsTable
             collection_products: CollectionProductsTable
+            homepage_sections: HomepageSectionsTable
+            cms_pages: CmsPagesTable
+            blog_posts: BlogPostsTable
+
+            // Orders & Cart
             orders: OrdersTable
             order_items: OrderItemsTable
             returns: ReturnsTable
             addresses: AddressesTable
             coupons: CouponsTable
+            cart_items: CartItemsTable
+            wishlist: WishlistTable
+
+            // Users & Customers
             customers: CustomersTable
             profiles: ProfilesTable
             admin_profiles: AdminProfilesTable
             audit_logs: AuditLogsTable
+            customer_activity_log: CustomerActivityLogTable
+            customer_addresses: CustomerAddressesTable
+            customer_notes: CustomerNotesTable
+
+            // Marketing
             banners: BannersTable
             advertisements: AdvertisementsTable
+
+            // Settings
             store_settings: StoreSettingsTable
             system_preferences: SystemPreferencesTable
+            payment_settings: PaymentSettingsTable
+            tax_settings: TaxSettingsTable
+            system_settings: SystemSettingsTable
+            inventory_settings: InventorySettingsTable
+            shipping_zones: ShippingZonesTable
+            shipping_rates: ShippingRatesTable
+            shipping_rules: ShippingRulesTable
+            store_locations: StoreLocationsTable
+
+            // Suppliers
+            suppliers: SuppliersTable
+            supplier_products: SupplierProductsTable
+            inventory: InventoryTable
+            category_tax_rules: CategoryTaxRulesTable
         }
         Views: {
             [_ in never]: never

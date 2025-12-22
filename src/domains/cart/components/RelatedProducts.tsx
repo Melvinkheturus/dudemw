@@ -21,9 +21,15 @@ export default function RelatedProducts() {
           .limit(4)
         setProducts((data || []).map(product => ({
           ...product,
+          price: product.price || 0,
           in_stock: product.in_stock ?? false,
           is_bestseller: product.is_bestseller ?? false,
-          is_new_drop: product.is_new_drop ?? false
+          is_new_drop: product.is_new_drop ?? false,
+          images: (product.images as string[]) || [],
+          sizes: (product.sizes as string[]) || [],
+          colors: (product.colors as string[]) || [],
+          slug: product.slug || '',
+          highlights: (product.highlights as string[]) || []
         })))
       } catch (error) {
         console.error('Failed to fetch related products:', error)

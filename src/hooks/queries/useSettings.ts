@@ -78,16 +78,16 @@ export function useShippingSettings(
  * Hook to fetch tax settings
  */
 export function useTaxSettings(
-  options?: Omit<UseQueryOptions<TaxSettings[], Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<TaxSettings, Error>, 'queryKey' | 'queryFn'>
 ) {
   return useQuery({
     queryKey: settingsKeys.tax(),
     queryFn: async () => {
       const result = await SettingsService.getTaxSettings()
-      if (!result.success) {
+      if (!result.success || !result.data) {
         throw new Error(result.error || 'Failed to fetch tax settings')
       }
-      return result.data || []
+      return result.data
     },
     staleTime: 10 * 60 * 1000,
     ...options,

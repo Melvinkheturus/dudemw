@@ -33,9 +33,15 @@ export function useGuestProfile(productCount: number = 6) {
           .limit(productCount)
         setFallbackProducts((products || []).map(product => ({
           ...product,
+          price: product.price || 0,
           in_stock: product.in_stock ?? false,
           is_bestseller: product.is_bestseller ?? false,
-          is_new_drop: product.is_new_drop ?? false
+          is_new_drop: product.is_new_drop ?? false,
+          images: (product.images as string[]) || [],
+          sizes: (product.sizes as string[]) || [],
+          colors: (product.colors as string[]) || [],
+          slug: product.slug || '',
+          highlights: (product.highlights as string[]) || []
         })))
       } catch (error) {
         console.error('Failed to fetch fallback products:', error)
@@ -52,45 +58,45 @@ export function useGuestProfile(productCount: number = 6) {
   }
 
   // Transform wishlist items to product format
-  const wishlistProducts: Product[] = userWishlist.length > 0 
+  const wishlistProducts: Product[] = userWishlist.length > 0
     ? userWishlist.slice(0, Math.floor(productCount / 2)).map(item => ({
-        id: item.id,
-        title: item.name,
-        images: [item.image],
-        slug: item.slug,
-        description: '',
-        price: item.price,
-        original_price: undefined,
-        category_id: '',
-        sizes: [],
-        colors: [],
-        in_stock: true,
-        is_bestseller: false,
-        is_new_drop: false,
-        created_at: '',
-        updated_at: ''
-      }))
+      id: item.id,
+      title: item.name,
+      images: [item.image],
+      slug: item.slug,
+      description: '',
+      price: item.price,
+      original_price: undefined,
+      category_id: '',
+      sizes: [],
+      colors: [],
+      in_stock: true,
+      is_bestseller: false,
+      is_new_drop: false,
+      created_at: '',
+      updated_at: ''
+    }))
     : fallbackProducts.slice(0, Math.floor(productCount / 2))
-  
+
   // Transform recently viewed items to product format
   const recentlyViewedProducts: Product[] = userRecentlyViewed.length > 0
     ? userRecentlyViewed.slice(0, Math.floor(productCount / 2)).map(item => ({
-        id: item.id,
-        title: item.name,
-        images: [item.image],
-        slug: item.slug,
-        description: '',
-        price: item.price,
-        original_price: undefined,
-        category_id: '',
-        sizes: [],
-        colors: [],
-        in_stock: true,
-        is_bestseller: false,
-        is_new_drop: false,
-        created_at: '',
-        updated_at: ''
-      }))
+      id: item.id,
+      title: item.name,
+      images: [item.image],
+      slug: item.slug,
+      description: '',
+      price: item.price,
+      original_price: undefined,
+      category_id: '',
+      sizes: [],
+      colors: [],
+      in_stock: true,
+      is_bestseller: false,
+      is_new_drop: false,
+      created_at: '',
+      updated_at: ''
+    }))
     : fallbackProducts.slice(Math.floor(productCount / 2), productCount)
 
   return {

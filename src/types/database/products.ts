@@ -543,3 +543,48 @@ export interface InventoryItemsTable {
         }
     ]
 }
+
+export interface ReviewsTable {
+    Row: {
+        id: string
+        product_id: string
+        user_id: string | null
+        user_name: string | null
+        rating: number
+        comment: string | null
+        verified_purchase: boolean | null
+        created_at: string | null
+        updated_at: string | null
+    }
+    Insert: {
+        id?: string
+        product_id: string
+        user_id?: string | null
+        user_name?: string | null
+        rating: number
+        comment?: string | null
+        verified_purchase?: boolean | null
+        created_at?: string | null
+        updated_at?: string | null
+    }
+    Update: {
+        id?: string
+        product_id?: string
+        user_id?: string | null
+        user_name?: string | null
+        rating?: number
+        comment?: string | null
+        verified_purchase?: boolean | null
+        created_at?: string | null
+        updated_at?: string | null
+    }
+    Relationships: [
+        {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+        },
+    ]
+}

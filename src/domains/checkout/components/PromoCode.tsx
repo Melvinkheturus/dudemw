@@ -21,7 +21,7 @@ export default function PromoCode({ onApplied }: PromoCodeProps) {
         }
 
         setIsApplying(true)
-        
+
         try {
             // Check if coupon exists and is valid in Supabase
             const { data: coupon, error } = await supabase
@@ -37,20 +37,20 @@ export default function PromoCode({ onApplied }: PromoCodeProps) {
 
             // Check if coupon is still valid (not expired, usage limits, etc.)
             const now = new Date()
-            if (coupon.expires_at && new Date(coupon.expires_at) < now) {
+            if (coupon.end_date && new Date(coupon.end_date) < now) {
                 throw new Error('This promo code has expired')
             }
 
-            if (coupon.usage_limit && coupon.usage_count && coupon.usage_count >= coupon.usage_limit) {
+            if (coupon.max_uses && coupon.current_uses && coupon.current_uses >= coupon.max_uses) {
                 throw new Error('This promo code has reached its usage limit')
             }
 
             setAppliedCode(code.toUpperCase())
             setCode('')
             showToast('Promo code applied successfully!', 'success')
-            onApplied?.({ 
-                code: code.toUpperCase(), 
-                amount: coupon.discount_type === 'percentage' ? coupon.discount_value : coupon.discount_value 
+            onApplied?.({
+                code: code.toUpperCase(),
+                amount: coupon.type === 'percentage' ? coupon.value : coupon.value
             })
         } catch (error: any) {
             console.error('Failed to apply promo code:', error)
@@ -64,7 +64,7 @@ export default function PromoCode({ onApplied }: PromoCodeProps) {
         if (!appliedCode) return
 
         setIsApplying(true)
-        
+
         try {
             setAppliedCode(null)
             showToast('Promo code removed', 'info')
