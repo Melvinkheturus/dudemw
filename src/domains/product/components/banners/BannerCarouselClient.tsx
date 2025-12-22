@@ -124,7 +124,7 @@ export default function BannerCarouselClient({ banners }: BannerCarouselClientPr
             <SwiperSlide key={slide.id}>
               <Link href={slide.link} className="block">
                 {/* 16:9 aspect ratio on mobile, fixed height on desktop */}
-                <div className="relative aspect-video md:h-[400px] md:aspect-auto">
+                <div className="relative aspect-video md:h-[500px] md:aspect-auto">
                   <Image
                     src={slide.image_url}
                     alt={slide.title}

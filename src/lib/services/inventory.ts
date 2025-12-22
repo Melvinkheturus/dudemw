@@ -46,7 +46,7 @@ export class InventoryService {
             sku,
             price,
             product_id,
-            products!inner (
+            products!product_variants_product_id_fkey!inner (
               id,
               title
             )
@@ -341,7 +341,7 @@ export class InventoryService {
           product_variants!inner (
             name,
             sku,
-            products!inner (
+            products!product_variants_product_id_fkey!inner (
               title
             )
           )
@@ -412,7 +412,7 @@ export class InventoryService {
           variant_id,
           product_variants (
             name,
-            products (
+            products!product_variants_product_id_fkey (
               title
             )
           )

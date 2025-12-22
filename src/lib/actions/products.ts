@@ -333,7 +333,7 @@ export async function getProducts(filters?: {
           is_primary,
           sort_order
         ),
-        product_variants (
+        product_variants!product_variants_product_id_fkey (
           id,
           name,
           sku,
@@ -435,7 +435,7 @@ export async function getProduct(id: string) {
             position
           )
         ),
-        product_variants (
+        product_variants!product_variants_product_id_fkey (
           id,
           name,
           sku,
@@ -530,15 +530,16 @@ export async function updateProduct(id: string, updates: ProductUpdate & {
   collectionIds?: string[]
   tags?: string[]
   newImage?: string
+  default_variant_id?: string | null
 }) {
   try {
     // Separate relationships from product fields
-    const { categoryIds, collectionIds, tags, newImage, ...productFields } = updates
+    const { categoryIds, collectionIds, tags, newImage, default_variant_id, ...productFields } = updates
 
-    // 1. Update product fields
+    // 1. Update product fields (including default_variant_id)
     const { data, error } = await supabaseAdmin
       .from('products')
-      .update(productFields)
+      .update({ ...productFields, default_variant_id })
       .eq('id', id)
       .select()
       .single()

@@ -22,8 +22,13 @@ export default function ProductCard({ product, badge, badgeColor = "red" }: Prod
   const { isInWishlist, toggleWishlist } = useWishlist()
   const { cartItems, addToCart, getItemByVariant } = useCart()
 
-  // Generate variant key for this product (basic version without size/color selection)
-  const variantKey = `${product.id}-default`
+  // Get the default variant (admin-selected) or fallback to first variant
+  const defaultVariant = product.default_variant
+    || product.product_variants?.[0]
+    || null
+
+  // Generate variant key based on actual variant ID (or fallback to product ID)
+  const variantKey = defaultVariant ? defaultVariant.id : `${product.id}-default`
 
   // Check if product is in cart
   const isInCart = getItemByVariant(variantKey) !== undefined
@@ -31,26 +36,29 @@ export default function ProductCard({ product, badge, badgeColor = "red" }: Prod
   // Check if product is in wishlist
   const isWishlisted = isInWishlist(product.id)
 
-  // Price calculations
-  const currentPrice = product.price
-  const originalPrice = product.original_price || product.price
-  const discountPercent = product.original_price ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100) : 0
+  // Price calculations - use variant price if available
+  const currentPrice = defaultVariant?.discount_price || defaultVariant?.price || product.price
+  const originalPrice = defaultVariant?.price || product.original_price || product.price
+  const discountPercent = originalPrice > currentPrice
+    ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100)
+    : 0
   const displayPrice = currentPrice
   const displayOriginalPrice = originalPrice
 
-  // Short description
-  const shortDesc = product.description?.slice(0, 50) || "Premium quality • Multiple sizes available"
+  // Short description - include variant name if present
+  const variantLabel = defaultVariant?.name ? ` • ${defaultVariant.name}` : ""
+  const shortDesc = product.description?.slice(0, 40) + variantLabel || "Premium quality • Multiple sizes available"
 
-  // Use product images with fallback logic
-  const imageUrl = getProductImage(null, product.images)
+  // Use variant image or product images with fallback
+  const imageUrl = defaultVariant?.image_url || getProductImage(null, product.images)
 
-  // Handle add to cart
+  // Handle add to cart - use variant data
   const handleAddToCart = () => {
     playCartSound()
     addToCart({
-      id: product.id,
-      title: product.title,
-      price: product.price,
+      id: variantKey, // Use variant ID as cart item ID
+      title: defaultVariant?.name ? `${product.title} - ${defaultVariant.name}` : product.title,
+      price: currentPrice,
       image: imageUrl,
       variantKey: variantKey,
     })

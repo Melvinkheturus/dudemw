@@ -37,7 +37,12 @@ export async function getCustomersAction(
   try {
     // Use new customer domain
     const result = await getCustomersForAdmin({
-      customer_type: filters?.status === 'all' ? undefined : filters?.status as any,
+      customer_type: filters?.customerType === 'all' || !filters?.customerType
+        ? undefined
+        : filters.customerType as 'guest' | 'registered',
+      status: filters?.status === 'all' || !filters?.status
+        ? undefined
+        : filters.status as 'active' | 'inactive',
       search: filters?.search,
       limit,
       offset: (page - 1) * limit,
@@ -47,9 +52,28 @@ export async function getCustomersAction(
       return { success: false, error: result.error }
     }
 
+    // Transform data to match expected format with proper field mapping
+    const transformedData: CustomerWithStats[] = (result.data || []).map(customer => ({
+      id: customer.id,
+      email: customer.email || '',
+      phone: customer.phone,
+      first_name: customer.first_name,
+      last_name: customer.last_name,
+      customer_type: customer.customer_type,
+      created_at: customer.created_at,
+      last_sign_in_at: customer.last_order_at,
+      metadata: customer.metadata || {},
+      totalOrders: customer.total_orders,
+      totalSpent: customer.total_spent,
+      averageOrderValue: customer.average_order_value,
+      lastOrderDate: customer.last_order_at,
+      lifetimeValue: customer.lifetime_value,
+      status: customer.status === 'active' ? 'active' : 'inactive',
+    }))
+
     return {
       success: true,
-      data: result.data,
+      data: transformedData,
       total: result.total,
       pagination: {
         page,
@@ -110,9 +134,9 @@ export async function getCustomersActionLegacy(
       if (totalOrders > 0) {
         const daysSinceLastOrder = lastOrder
           ? Math.floor(
-              (Date.now() - new Date(lastOrder.created_at || '').getTime()) /
-                (1000 * 60 * 60 * 24)
-            )
+            (Date.now() - new Date(lastOrder.created_at || '').getTime()) /
+            (1000 * 60 * 60 * 24)
+          )
           : 999
         status = daysSinceLastOrder < 90 ? 'active' : 'inactive'
       }
@@ -209,7 +233,7 @@ export async function getCustomerAction(
   try {
     // Use new customer domain
     const result = await getCustomerByIdForAdmin(id)
-    
+
     if (!result.success || !result.data) {
       return { success: false, error: result.error || 'Customer not found' }
     }
@@ -221,9 +245,17 @@ export async function getCustomerAction(
       data: {
         id: customer.id,
         email: customer.email || '',
+        first_name: customer.first_name,
+        last_name: customer.last_name,
+        phone: customer.phone,
+        customer_type: customer.customer_type,
         created_at: customer.created_at,
         last_sign_in_at: customer.last_order_at, // Use last_order_at as proxy
-        metadata: customer.metadata,
+        metadata: {
+          ...customer.metadata,
+          full_name: `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || undefined,
+          phone: customer.phone,
+        },
         totalOrders: customer.total_orders,
         totalSpent: customer.total_spent,
         averageOrderValue: customer.average_order_value,
@@ -309,8 +341,8 @@ export async function getCustomerActionLegacy(
     if (totalOrders > 0) {
       const daysSinceLastOrder = lastOrder
         ? Math.floor(
-            (Date.now() - new Date(lastOrder.created_at || '').getTime()) / (1000 * 60 * 60 * 24)
-          )
+          (Date.now() - new Date(lastOrder.created_at || '').getTime()) / (1000 * 60 * 60 * 24)
+        )
         : 999
       status = daysSinceLastOrder < 90 ? 'active' : 'inactive'
     }
@@ -362,7 +394,7 @@ export async function getCustomerStatsAction(): Promise<{
   try {
     // Use new customer domain
     const result = await getCustomerStatsForAdmin()
-    
+
     if (!result.success || !result.data) {
       return { success: false, error: result.error || 'Failed to fetch stats' }
     }
@@ -374,10 +406,10 @@ export async function getCustomerStatsAction(): Promise<{
         total: result.data.total,
         active: result.data.active,
         inactive: result.data.inactive,
-
+        registered: result.data.registered,
+        guests: result.data.guests,
         newThisMonth: result.data.new_this_month,
         totalRevenue: result.data.total_revenue,
-
       } as CustomerStats,
     }
   } catch (error: any) {
@@ -449,6 +481,8 @@ export async function getCustomerStatsActionLegacy(): Promise<{
       total: totalCustomers,
       active: activeCount,
       inactive: inactiveCount,
+      registered: totalCustomers, // Legacy: assume all auth users are registered
+      guests: 0, // Legacy: auth.users doesn't track guests
       newThisMonth,
       totalRevenue,
     }

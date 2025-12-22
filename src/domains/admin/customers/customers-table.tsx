@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Eye, Mail, Users } from 'lucide-react'
+import { Eye, Mail, Users, User, UserX } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -43,6 +43,31 @@ export function CustomersTable({ customers, isLoading }: CustomersTableProps) {
       default:
         return null
     }
+  }
+
+  const getCustomerTypeBadge = (customerType?: string) => {
+    if (customerType === 'guest') {
+      return (
+        <Badge
+          variant="outline"
+          className="bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-400"
+          data-testid="customer-type-guest"
+        >
+          <UserX className="h-3 w-3 mr-1" />
+          Guest
+        </Badge>
+      )
+    }
+    return (
+      <Badge
+        variant="outline"
+        className="bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-400"
+        data-testid="customer-type-registered"
+      >
+        <User className="h-3 w-3 mr-1" />
+        Registered
+      </Badge>
+    )
   }
 
   if (isLoading) {
@@ -87,6 +112,7 @@ export function CustomersTable({ customers, isLoading }: CustomersTableProps) {
             <TableHeader>
               <TableRow>
                 <TableHead>Customer</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Orders</TableHead>
                 <TableHead className="text-right">Total Spent</TableHead>
@@ -105,14 +131,22 @@ export function CustomersTable({ customers, isLoading }: CustomersTableProps) {
                 >
                   <TableCell>
                     <div className="flex flex-col">
-                      <span className="font-medium">{customer.email}</span>
-                      {customer.metadata?.full_name && (
+                      <span className="font-medium">{customer.email || 'No email'}</span>
+                      {(customer.first_name || customer.last_name || customer.metadata?.full_name) && (
                         <span className="text-sm text-muted-foreground">
-                          {customer.metadata.full_name}
+                          {customer.first_name && customer.last_name
+                            ? `${customer.first_name} ${customer.last_name}`
+                            : customer.metadata?.full_name || ''}
+                        </span>
+                      )}
+                      {customer.phone && (
+                        <span className="text-xs text-muted-foreground">
+                          {customer.phone}
                         </span>
                       )}
                     </div>
                   </TableCell>
+                  <TableCell>{getCustomerTypeBadge(customer.customer_type)}</TableCell>
                   <TableCell>{getStatusBadge(customer.status)}</TableCell>
                   <TableCell className="text-right">
                     <span className="font-medium">{customer.totalOrders}</span>

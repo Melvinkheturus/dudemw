@@ -15,7 +15,7 @@ export default function OrderConfirmedPage() {
     const fetchOrder = async () => {
       try {
         setLoading(true)
-        
+
         // Fetch order from Supabase
         const { data: orderData, error: orderError } = await supabase
           .from('orders')
@@ -32,8 +32,7 @@ export default function OrderConfirmedPage() {
                   )
                 )
               )
-            ),
-            addresses (*)
+            )
           `)
           .eq('id', params.id as string)
           .single()
@@ -44,31 +43,37 @@ export default function OrderConfirmedPage() {
           return
         }
 
-        // Transform data to match expected format
-        const shippingAddress = orderData.addresses;
+        // Use shipping_address JSONB directly from the order
+        const shippingAddress = orderData.shipping_address;
         const transformedOrder = {
           id: orderData.id,
-          display_id: orderData.id,
+          display_id: orderData.id?.slice(-8).toUpperCase() || orderData.id,
           status: orderData.order_status || 'pending',
+          payment_status: orderData.payment_status,
+          payment_method: orderData.payment_method,
           created_at: orderData.created_at,
           items: orderData.order_items?.map((item: any) => ({
             id: item.id,
             title: item.product_variants?.products?.name || 'Product',
             quantity: item.quantity,
-            unit_price: item.unit_price * 100, // Convert to paise for display
+            unit_price: item.price, // Use 'price' column, already in rupees
             thumbnail: item.product_variants?.products?.product_images?.[0]?.image_url || '/images/placeholder.jpg'
           })) || [],
-          total: orderData.total_amount * 100, // Convert to paise for display
+          subtotal: orderData.subtotal_amount,
+          shipping: orderData.shipping_amount,
+          tax: orderData.tax_amount,
+          total: orderData.total_amount, // Already in rupees
           shipping_address: shippingAddress ? {
-            first_name: shippingAddress.name?.split(' ')[0] || '',
-            last_name: shippingAddress.name?.split(' ').slice(1).join(' ') || '',
-            address_1: shippingAddress.address_line1,
+            first_name: shippingAddress.firstName || '',
+            last_name: shippingAddress.lastName || '',
+            address_1: shippingAddress.address,
             city: shippingAddress.city,
             province: shippingAddress.state,
-            postal_code: shippingAddress.pincode
+            postal_code: shippingAddress.postalCode,
+            phone: shippingAddress.phone
           } : null
         }
-        
+
         setOrder(transformedOrder)
       } catch (error) {
         console.error('Failed to fetch order:', error)
@@ -124,18 +129,18 @@ export default function OrderConfirmedPage() {
 
         <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
           <h2 className="text-xl font-bold mb-4">Order Details</h2>
-          
+
           <div className="space-y-4">
             <div className="flex justify-between">
               <span className="font-medium">Order ID:</span>
               <span>#{order.display_id}</span>
             </div>
-            
+
             <div className="flex justify-between">
               <span className="font-medium">Status:</span>
               <span className="text-green-600 font-medium">{order.status}</span>
             </div>
-            
+
             <div className="flex justify-between">
               <span className="font-medium">Date:</span>
               <span>{new Date(order.created_at).toLocaleDateString()}</span>
@@ -144,18 +149,38 @@ export default function OrderConfirmedPage() {
 
           <div className="border-t pt-4 mt-4">
             <h3 className="font-semibold mb-2">Items</h3>
-            {order.items.map((item: any) => (
-              <div key={item.id} className="flex justify-between">
+            {order.items.length > 0 ? order.items.map((item: any) => (
+              <div key={item.id} className="flex justify-between py-1">
                 <span>{item.title} x {item.quantity}</span>
-                <span>₹{(item.unit_price / 100).toFixed(0)}</span>
+                <span>₹{item.unit_price?.toFixed(2)}</span>
               </div>
-            ))}
+            )) : (
+              <p className="text-gray-500 text-sm">Items are being processed...</p>
+            )}
           </div>
 
-          <div className="border-t pt-4 mt-4">
-            <div className="flex justify-between font-bold text-lg">
+          <div className="border-t pt-4 mt-4 space-y-2">
+            {order.subtotal && (
+              <div className="flex justify-between text-sm">
+                <span>Subtotal</span>
+                <span>₹{Number(order.subtotal).toFixed(2)}</span>
+              </div>
+            )}
+            {order.shipping && (
+              <div className="flex justify-between text-sm">
+                <span>Shipping</span>
+                <span>₹{Number(order.shipping).toFixed(2)}</span>
+              </div>
+            )}
+            {order.tax && (
+              <div className="flex justify-between text-sm">
+                <span>Tax (GST)</span>
+                <span>₹{Number(order.tax).toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold text-lg pt-2 border-t">
               <span>Total</span>
-              <span>₹{(order.total / 100).toFixed(0)}</span>
+              <span>₹{Number(order.total).toFixed(2)}</span>
             </div>
           </div>
 

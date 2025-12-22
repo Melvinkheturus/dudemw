@@ -1,5 +1,11 @@
 import { useQuery, UseQueryOptions } from '@tanstack/react-query'
-import { AnalyticsService } from '@/lib/services/analytics'
+import {
+  getDashboardAnalytics,
+  getRevenueChart,
+  getOrdersChart,
+  getTopProducts,
+  getCategoryPerformance
+} from '@/lib/actions/analytics'
 
 /**
  * Query keys for analytics
@@ -23,7 +29,7 @@ export function useDashboardAnalytics(
   return useQuery({
     queryKey: analyticsKeys.dashboard(),
     queryFn: async () => {
-      const result = await AnalyticsService.getDashboardAnalytics()
+      const result = await getDashboardAnalytics()
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch dashboard analytics')
       }
@@ -44,7 +50,8 @@ export function useRevenueData(
   return useQuery({
     queryKey: analyticsKeys.revenue(period),
     queryFn: async () => {
-      const result = await AnalyticsService.getRevenueData(period)
+      // Map period to days if needed, currently action accepts period directly for revenue
+      const result = await getRevenueChart(period)
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch revenue data')
       }
@@ -65,7 +72,8 @@ export function useOrdersData(
   return useQuery({
     queryKey: analyticsKeys.orders(period),
     queryFn: async () => {
-      const result = await AnalyticsService.getOrdersData(period)
+      // getOrdersChart accepts days, defaulting to 30. passing 30 for now.
+      const result = await getOrdersChart(30)
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch orders data')
       }
@@ -86,7 +94,7 @@ export function useTopProducts(
   return useQuery({
     queryKey: analyticsKeys.topProducts(limit),
     queryFn: async () => {
-      const result = await AnalyticsService.getTopProducts(limit)
+      const result = await getTopProducts(limit)
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch top products')
       }
@@ -106,7 +114,7 @@ export function useCategoryPerformance(
   return useQuery({
     queryKey: analyticsKeys.categoryPerformance(),
     queryFn: async () => {
-      const result = await AnalyticsService.getCategoryPerformance()
+      const result = await getCategoryPerformance()
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch category performance')
       }

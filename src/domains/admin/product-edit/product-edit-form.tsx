@@ -42,6 +42,7 @@ export function ProductEditForm({ product, categories, collections, tags }: Prod
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [selectedCollections, setSelectedCollections] = useState<string[]>([])
   const [highlights, setHighlights] = useState<string[]>([''])
+  const [defaultVariantId, setDefaultVariantId] = useState<string | null>(product.default_variant_id || null)
 
   // Initialize separate states
   useEffect(() => {
@@ -151,7 +152,8 @@ export function ProductEditForm({ product, categories, collections, tags }: Prod
         categoryIds: selectedCategories,
         collectionIds: selectedCollections,
         newImage: newImageUrl,
-        highlights: highlights.filter(h => h.trim() !== '') // Filter out empty strings
+        highlights: highlights.filter(h => h.trim() !== ''), // Filter out empty strings
+        default_variant_id: defaultVariantId, // Add default variant selection
       })
 
       if (result.success) {
@@ -304,6 +306,31 @@ export function ProductEditForm({ product, categories, collections, tags }: Prod
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Default Variant Selector */}
+              {product.product_variants && product.product_variants.length > 0 && (
+                <div className="space-y-2 pb-4 border-b border-gray-200">
+                  <Label htmlFor="default-variant" className="text-sm font-medium">
+                    Display Variant (for Product Cards)
+                  </Label>
+                  <select
+                    id="default-variant"
+                    value={defaultVariantId || ''}
+                    onChange={(e) => setDefaultVariantId(e.target.value || null)}
+                    className="w-full h-10 px-3 rounded-md border border-gray-200 bg-white text-sm focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                  >
+                    <option value="">Auto (First Variant)</option>
+                    {product.product_variants.map((v: any) => (
+                      <option key={v.id} value={v.id}>
+                        {v.name || 'Untitled'} - ₹{v.price} (SKU: {v.sku})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500">
+                    This variant's price and image will show on product cards in the store.
+                  </p>
+                </div>
+              )}
+
               {product.product_variants && product.product_variants.length > 0 ? (
                 <div className="space-y-2">
                   <p className="text-sm text-gray-600">
@@ -311,9 +338,14 @@ export function ProductEditForm({ product, categories, collections, tags }: Prod
                   </p>
                   <div className="bg-white/50 dark:bg-gray-800/50 rounded-md p-3 max-h-40 overflow-y-auto">
                     {product.product_variants.map((v: any) => (
-                      <div key={v.id} className="flex justify-between items-center py-2 border-b last:border-0 border-gray-100 dark:border-gray-700">
+                      <div key={v.id} className={`flex justify-between items-center py-2 border-b last:border-0 border-gray-100 dark:border-gray-700 ${defaultVariantId === v.id ? 'bg-red-50 -mx-3 px-3 rounded' : ''}`}>
                         <div>
-                          <p className="font-medium text-sm">{v.name || 'Untitled'}</p>
+                          <p className="font-medium text-sm">
+                            {v.name || 'Untitled'}
+                            {defaultVariantId === v.id && (
+                              <span className="ml-2 text-xs bg-red-600 text-white px-2 py-0.5 rounded">Display</span>
+                            )}
+                          </p>
                           <p className="text-xs text-gray-500">SKU: {v.sku}</p>
                         </div>
                         <div className="text-right">

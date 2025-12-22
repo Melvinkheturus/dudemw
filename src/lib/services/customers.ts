@@ -40,14 +40,14 @@ export class CustomerService {
         const totalOrders = customerOrders.length
         const totalSpent = customerOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0)
         const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0
-        const lastOrder = customerOrders.sort((a, b) => 
+        const lastOrder = customerOrders.sort((a, b) =>
           new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
         )[0]
 
         // Determine status
         let status: 'active' | 'inactive' = 'inactive'
         if (totalOrders > 0) {
-          const daysSinceLastOrder = lastOrder 
+          const daysSinceLastOrder = lastOrder
             ? Math.floor((Date.now() - new Date(lastOrder.created_at || '').getTime()) / (1000 * 60 * 60 * 24))
             : 999
           status = daysSinceLastOrder < 90 ? 'active' : 'inactive'
@@ -119,15 +119,15 @@ export class CustomerService {
     } catch (error: any) {
       const errorMessage = error?.message || error?.error_description || JSON.stringify(error) || 'Unknown error'
       console.error('Error fetching customers:', errorMessage, error)
-      
+
       // Special handling for auth errors
       if (error?.message?.includes('User not allowed') || error?.message?.includes('JWT')) {
-        return { 
-          success: false, 
-          error: 'Admin access required. Please ensure SUPABASE_SERVICE_ROLE_KEY is configured in environment variables.' 
+        return {
+          success: false,
+          error: 'Admin access required. Please ensure SUPABASE_SERVICE_ROLE_KEY is configured in environment variables.'
         }
       }
-      
+
       return { success: false, error: `Failed to fetch customers: ${errorMessage}` }
     }
   }
@@ -157,7 +157,7 @@ export class CustomerService {
             price,
             product_variants (
               name,
-              products (
+              products!product_variants_product_id_fkey (
                 title
               )
             )
@@ -211,15 +211,15 @@ export class CustomerService {
     } catch (error: any) {
       const errorMessage = error?.message || error?.error_description || JSON.stringify(error) || 'Unknown error'
       console.error('Error fetching customer:', errorMessage, error)
-      
+
       // Special handling for auth errors
       if (error?.message?.includes('User not allowed') || error?.message?.includes('JWT')) {
-        return { 
-          success: false, 
-          error: 'Admin access required. Please ensure SUPABASE_SERVICE_ROLE_KEY is configured in environment variables.' 
+        return {
+          success: false,
+          error: 'Admin access required. Please ensure SUPABASE_SERVICE_ROLE_KEY is configured in environment variables.'
         }
       }
-      
+
       return { success: false, error: `Failed to fetch customer details: ${errorMessage}` }
     }
   }
@@ -289,15 +289,15 @@ export class CustomerService {
     } catch (error: any) {
       const errorMessage = error?.message || error?.error_description || JSON.stringify(error) || 'Unknown error'
       console.error('Error fetching customer stats:', errorMessage, error)
-      
+
       // Special handling for auth errors
       if (error?.message?.includes('User not allowed') || error?.message?.includes('JWT')) {
-        return { 
-          success: false, 
-          error: 'Admin access required. Please ensure SUPABASE_SERVICE_ROLE_KEY is configured in environment variables.' 
+        return {
+          success: false,
+          error: 'Admin access required. Please ensure SUPABASE_SERVICE_ROLE_KEY is configured in environment variables.'
         }
       }
-      
+
       return { success: false, error: `Failed to fetch customer statistics: ${errorMessage}` }
     }
   }
@@ -322,7 +322,7 @@ export class CustomerService {
             product_variants (
               name,
               sku,
-              products (
+              products!product_variants_product_id_fkey (
                 title
               )
             )

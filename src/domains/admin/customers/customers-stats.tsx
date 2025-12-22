@@ -2,7 +2,7 @@
 
 import { CustomerStats } from '@/lib/types/customers'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Users, UserCheck, UserX, TrendingUp } from 'lucide-react'
+import { Users, UserCheck, UserX, TrendingUp, User, UserMinus } from 'lucide-react'
 
 interface CustomersStatsProps {
   stats?: CustomerStats | null
@@ -57,27 +57,27 @@ export function CustomersStats({ stats, isLoading }: CustomersStatsProps) {
       testId: 'total-customers-stat',
     },
     {
-      title: 'Active Customers',
-      value: (stats.active || 0).toLocaleString(),
-      icon: UserCheck,
+      title: 'Registered',
+      value: (stats.registered || 0).toLocaleString(),
+      icon: User,
       color: 'text-green-600 dark:text-green-400',
       bgColor: 'bg-green-100 dark:bg-green-950',
-      testId: 'active-customers-stat',
+      testId: 'registered-customers-stat',
     },
     {
-      title: 'Inactive Customers',
-      value: (stats.inactive || 0).toLocaleString(),
-      icon: UserX,
-      color: 'text-gray-600 dark:text-gray-400',
-      bgColor: 'bg-gray-100 dark:bg-gray-950',
-      testId: 'inactive-customers-stat',
+      title: 'Guests',
+      value: (stats.guests || 0).toLocaleString(),
+      icon: UserMinus,
+      color: 'text-orange-600 dark:text-orange-400',
+      bgColor: 'bg-orange-100 dark:bg-orange-950',
+      testId: 'guest-customers-stat',
     },
     {
       title: 'New This Month',
       value: (stats.newThisMonth || 0).toLocaleString(),
       icon: TrendingUp,
-      color: 'text-orange-600 dark:text-orange-400',
-      bgColor: 'bg-orange-100 dark:bg-orange-950',
+      color: 'text-purple-600 dark:text-purple-400',
+      bgColor: 'bg-purple-100 dark:bg-purple-950',
       testId: 'new-customers-stat',
     },
   ]

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { AnalyticsService } from '@/lib/services/analytics'
+import { getOrdersChart } from '@/lib/actions/analytics'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Loader2 } from 'lucide-react'
 
@@ -16,7 +16,7 @@ export function OrdersChart() {
 
   const fetchData = async () => {
     setLoading(true)
-    const result = await AnalyticsService.getOrdersChart(30)
+    const result = await getOrdersChart(30)
     if (result.success && result.data) {
       setData(result.data)
     }
@@ -41,16 +41,16 @@ export function OrdersChart() {
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={data}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis 
-                dataKey="label" 
+              <XAxis
+                dataKey="label"
                 stroke="#6b7280"
                 fontSize={12}
               />
-              <YAxis 
+              <YAxis
                 stroke="#6b7280"
                 fontSize={12}
               />
-              <Tooltip 
+              <Tooltip
                 formatter={(value: any) => [value, 'Orders']}
                 contentStyle={{
                   backgroundColor: '#fff',
@@ -58,9 +58,9 @@ export function OrdersChart() {
                   borderRadius: '8px'
                 }}
               />
-              <Bar 
-                dataKey="value" 
-                fill="#dc2626" 
+              <Bar
+                dataKey="value"
+                fill="#dc2626"
                 radius={[8, 8, 0, 0]}
               />
             </BarChart>

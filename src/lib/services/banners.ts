@@ -197,9 +197,9 @@ export class BannerService {
       await CacheService.clearBannerCache()
 
       return { success: true, data: data as Banner }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating banner:', error)
-      return { success: false, error: 'Failed to update banner' }
+      return { success: false, error: error.message || 'Failed to update banner' }
     }
   }
 

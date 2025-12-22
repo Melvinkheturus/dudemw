@@ -44,7 +44,7 @@ export interface BulkImportProduct {
 export class ProductService {
   /**
    * Helper to map database product to domain product
-   * Adds convenience properties like 'images' array
+   * Adds convenience properties like 'images' array and 'default_variant'
    */
   private static mapProduct(product: any) {
     if (!product) return product
@@ -58,9 +58,15 @@ export class ProductService {
       return (a.sort_order || 0) - (b.sort_order || 0)
     })
 
+    // Find the default variant (admin-selected) or use first variant
+    const defaultVariant = product.default_variant_id
+      ? product.product_variants?.find((v: any) => v.id === product.default_variant_id)
+      : product.product_variants?.[0] || null
+
     return {
       ...product,
-      images: sortedImages?.map((img: any) => img.image_url) || []
+      images: sortedImages?.map((img: any) => img.image_url) || [],
+      default_variant: defaultVariant
     }
   }
 
@@ -92,7 +98,7 @@ export class ProductService {
             is_primary,
             sort_order
           ),
-          product_variants (
+          product_variants!product_variants_product_id_fkey (
             id,
             name,
             sku,
@@ -192,9 +198,9 @@ export class ProductService {
         success: true,
         data: (filteredData || []).map(p => this.mapProduct(p))
       }
-    } catch (error) {
-      console.error('Error fetching products:', error)
-      return { success: false, error: 'Failed to fetch products' }
+    } catch (error: any) {
+      console.error('Error fetching products:', error?.message || error?.code || JSON.stringify(error) || error)
+      return { success: false, error: error?.message || 'Failed to fetch products' }
     }
   }
 
@@ -226,7 +232,7 @@ export class ProductService {
               position
             )
           ),
-          product_variants (
+          product_variants!product_variants_product_id_fkey (
             id,
             name,
             sku,

@@ -1,8 +1,14 @@
-import { Tables } from '@/types/database.types'
+import { Tables } from '@/types/database'
+
+export type CustomerType = 'guest' | 'registered'
 
 export type Customer = {
   id: string
   email: string
+  phone?: string | null
+  first_name?: string | null
+  last_name?: string | null
+  customer_type?: CustomerType
   created_at: string
   last_sign_in_at?: string | null
   metadata?: {
@@ -24,6 +30,7 @@ export type CustomerWithStats = Customer & {
 export type CustomerFilters = {
   search?: string
   status?: 'all' | 'active' | 'inactive'
+  customerType?: 'all' | 'guest' | 'registered'
   dateFrom?: string
   dateTo?: string
   minOrders?: number
@@ -34,6 +41,8 @@ export type CustomerStats = {
   total: number
   active: number
   inactive: number
+  registered: number
+  guests: number
   newThisMonth: number
   totalRevenue: number
 }

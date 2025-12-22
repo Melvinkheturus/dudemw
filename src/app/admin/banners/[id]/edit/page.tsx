@@ -141,6 +141,9 @@ export default function EditBannerPage() {
         category: formData.category || undefined,
         cta_text: formData.cta_text || undefined,
         status: formData.status,
+        // Preserve existing complex data
+        carousel_data: banner.carousel_data,
+        marquee_data: banner.marquee_data,
       }
 
       // Include image_url if we have a new one

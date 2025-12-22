@@ -18,6 +18,22 @@ export interface ProductCategory {
   categories?: Category
 }
 
+// Product variant for SKU-level data
+export interface ProductVariant {
+  id: string
+  product_id: string
+  name: string | null
+  sku: string
+  price: number
+  discount_price?: number | null
+  stock: number
+  active: boolean
+  position?: number | null
+  image_url?: string | null
+  created_at?: string | null
+  updated_at?: string | null
+}
+
 export interface Product {
   id: string
   title: string
@@ -44,9 +60,13 @@ export interface Product {
   material?: string | null
   fabric_weight?: string | null
   care_instructions?: string | null
+  // Default variant for product cards
+  default_variant_id?: string | null
+  default_variant?: ProductVariant | null
   // Related data from joins
   product_images?: ProductImage[] | null
   product_categories?: ProductCategory[] | null
+  product_variants?: ProductVariant[] | null
 }
 
 export interface Category {

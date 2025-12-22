@@ -8,6 +8,8 @@ import { useToast } from '@/lib/layout/feedback/ToastContext'
 import { useRouter } from 'next/navigation'
 import { useCheckoutSound } from '@/domains/checkout'
 import { supabase } from '@/lib/supabase/client'
+import { getGuestId } from '@/lib/guest-session'
+import { getOrCreateGuestCustomer, getOrCreateCustomerForUser } from '@/lib/actions/customer-domain'
 
 export default function CheckoutForm() {
   const { cartItems, clearCart } = useCart()
@@ -80,16 +82,50 @@ export default function CheckoutForm() {
         throw new Error('Shipping information is missing')
       }
 
-      // Create order in Supabase
+      let customerId: string | null = null
+
+      // Create or get customer record
+      if (user) {
+        // Logged in user - get or create registered customer
+        const customerResult = await getOrCreateCustomerForUser(user.id, {
+          email: user.email || shippingInfo.email,
+          phone: shippingInfo.phone,
+          first_name: shippingInfo.firstName,
+          last_name: shippingInfo.lastName,
+        })
+
+        if (customerResult.success && customerResult.data) {
+          customerId = customerResult.data.id
+        }
+      } else {
+        // Guest user - get or create guest customer
+        const guestResult = await getOrCreateGuestCustomer(shippingInfo.email, {
+          phone: shippingInfo.phone,
+          first_name: shippingInfo.firstName,
+          last_name: shippingInfo.lastName,
+        })
+
+        if (guestResult.success && guestResult.data) {
+          customerId = guestResult.data.id
+        }
+      }
+
+      // Get guest session ID for tracking
+      const guestSessionId = !user ? getGuestId() : null
+
+      // Create order in Supabase with customer_id for proper tracking
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
           user_id: user?.id || null,
-          guest_id: !user ? `guest_${Date.now()}` : null,
-          email: shippingInfo.email,
-          phone: shippingInfo.phone,
-          status: 'pending',
+          customer_id: customerId, // Link to customer record for admin visibility
+          guest_id: guestSessionId,
+          customer_email_snapshot: shippingInfo.email,
+          customer_phone_snapshot: shippingInfo.phone,
+          customer_name_snapshot: `${shippingInfo.firstName} ${shippingInfo.lastName}`.trim(),
+          order_status: 'pending',
           payment_status: 'pending',
+          payment_method: 'cod', // Cash on Delivery
           total_amount: cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
           shipping_address: {
             firstName: shippingInfo.firstName,

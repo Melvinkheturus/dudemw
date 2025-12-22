@@ -14,8 +14,8 @@ export class OrderService {
   // Get orders with filtering and pagination
   static async getOrders(filters?: OrderFilters, page: number = 1, limit: number = 20) {
     try {
-      const supabase = getSupabaseClient()
-      let query = supabase
+      // Use supabaseAdmin to bypass RLS for admin pages
+      let query = supabaseAdmin
         .from('orders')
         .select(`
           *,
@@ -28,7 +28,7 @@ export class OrderService {
               id,
               name,
               sku,
-              products (
+              products!product_variants_product_id_fkey (
                 id,
                 title,
                 slug
@@ -103,8 +103,8 @@ export class OrderService {
   // Get single order by ID
   static async getOrder(id: string) {
     try {
-      const supabase = getSupabaseClient()
-      const { data, error } = await supabase
+      // Use supabaseAdmin to bypass RLS for admin pages
+      const { data, error } = await supabaseAdmin
         .from('orders')
         .select(`
           *,
@@ -117,7 +117,7 @@ export class OrderService {
               id,
               name,
               sku,
-              products (
+              products!product_variants_product_id_fkey (
                 id,
                 title,
                 slug
@@ -149,8 +149,8 @@ export class OrderService {
   // Get order statistics
   static async getOrderStats() {
     try {
-      const supabase = getSupabaseClient()
-      const { data: orders, error } = await supabase
+      // Use supabaseAdmin to bypass RLS for admin pages
+      const { data: orders, error } = await supabaseAdmin
         .from('orders')
         .select('order_status, total_amount, created_at')
 

@@ -1,4 +1,5 @@
 import { useQuery, UseQueryOptions } from '@tanstack/react-query'
+import { getProducts as getProductsAction, getProduct as getProductAction } from '@/lib/actions/products'
 import { ProductService } from '@/lib/services/products'
 
 /**
@@ -15,7 +16,7 @@ export const productKeys = {
 }
 
 /**
- * Hook to fetch products list
+ * Hook to fetch products list (uses server action with supabaseAdmin)
  */
 export function useProducts(
   filters?: any,
@@ -24,7 +25,7 @@ export function useProducts(
   return useQuery({
     queryKey: productKeys.list(filters),
     queryFn: async () => {
-      const result = await ProductService.getProducts(filters)
+      const result = await getProductsAction(filters)
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch products')
       }

@@ -59,6 +59,28 @@ export interface RecentActivity {
   metadata?: any
 }
 
+export interface ChartDataPoint {
+  date: string
+  value: number
+  label?: string
+}
+
+export interface TopProduct {
+  id: string
+  title: string
+  revenue: number
+  orders: number
+  image_url?: string
+}
+
+export interface CategoryPerformance {
+  id: string
+  name: string
+  revenue: number
+  orders: number
+  products: number
+}
+
 // Helper function to calculate percentage change
 function calculateChange(current: number, previous: number) {
   if (previous === 0) return current > 0 ? 100 : 0
@@ -289,7 +311,7 @@ export async function getRecentActivity(limit: number = 10): Promise<{ success: 
     // Get recent inventory updates (from inventory_logs if exists, otherwise skip)
     let recentInventory: any[] = []
     try {
-      const { data } = await supabaseAdmin
+      const { data } = await (supabaseAdmin as any)
         .from('inventory_logs')
         .select('id, sku, quantity_change, reason, created_at')
         .order('created_at', { ascending: false })
@@ -350,6 +372,283 @@ export async function getRecentActivity(limit: number = 10): Promise<{ success: 
   } catch (error) {
     console.error('Error fetching recent activity:', error)
     return { success: false, error: 'Failed to fetch recent activity' }
+  }
+}
+
+
+// Chart Data Actions
+
+export async function getRevenueChart(period: 'daily' | 'weekly' | 'monthly' = 'daily', days: number = 30) {
+  try {
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - days)
+
+    const { data: orders } = await supabaseAdmin
+      .from('orders')
+      .select('total_amount, created_at')
+      .gte('created_at', startDate.toISOString())
+      .order('created_at', { ascending: true })
+
+    // Group by date
+    const chartData: { [key: string]: number } = {}
+
+    orders?.forEach(order => {
+      if (!order.created_at) return
+      const date = new Date(order.created_at)
+      let key: string
+
+      if (period === 'daily') {
+        key = date.toISOString().split('T')[0]
+      } else if (period === 'weekly') {
+        const weekStart = new Date(date)
+        weekStart.setDate(date.getDate() - date.getDay())
+        key = weekStart.toISOString().split('T')[0]
+      } else {
+        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      }
+
+      chartData[key] = (chartData[key] || 0) + (order.total_amount || 0)
+    })
+
+    const data: ChartDataPoint[] = Object.entries(chartData).map(([date, value]) => ({
+      date,
+      value,
+      label: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    }))
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error fetching revenue chart:', error)
+    return { success: false, error: 'Failed to fetch revenue chart data' }
+  }
+}
+
+export async function getOrdersChart(days: number = 30) {
+  try {
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - days)
+
+    const { data: orders } = await supabaseAdmin
+      .from('orders')
+      .select('id, created_at')
+      .gte('created_at', startDate.toISOString())
+      .order('created_at', { ascending: true })
+
+    // Group by date
+    const chartData: { [key: string]: number } = {}
+
+    orders?.forEach(order => {
+      if (!order.created_at) return
+      const date = new Date(order.created_at).toISOString().split('T')[0]
+      chartData[date] = (chartData[date] || 0) + 1
+    })
+
+    const data: ChartDataPoint[] = Object.entries(chartData).map(([date, value]) => ({
+      date,
+      value,
+      label: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    }))
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error fetching orders chart:', error)
+    return { success: false, error: 'Failed to fetch orders chart data' }
+  }
+}
+
+export async function getTopProducts(limit: number = 10) {
+  try {
+    const { data: orderItems } = await supabaseAdmin
+      .from('order_items')
+      .select(`
+        quantity,
+        price,
+        product_variants (
+          product_id,
+          products!product_variants_product_id_fkey (
+            id,
+            title,
+            product_images (image_url, is_primary)
+          )
+        )
+      `)
+
+    // Aggregate by product
+    const productMap = new Map<string, { title: string; revenue: number; orders: number; image_url?: string }>()
+
+    orderItems?.forEach((item: any) => {
+      const product = item.product_variants?.products
+      if (!product) return
+
+      const existing = productMap.get(product.id) || {
+        title: product.title,
+        revenue: 0,
+        orders: 0,
+        image_url: product.product_images?.find((img: any) => img.is_primary)?.image_url
+      }
+
+      existing.revenue += (item.price || 0) * (item.quantity || 0)
+      existing.orders += item.quantity || 0
+      productMap.set(product.id, existing)
+    })
+
+    const topProducts: TopProduct[] = Array.from(productMap.entries())
+      .map(([id, data]) => ({ id, ...data }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, limit)
+
+    return { success: true, data: topProducts }
+  } catch (error) {
+    console.error('Error fetching top products:', error)
+    return { success: false, error: 'Failed to fetch top products' }
+  }
+}
+
+export async function getCategoryPerformance() {
+  try {
+    const { data: categories } = await supabaseAdmin
+      .from('categories')
+      .select(`
+        id,
+        name,
+        product_categories (
+          products!product_variants_product_id_fkey (
+            id,
+            order_items (
+              quantity,
+              price
+            )
+          )
+        )
+      `)
+
+    const performance: CategoryPerformance[] = categories?.map((cat: any) => {
+      let revenue = 0
+      let orders = 0
+      const productIds = new Set()
+
+      cat.product_categories?.forEach((pc: any) => {
+        if (pc.products) {
+          productIds.add(pc.products.id)
+          pc.products.order_items?.forEach((item: any) => {
+            revenue += (item.price || 0) * (item.quantity || 0)
+            orders += item.quantity || 0
+          })
+        }
+      })
+
+      return {
+        id: cat.id,
+        name: cat.name,
+        revenue,
+        orders,
+        products: productIds.size
+      }
+    }).sort((a: any, b: any) => b.revenue - a.revenue) || []
+
+    return { success: true, data: performance }
+  } catch (error) {
+    console.error('Error fetching category performance:', error)
+    return { success: false, error: 'Failed to fetch category performance' }
+  }
+}
+
+export async function getCustomerGrowthChart(days: number = 30) {
+  try {
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - days)
+
+    const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers()
+
+    // Group by date
+    const chartData: { [key: string]: number } = {}
+
+    authUsers?.users
+      .filter(user => new Date(user.created_at) >= startDate)
+      .forEach(user => {
+        const date = new Date(user.created_at).toISOString().split('T')[0]
+        chartData[date] = (chartData[date] || 0) + 1
+      })
+
+    // Calculate cumulative growth
+    let cumulative = 0
+    const data: ChartDataPoint[] = Object.entries(chartData)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, value]) => {
+        cumulative += value
+        return {
+          date,
+          value: cumulative,
+          label: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        }
+      })
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error fetching customer growth chart:', error)
+    return { success: false, error: 'Failed to fetch customer growth data' }
+  }
+}
+
+export async function exportAnalytics(startDate: Date, endDate: Date) {
+  try {
+    const { data: orders } = await supabaseAdmin
+      .from('orders')
+      .select(`
+        *,
+        order_items (
+          quantity,
+          price,
+          product_variants (
+            name,
+            sku,
+            products!product_variants_product_id_fkey (title)
+          )
+        )
+      `)
+      .gte('created_at', startDate.toISOString())
+      .lte('created_at', endDate.toISOString())
+
+    const csvData = orders?.map(order => ({
+      'Order ID': order.id,
+      'Date': order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A',
+      'Customer Email': order.user_id || 'Guest',
+      'Total Amount': `₹${order.total_amount}`,
+      'Status': order.order_status,
+      'Payment Status': order.payment_status,
+      'Items': order.order_items?.length || 0
+    })) || []
+
+    return { success: true, data: csvData }
+  } catch (error) {
+    console.error('Error exporting analytics:', error)
+    return { success: false, error: 'Failed to export analytics' }
+  }
+}
+
+// Aggregate function for the dashboard
+export async function getDashboardAnalytics() {
+  try {
+    const [stats, recentOrders, lowStockItems, activities] = await Promise.all([
+      getDashboardStats(),
+      getRecentOrders(5),
+      getLowStockItems(10),
+      getRecentActivity(10)
+    ])
+
+    return {
+      success: true,
+      data: {
+        stats: stats.data || null,
+        recentOrders: recentOrders.data || [],
+        lowStockItems: lowStockItems.data || [],
+        activities: activities.data || [],
+        lastUpdated: new Date().toISOString()
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching dashboard analytics:', error)
+    return { success: false, error: 'Failed to fetch dashboard analytics' }
   }
 }
 

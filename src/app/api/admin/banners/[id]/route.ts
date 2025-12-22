@@ -60,6 +60,8 @@ export async function PATCH(
       category: body.category,
       cta_text: body.cta_text,
       status: body.status,
+      carousel_data: body.carousel_data,
+      marquee_data: body.marquee_data,
     }
 
     // Remove undefined values
@@ -73,16 +75,16 @@ export async function PATCH(
 
     if (!result.success) {
       return NextResponse.json(
-        { error: result.error },
+        { error: result.error || 'Failed to update banner' },
         { status: 500 }
       )
     }
 
     return NextResponse.json(result.data)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in PATCH /api/admin/banners/[id]:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error.message || 'Internal server error' },
       { status: 500 }
     )
   }

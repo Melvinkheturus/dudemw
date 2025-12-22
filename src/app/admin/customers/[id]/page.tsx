@@ -111,11 +111,24 @@ export default function CustomerDetailPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Customer Details</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {customer.first_name || customer.last_name
+                ? `${customer.first_name || ''} ${customer.last_name || ''}`.trim()
+                : 'Customer Details'}
+            </h1>
             <p className="text-muted-foreground">{customer.email}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {customer.customer_type === 'guest' ? (
+            <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-200">
+              Guest
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">
+              Registered
+            </Badge>
+          )}
           {getStatusBadge(customer.status)}
           <Button
             variant="outline"
@@ -175,8 +188,8 @@ export default function CustomerDetailPage() {
             <div className="text-2xl font-bold">
               {customer.lastOrderDate
                 ? formatDistanceToNow(new Date(customer.lastOrderDate), {
-                    addSuffix: true,
-                  })
+                  addSuffix: true,
+                })
                 : 'Never'}
             </div>
             <p className="text-xs text-muted-foreground">Last purchase</p>
@@ -196,7 +209,9 @@ export default function CustomerDetailPage() {
               <div>
                 <p className="text-sm font-medium">Full Name</p>
                 <p className="text-sm text-muted-foreground">
-                  {customer.metadata?.full_name || 'Not provided'}
+                  {customer.first_name || customer.last_name
+                    ? `${customer.first_name || ''} ${customer.last_name || ''}`.trim()
+                    : 'Not provided'}
                 </p>
               </div>
             </div>
@@ -214,7 +229,7 @@ export default function CustomerDetailPage() {
               <div>
                 <p className="text-sm font-medium">Phone</p>
                 <p className="text-sm text-muted-foreground">
-                  {customer.metadata?.phone || 'Not provided'}
+                  {customer.phone || 'Not provided'}
                 </p>
               </div>
             </div>

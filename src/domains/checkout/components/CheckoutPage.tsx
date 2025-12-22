@@ -2,8 +2,7 @@
 
 import { useCart } from '@/domains/cart'
 import { useAuth } from '@/domains/auth/context'
-import CheckoutForm from './CheckoutForm'
-import OrderSummary from './OrderSummary'
+import CheckoutForm from './CheckoutFormV2'
 import Link from 'next/link'
 
 export default function CheckoutPage() {
@@ -47,19 +46,7 @@ export default function CheckoutPage() {
       <div className="container mx-auto px-4">
         <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Checkout Form */}
-          <div className="lg:col-span-2">
-            <CheckoutForm />
-          </div>
-
-          {/* Order Summary */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-8">
-              <OrderSummary />
-            </div>
-          </div>
-        </div>
+        <CheckoutForm />
       </div>
     </div>
   )

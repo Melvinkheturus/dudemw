@@ -35,15 +35,16 @@ export function CustomersFilters({
 
   const handleClearFilters = () => {
     setLocalSearch("")
-    onFiltersChange({ status: "all" })
+    onFiltersChange({ status: "all", customerType: "all" })
   }
 
-  const hasActiveFilters = filters.search || filters.status !== "all"
+  const hasActiveFilters = filters.search || filters.status !== "all" || filters.customerType !== "all"
 
   // Count active filters
   const activeFilterCount = [
     filters.search,
     filters.status !== "all" ? filters.status : null,
+    filters.customerType !== undefined && filters.customerType !== "all" ? filters.customerType : null,
   ].filter(Boolean).length
 
   return (
@@ -81,6 +82,21 @@ export function CustomersFilters({
           <SelectItem value="all">All Status</SelectItem>
           <SelectItem value="active">Active</SelectItem>
           <SelectItem value="inactive">Inactive</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {/* Customer Type Filter */}
+      <Select
+        value={filters.customerType || "all"}
+        onValueChange={(value) => onFiltersChange({ ...filters, customerType: value as any })}
+      >
+        <SelectTrigger className="w-[140px] h-9 bg-white border-gray-200" data-testid="customer-type-filter">
+          <SelectValue placeholder="Type" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Types</SelectItem>
+          <SelectItem value="registered">Registered</SelectItem>
+          <SelectItem value="guest">Guests</SelectItem>
         </SelectContent>
       </Select>
 

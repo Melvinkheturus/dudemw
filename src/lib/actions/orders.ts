@@ -7,10 +7,10 @@ import { OrderExportService } from '@/lib/services/order-export'
 import type { OrderFilters } from '@/lib/types/orders'
 
 // Re-export types (types can be exported from server action files)
-export type { 
-  OrderWithDetails, 
-  OrderFilters, 
-  OrderStats, 
+export type {
+  OrderWithDetails,
+  OrderFilters,
+  OrderStats,
   PaginationInfo,
   Order,
   OrderItem,
@@ -48,4 +48,115 @@ export async function cancelOrder(orderId: string, reason?: string) {
 
 export async function exportOrders(filters?: OrderFilters) {
   return OrderExportService.exportOrders(filters)
+}
+
+// Interface for creating orders from checkout
+interface CreateOrderInput {
+  userId?: string | null
+  guestId?: string | null
+  customerId?: string | null
+  customerEmail: string
+  customerPhone: string
+  customerName: string
+  orderStatus: string
+  paymentStatus: string
+  paymentMethod: string
+  subtotalAmount: number
+  shippingAmount: number
+  taxAmount: number
+  totalAmount: number
+  shippingAddress: {
+    firstName: string
+    lastName: string
+    address: string
+    city: string
+    state: string
+    postalCode: string
+    phone: string
+  }
+  shippingMethod: string
+  taxDetails?: any
+  items: {
+    variantId: string
+    quantity: number
+    price: number
+  }[]
+}
+
+// Create order with supabaseAdmin (bypasses RLS for guests)
+export async function createOrder(input: CreateOrderInput): Promise<{ success: boolean; orderId?: string; error?: string }> {
+  try {
+    const { supabaseAdmin } = await import('@/lib/supabase/supabase')
+
+    // Create the order
+    const { data: order, error: orderError } = await supabaseAdmin
+      .from('orders')
+      .insert({
+        user_id: input.userId || null,
+        customer_id: input.customerId || null,
+        guest_id: input.guestId || null,
+        customer_email_snapshot: input.customerEmail,
+        customer_phone_snapshot: input.customerPhone,
+        customer_name_snapshot: input.customerName,
+        order_status: input.orderStatus,
+        payment_status: input.paymentStatus,
+        payment_method: input.paymentMethod,
+        subtotal_amount: input.subtotalAmount,
+        shipping_amount: input.shippingAmount,
+        tax_amount: input.taxAmount,
+        total_amount: input.totalAmount,
+        shipping_address: input.shippingAddress,
+        shipping_method: input.shippingMethod,
+        tax_details: input.taxDetails
+      })
+      .select()
+      .single()
+
+    if (orderError || !order) {
+      console.error('Order creation error:', orderError)
+      return { success: false, error: orderError?.message || 'Failed to create order' }
+    }
+
+    // Create order items
+    const orderItems = input.items.map(item => ({
+      order_id: order.id,
+      variant_id: item.variantId,
+      quantity: item.quantity,
+      price: item.price,
+      subtotal: item.price * item.quantity
+    }))
+
+    const { error: itemsError } = await supabaseAdmin
+      .from('order_items')
+      .insert(orderItems)
+
+    if (itemsError) {
+      console.error('Order items creation error:', itemsError)
+      // Don't fail the whole order, items error is logged
+    }
+
+    return { success: true, orderId: order.id }
+  } catch (error: any) {
+    console.error('createOrder error:', error)
+    return { success: false, error: error.message || 'Unknown error' }
+  }
+}
+
+// Update order status using supabaseAdmin
+export async function updateOrderStatusDirect(orderId: string, status: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { supabaseAdmin } = await import('@/lib/supabase/supabase')
+
+    const { error } = await supabaseAdmin
+      .from('orders')
+      .update({ order_status: status })
+      .eq('id', orderId)
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
 }

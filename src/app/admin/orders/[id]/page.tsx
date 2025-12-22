@@ -6,13 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { 
-  ArrowLeft, 
-  Package, 
-  Truck, 
-  MapPin, 
-  User, 
-  CreditCard, 
+import {
+  ArrowLeft,
+  Package,
+  Truck,
+  MapPin,
+  User,
+  CreditCard,
   Calendar,
   Phone,
   Mail,
@@ -56,7 +56,7 @@ export default function OrderDetailPage() {
     try {
       setIsLoading(true)
       const result = await getOrder(orderId)
-      
+
       if (result.success && result.data) {
         setOrder(result.data)
       } else {
@@ -220,10 +220,10 @@ export default function OrderDetailPage() {
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-3">
           {order.order_status === 'pending' && (
-            <Button 
+            <Button
               variant="outline"
               onClick={() => handleStatusUpdate('processing')}
               disabled={isUpdating}
@@ -233,7 +233,7 @@ export default function OrderDetailPage() {
             </Button>
           )}
           {(order.order_status === 'pending' || order.order_status === 'processing') && (
-            <Button 
+            <Button
               variant="outline"
               onClick={() => setTrackingDialog(true)}
               disabled={isUpdating}
@@ -243,7 +243,7 @@ export default function OrderDetailPage() {
             </Button>
           )}
           {order.order_status === 'shipped' && (
-            <Button 
+            <Button
               variant="outline"
               onClick={() => handleStatusUpdate('delivered')}
               disabled={isUpdating}
@@ -253,7 +253,7 @@ export default function OrderDetailPage() {
             </Button>
           )}
           {order.order_status !== 'cancelled' && order.order_status !== 'delivered' && order.order_status !== 'completed' && (
-            <Button 
+            <Button
               variant="destructive"
               onClick={() => setCancelDialog(true)}
               disabled={isUpdating}
@@ -278,7 +278,7 @@ export default function OrderDetailPage() {
             <Badge className={`${getStatusColor(order.order_status)} font-medium text-sm px-3 py-1`}>
               {order.order_status || 'pending'}
             </Badge>
-            
+
             {order.shipping_tracking_number && (
               <div className="space-y-2">
                 <p className="text-sm font-medium text-gray-700">Tracking Information</p>
@@ -288,7 +288,7 @@ export default function OrderDetailPage() {
                 </div>
               </div>
             )}
-            
+
             <div className="space-y-2">
               <p className="text-sm font-medium text-gray-700">Timeline</p>
               <div className="text-sm text-gray-600 space-y-1">
@@ -313,12 +313,20 @@ export default function OrderDetailPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="font-medium text-gray-900">{getCustomerName(order)}</p>
+              <p className="font-medium text-gray-900">
+                {order.customer_name_snapshot || getCustomerName(order)}
+              </p>
               <div className="text-sm text-gray-600 space-y-1 mt-2">
-                {order.guest_email && (
+                {(order.customer_email_snapshot || order.guest_email) && (
                   <div className="flex items-center space-x-2">
                     <Mail className="h-3 w-3" />
-                    <span>{order.guest_email}</span>
+                    <span>{order.customer_email_snapshot || order.guest_email}</span>
+                  </div>
+                )}
+                {order.customer_phone_snapshot && (
+                  <div className="flex items-center space-x-2">
+                    <Phone className="h-3 w-3" />
+                    <span>{order.customer_phone_snapshot}</span>
                   </div>
                 )}
               </div>
@@ -338,7 +346,7 @@ export default function OrderDetailPage() {
             <Badge className={`${getPaymentStatusColor(order.payment_status)} font-medium text-sm px-3 py-1`}>
               {order.payment_status || 'pending'}
             </Badge>
-            
+
             <div className="space-y-2">
               {order.shipping_amount && (
                 <div className="flex justify-between text-sm">
@@ -379,8 +387,8 @@ export default function OrderDetailPage() {
                   </div>
                 </div>
               )) || (
-                <p className="text-gray-500">No items found</p>
-              )}
+                  <p className="text-gray-500">No items found</p>
+                )}
             </div>
           </CardContent>
         </Card>
@@ -396,10 +404,10 @@ export default function OrderDetailPage() {
           <CardContent>
             {order.shipping_address ? (
               <div className="text-sm text-gray-600 space-y-1">
-                <p><strong>{order.shipping_address.name}</strong></p>
-                <p>{order.shipping_address.address_line1}</p>
+                <p><strong>{order.shipping_address.firstName} {order.shipping_address.lastName}</strong></p>
+                <p>{order.shipping_address.address}</p>
                 <p>{order.shipping_address.city}, {order.shipping_address.state}</p>
-                <p>{order.shipping_address.pincode}</p>
+                <p>{order.shipping_address.postalCode}</p>
                 <p>{order.shipping_address.phone}</p>
               </div>
             ) : (

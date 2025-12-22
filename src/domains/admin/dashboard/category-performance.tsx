@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { AnalyticsService } from '@/lib/services/analytics'
+import { getCategoryPerformance } from '@/lib/actions/analytics'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 import { Loader2 } from 'lucide-react'
 
@@ -18,7 +18,7 @@ export function CategoryPerformance() {
 
   const fetchData = async () => {
     setLoading(true)
-    const result = await AnalyticsService.getCategoryPerformance()
+    const result = await getCategoryPerformance()
     if (result.success && result.data) {
       setCategories(result.data.slice(0, 6))
     }

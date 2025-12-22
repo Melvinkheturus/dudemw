@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { AnalyticsService } from '@/lib/services/analytics'
+import { getRevenueChart } from '@/lib/actions/analytics'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Loader2 } from 'lucide-react'
 
@@ -19,7 +19,7 @@ export function RevenueChart() {
 
   const fetchData = async () => {
     setLoading(true)
-    const result = await AnalyticsService.getRevenueChart(period, days)
+    const result = await getRevenueChart(period, days)
     if (result.success && result.data) {
       setData(result.data)
     }
@@ -56,17 +56,17 @@ export function RevenueChart() {
           <ResponsiveContainer width="100%" height={320}>
             <LineChart data={data}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis 
-                dataKey="label" 
+              <XAxis
+                dataKey="label"
                 stroke="#6b7280"
                 fontSize={12}
               />
-              <YAxis 
+              <YAxis
                 stroke="#6b7280"
                 fontSize={12}
                 tickFormatter={(value) => `₹${value.toLocaleString()}`}
               />
-              <Tooltip 
+              <Tooltip
                 formatter={(value: any) => [`₹${value.toLocaleString()}`, 'Revenue']}
                 contentStyle={{
                   backgroundColor: '#fff',
@@ -74,10 +74,10 @@ export function RevenueChart() {
                   borderRadius: '8px'
                 }}
               />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
-                stroke="#dc2626" 
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke="#dc2626"
                 strokeWidth={2}
                 dot={{ fill: '#dc2626', r: 4 }}
                 activeDot={{ r: 6 }}

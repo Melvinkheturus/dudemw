@@ -4,18 +4,35 @@ import { useCart, type CartItem } from '@/domains/cart'
 import Image from 'next/image'
 import { useState } from 'react'
 
-export default function OrderSummary() {
+interface OrderSummaryProps {
+  shippingOverride?: number
+  taxOverride?: number
+  totalOverride?: number
+  taxDetails?: any
+}
+
+export default function OrderSummary({
+  shippingOverride,
+  taxOverride,
+  totalOverride,
+  taxDetails
+}: OrderSummaryProps) {
   const { cartItems, totalPrice, itemCount } = useCart()
   const [discount, setDiscount] = useState<{ code: string; amount: number } | null>(null)
 
   const formatPrice = (amount: number) => {
-    return `₹${amount.toFixed(0)}`
+    return `₹${amount.toFixed(2)}`
   }
 
   const subtotal = totalPrice
-  const shippingCost = subtotal >= 999 ? 0 : 99 // Free shipping over ₹999
+  // Use override if provided, otherwise default logic
+  const shippingCost = shippingOverride !== undefined ? shippingOverride : (subtotal >= 999 ? 0 : 99)
+  const taxAmount = taxOverride || 0
   const discountAmount = discount ? discount.amount : 0
-  const finalTotal = subtotal + shippingCost - discountAmount
+
+  const finalTotal = totalOverride !== undefined
+    ? totalOverride
+    : subtotal + shippingCost + taxAmount - discountAmount
 
   return (
     <div className="bg-gray-50 rounded-lg p-6">
@@ -77,6 +94,32 @@ export default function OrderSummary() {
           <span>Shipping</span>
           <span>{shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}</span>
         </div>
+
+        {taxDetails && (
+          <div className="space-y-1">
+            {taxDetails.taxType === 'intra-state' ? (
+              <>
+                <div className="flex justify-between text-xs text-gray-600">
+                  <span>CGST (6%):</span>
+                  <span>{formatPrice(taxDetails.cgst)}</span>
+                </div>
+                <div className="flex justify-between text-xs text-gray-600">
+                  <span>SGST (6%):</span>
+                  <span>{formatPrice(taxDetails.sgst)}</span>
+                </div>
+              </>
+            ) : (
+              <div className="flex justify-between text-xs text-gray-600">
+                <span>IGST (12%):</span>
+                <span>{formatPrice(taxDetails.igst)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-sm">
+              <span>Tax</span>
+              <span>{formatPrice(taxAmount)}</span>
+            </div>
+          </div>
+        )}
 
         {discount && (
           <div className="flex justify-between text-sm text-green-600">
