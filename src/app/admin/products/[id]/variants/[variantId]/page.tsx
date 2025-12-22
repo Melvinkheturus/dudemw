@@ -19,7 +19,7 @@ export default async function VariantDetailPage({ params }: VariantDetailPagePro
   }
 
   const product = result.data
-  const variant = product.product_variants?.find(v => v.id === variantId)
+  const variant = product.product_variants?.find((v: any) => v.id === variantId)
 
   if (!variant) {
     notFound()
