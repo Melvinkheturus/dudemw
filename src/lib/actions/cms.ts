@@ -30,20 +30,27 @@ export async function getCMSPages() {
 }
 
 export async function getCMSPage(slug: string) {
-    const supabase = await createServerSupabase()
+    try {
+        console.log('[getCMSPage] Fetching CMS page:', slug)
+        const supabase = await createServerSupabase()
 
-    const { data, error } = await supabase
-        .from('cms_pages')
-        .select('*')
-        .eq('slug', slug)
-        .single()
+        const { data, error } = await supabase
+            .from('cms_pages')
+            .select('*')
+            .eq('slug', slug)
+            .single()
 
-    if (error) {
-        console.error(`Error fetching CMS page ${slug}:`, error)
+        if (error) {
+            console.error(`[getCMSPage] Error fetching CMS page ${slug}:`, error)
+            return null
+        }
+
+        console.log('[getCMSPage] Successfully fetched:', slug, 'published:', data?.is_published)
+        return data as CMSPage
+    } catch (err) {
+        console.error(`[getCMSPage] Exception fetching ${slug}:`, err)
         return null
     }
-
-    return data as CMSPage
 }
 
 export async function updateCMSPage(slug: string, data: Partial<CMSPage>) {
