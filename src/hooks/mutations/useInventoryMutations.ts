@@ -84,11 +84,11 @@ export function useImportInventory() {
       const text = await file.text()
       const result = await CSVService.parseInventoryCSV(text)
       if (!result.success) {
-        throw new Error(result.error || 'Failed to parse CSV')
+        throw new Error(result.errors?.[0] || 'Failed to parse CSV')
       }
       
       // Now bulk adjust the stock
-      const bulkResult = await InventoryService.bulkAdjustStock(result.data || [])
+      const bulkResult = await InventoryService.bulkAdjustStock({ adjustments: result.data || [] })
       if (!bulkResult.success) {
         throw new Error(bulkResult.error || 'Failed to import inventory')
       }
