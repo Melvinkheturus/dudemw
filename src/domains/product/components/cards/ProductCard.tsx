@@ -67,7 +67,14 @@ export default function ProductCard({ product, badge, badgeColor = "red" }: Prod
   return (
     <div className="group relative">
       <Link
-        href={`/products/${product.slug}`}
+        href={product?.slug ? `/products/${product.slug}` : '#'}
+        onClick={(e) => {
+          if (!product?.slug) {
+            e.preventDefault()
+            console.error('[ProductCard] Product missing slug:', product?.id, product?.title)
+            alert('Product information is incomplete. Please try again later.')
+          }
+        }}
         className="block transition-transform duration-300 ease-out active:scale-95"
       >
         {/* Image Container - Portrait aspect ratio */}
