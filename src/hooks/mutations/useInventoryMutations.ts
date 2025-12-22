@@ -24,7 +24,12 @@ export function useAdjustStock() {
       reason: string
       notes?: string
     }) => {
-      const result = await InventoryService.adjustStock(productId, variantId, quantity, reason, notes)
+      const result = await InventoryService.adjustStock({
+        variant_id: variantId || productId,
+        quantity,
+        reason,
+        adjust_type: quantity >= 0 ? 'add' : 'subtract'
+      })
       if (!result.success) {
         throw new Error(result.error || 'Failed to adjust stock')
       }
