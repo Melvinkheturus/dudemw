@@ -80,7 +80,7 @@ export function CategorySelectionStep({ selectedCategory, onCategoryChange }: Ca
                   </SelectItem>
                 ))
               ) : (
-                <SelectItem value="loading" disabled>
+                <SelectItem value="loading" disabled={true}>
                   {isLoadingCategories ? "Loading..." : "No categories found"}
                 </SelectItem>
               )}
