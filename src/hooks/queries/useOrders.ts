@@ -1,5 +1,5 @@
 import { useQuery, UseQueryOptions } from '@tanstack/react-query'
-import { OrderService } from '@/lib/services/orders'
+import { getOrders, getOrder, getOrderStats } from '@/lib/actions/orders'
 
 /**
  * Query keys for orders
@@ -23,7 +23,7 @@ export function useOrders(
   return useQuery({
     queryKey: orderKeys.list(filters),
     queryFn: async () => {
-      const result = await OrderService.getOrders(filters)
+      const result = await getOrders(filters)
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch orders')
       }
@@ -43,7 +43,7 @@ export function useOrder(
   return useQuery({
     queryKey: orderKeys.detail(orderId),
     queryFn: async () => {
-      const result = await OrderService.getOrder(orderId)
+      const result = await getOrder(orderId)
       if (!result.success || !result.data) {
         throw new Error(result.error || 'Failed to fetch order')
       }
@@ -63,7 +63,7 @@ export function useOrderStats(
   return useQuery({
     queryKey: orderKeys.stats(),
     queryFn: async () => {
-      const result = await OrderService.getOrderStats()
+      const result = await getOrderStats()
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch order stats')
       }

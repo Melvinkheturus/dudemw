@@ -16,32 +16,20 @@ export default function OrderConfirmedPage() {
       try {
         setLoading(true)
 
-        // Fetch order from Supabase
-        const { data: orderData, error: orderError } = await supabase
-          .from('orders')
-          .select(`
-            *,
-            order_items (
-              *,
-              product_variants (
-                *,
-                products (
-                  name,
-                  product_images (
-                    image_url
-                  )
-                )
-              )
-            )
-          `)
-          .eq('id', params.id as string)
-          .single()
+        // Get guest ID from local storage if available
+        const guestId = typeof window !== 'undefined' ? localStorage.getItem('guest_session_id') : null
 
-        if (orderError) {
-          console.error('Error fetching order:', orderError)
+        // Fetch order securely via server action
+        const { getOrderForConfirmation } = await import('@/lib/actions/orders')
+        const result = await getOrderForConfirmation(params.id as string, guestId)
+
+        if (!result.success || !result.order) {
+          console.error('Error fetching order:', result.error)
           setOrder(null)
           return
         }
+
+        const orderData = result.order as any
 
         // Use shipping_address JSONB directly from the order
         const shippingAddress = orderData.shipping_address;

@@ -39,12 +39,12 @@ export default function ProductImageGallery({
                 key={idx}
                 onClick={() => setSelectedImage(idx)}
                 className={`relative flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === idx
-                    ? 'border-white scale-105'
-                    : 'border-white/40'
+                  ? 'border-white scale-105'
+                  : 'border-white/40'
                   }`}
               >
                 <Image
-                  src={img}
+                  src={getProductImage(null, [img])}
                   fill
                   alt={`View ${idx + 1}`}
                   className="object-cover"

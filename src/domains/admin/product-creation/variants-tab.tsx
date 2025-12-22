@@ -560,11 +560,12 @@ export function VariantsTab({
                                         className="w-24 h-8 text-sm"
                                       />
                                       {isColorOption(option) && (
-                                        <Input
-                                          type="color"
-                                          value={value.hexColor || "#000000"}
-                                          onChange={(e) => updateOptionValue(option.id, value.id, { hexColor: e.target.value })}
-                                          className="w-8 h-8 p-0 border-0"
+                                        <ColorPicker
+                                          label=""
+                                          color={value.hexColor || "#000000"}
+                                          onChange={(color) => updateOptionValue(option.id, value.id, { hexColor: color })}
+                                          isEyeDroppper={true}
+                                          className="w-auto"
                                         />
                                       )}
                                       <Button

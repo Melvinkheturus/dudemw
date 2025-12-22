@@ -11,20 +11,41 @@ const nextConfig: NextConfig = {
   // Disable source maps in development to avoid warnings
   productionBrowserSourceMaps: false,
 
+  // Enable compression
+  compress: true,
+
   images: {
+    // Disable optimization to bypass private IP restriction
+    unoptimized: true,
+
+    // Device sizes for responsive images
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+
+    // Reduced cache time for testing
+    minimumCacheTTL: 60,
+
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '*.supabase.co',
-        port: '',
-        pathname: '/storage/v1/object/public/**',
+        hostname: '**.supabase.co',
       },
       {
         protocol: 'https',
         hostname: 'qyvpihdiyuowkyideltd.supabase.co',
-        port: '',
-        pathname: '/storage/v1/object/public/**',
       },
+    ],
+  },
+
+  // Optimize package imports to reduce bundle size
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      'framer-motion',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-select',
+      '@radix-ui/react-popover',
     ],
   },
 

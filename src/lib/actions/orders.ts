@@ -117,13 +117,13 @@ export async function createOrder(input: CreateOrderInput): Promise<{ success: b
       return { success: false, error: orderError?.message || 'Failed to create order' }
     }
 
+
     // Create order items
     const orderItems = input.items.map(item => ({
       order_id: order.id,
       variant_id: item.variantId,
       quantity: item.quantity,
-      price: item.price,
-      subtotal: item.price * item.quantity
+      price: item.price
     }))
 
     const { error: itemsError } = await supabaseAdmin
@@ -134,6 +134,7 @@ export async function createOrder(input: CreateOrderInput): Promise<{ success: b
       console.error('Order items creation error:', itemsError)
       // Don't fail the whole order, items error is logged
     }
+
 
     return { success: true, orderId: order.id }
   } catch (error: any) {
@@ -157,6 +158,72 @@ export async function updateOrderStatusDirect(orderId: string, status: string): 
     }
     return { success: true }
   } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+// Securely fetch order for confirmation page (handles guest RLS issues)
+export async function getOrderForConfirmation(orderId: string, guestIdParam?: string | null) {
+  try {
+    const { supabaseAdmin } = await import('@/lib/supabase/supabase')
+
+    // 1. Fetch the order with admin privileges
+    const { data: order, error } = await supabaseAdmin
+      .from('orders')
+      .select(`
+        *,
+        order_items (
+          *,
+          product_variants (
+            *,
+            products (
+              name,
+              product_images (
+                image_url
+              )
+            )
+          )
+        )
+      `)
+      .eq('id', orderId)
+      .single()
+
+    if (error || !order) {
+      console.error('Error fetching order for confirmation:', error)
+      return { success: false, error: 'Order not found' }
+    }
+
+    // 2. Perform Security Check
+    let isAuthorized = false
+
+    // Check Guest ID (if provided)
+    if (guestIdParam && order.guest_id === guestIdParam) {
+      isAuthorized = true
+    }
+
+    // Check Authenticated User (if not already authorized as guest)
+    if (!isAuthorized) {
+      try {
+        const { createServerSupabase } = await import('@/lib/supabase/server')
+        const supabase = await createServerSupabase()
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (user && (user.id === order.user_id || user.id === order.customer_id)) {
+          isAuthorized = true
+        }
+      } catch (authError) {
+        // Ignore auth error, just means we can't verify via user session
+        console.warn('Auth check failed during order confirmation:', authError)
+      }
+    }
+
+    if (!isAuthorized) {
+      return { success: false, error: 'Unauthorized to view this order' }
+    }
+
+    return { success: true, order }
+  } catch (error: any) {
+    console.error('getOrderForConfirmation exception:', error)
     return { success: false, error: error.message }
   }
 }

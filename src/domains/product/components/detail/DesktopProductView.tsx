@@ -15,8 +15,28 @@ interface DesktopProductViewProps {
   product: Product
 }
 
+// Helper function to extract sizes from product_options
+const getSizesFromProduct = (product: any): string[] => {
+  const sizeOption = product.product_options?.find((opt: any) => opt.name.toLowerCase() === 'size')
+  return sizeOption?.product_option_values?.map((v: any) => v.name) || []
+}
+
+// Helper function to extract colors from product_options
+const getColorsFromProduct = (product: any): string[] => {
+  const colorOption = product.product_options?.find((opt: any) => opt.name.toLowerCase() === 'color')
+  return colorOption?.product_option_values?.map((v: any) => v.name) || []
+}
+
+// Helper function to get color hex from product_option_values
+const getColorHexFromOptions = (colorName: string, product: any): string => {
+  const colorOption = product.product_options?.find((opt: any) => opt.name.toLowerCase() === 'color')
+  const colorValue = colorOption?.product_option_values?.find((v: any) => v.name === colorName)
+  return colorValue?.hex_color || '#000000'
+}
+
 export default function DesktopProductView({ product }: DesktopProductViewProps) {
-  const [selectedColor, setSelectedColor] = useState((product.colors && product.colors[0]) || 'Black')
+  const colors = getColorsFromProduct(product)
+  const [selectedColor, setSelectedColor] = useState(colors[0] || 'Black')
   const [selectedSize, setSelectedSize] = useState('')
   const [selectedImage, setSelectedImage] = useState(0)
   const [isWishlisted, setIsWishlisted] = useState(false)
@@ -104,7 +124,7 @@ export default function DesktopProductView({ product }: DesktopProductViewProps)
                             }`}
                         >
                           <Image
-                            src={img}
+                            src={getProductImage(null, [img])}
                             fill
                             alt={`View ${idx + 1}`}
                             className="object-cover"
@@ -142,8 +162,8 @@ export default function DesktopProductView({ product }: DesktopProductViewProps)
                     </button>
 
                     <ProductOptions
-                      sizes={product.sizes || []}
-                      colors={(product.colors || []).map(color => ({ name: color, hex: '#000000', image: (product.images && product.images[0]) || '' }))}
+                      sizes={getSizesFromProduct(product)}
+                      colors={getColorsFromProduct(product).map(color => ({ name: color, hex: getColorHexFromOptions(color, product), image: (product.images && product.images[0]) || '' }))}
                       rating={4.5}
                       reviews={128}
                       selectedSize={selectedSize}

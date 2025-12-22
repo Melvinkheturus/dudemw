@@ -6,6 +6,7 @@ import { CartProvider } from "@/domains/cart";
 import { ToastProvider } from "@/lib/layout/feedback/ToastContext";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { OfferBarProvider } from "@/contexts/OfferBarContext";
+import { GuestMergeHandler } from "@/components/providers/guest-merge-provider";
 import "./globals.css";
 import Footer from "@/lib/layout/layout/Footer";
 import ConditionalNavbar from "@/lib/layout/layout/ConditionalNavbar";
@@ -98,6 +99,18 @@ export const metadata: Metadata = {
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
   },
+  icons: {
+    icon: [
+      { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
+  appleWebApp: {
+    title: 'Dudemw',
+  },
+  manifest: '/site.webmanifest',
 };
 
 export default function RootLayout({
@@ -108,6 +121,7 @@ export default function RootLayout({
   return (
     <QueryProvider>
       <AuthProvider>
+        <GuestMergeHandler />
         <CartProvider>
           <ToastProvider>
             <OfferBarProvider>

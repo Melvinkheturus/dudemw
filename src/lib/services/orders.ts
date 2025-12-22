@@ -119,19 +119,10 @@ export class OrderService {
               sku,
               products!product_variants_product_id_fkey (
                 id,
-                title,
+                name,
                 slug
               )
             )
-          ),
-          shipping_address:addresses!shipping_address_id (
-            id,
-            address_line1,
-            city,
-            state,
-            pincode,
-            name,
-            phone
           )
         `)
         .eq('id', id)

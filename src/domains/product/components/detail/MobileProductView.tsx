@@ -15,6 +15,25 @@ interface MobileProductViewProps {
   product: Product
 }
 
+// Helper function to extract sizes from product_options
+const getSizesFromProduct = (product: Product): string[] => {
+  const sizeOption = product.product_options?.find(opt => opt.name.toLowerCase() === 'size')
+  return sizeOption?.product_option_values?.map(v => v.name) || []
+}
+
+// Helper function to extract colors from product_options  
+const getColorsFromProduct = (product: Product): string[] => {
+  const colorOption = product.product_options?.find(opt => opt.name.toLowerCase() === 'color')
+  return colorOption?.product_option_values?.map(v => v.name) || []
+}
+
+// Helper function to get color hex from product_option_values
+const getColorHexFromOptions = (colorName: string, product: Product): string => {
+  const colorOption = product.product_options?.find(opt => opt.name.toLowerCase() === 'color')
+  const colorValue = colorOption?.product_option_values?.find(v => v.name === colorName)
+  return colorValue?.hex_color || getColorHex(colorName)
+}
+
 // Helper function to convert string colors to ProductColor objects
 const getColorHex = (colorName: string): string => {
   const colorMap: { [key: string]: string } = {
@@ -37,16 +56,17 @@ const getColorHex = (colorName: string): string => {
   return colorMap[colorName] || '#000000'
 }
 
-const convertToProductColors = (colors: string[], productImages: string[]) => {
+const convertToProductColors = (product: Product) => {
+  const colors = getColorsFromProduct(product)
   return colors.map(color => ({
     name: color,
-    hex: getColorHex(color),
-    image: productImages[0] // Use first product image as fallback
+    hex: getColorHexFromOptions(color, product),
+    image: product.images?.[0] || ''
   }))
 }
 
 export default function MobileProductView({ product }: MobileProductViewProps) {
-  const productColors = convertToProductColors(product.colors || [], product.images || [])
+  const productColors = convertToProductColors(product)
   const [selectedColor, setSelectedColor] = useState(productColors[0] || { name: 'Black', hex: '#000000', image: getProductImage(null, product.images) })
   const [selectedSize, setSelectedSize] = useState('')
   const [selectedImage, setSelectedImage] = useState(0)
@@ -133,7 +153,7 @@ export default function MobileProductView({ product }: MobileProductViewProps) {
                     }`}
                 >
                   <Image
-                    src={img}
+                    src={getProductImage(null, [img])}
                     fill
                     alt={`View ${idx + 1}`}
                     className="object-cover"
@@ -175,7 +195,7 @@ export default function MobileProductView({ product }: MobileProductViewProps) {
         </p>
 
         <ProductOptions
-          sizes={product.sizes || []}
+          sizes={getSizesFromProduct(product)}
           colors={productColors}
           rating={4.5}
           reviews={128}

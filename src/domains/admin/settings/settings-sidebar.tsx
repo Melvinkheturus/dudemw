@@ -19,7 +19,8 @@ import {
   ChevronDown,
   HelpCircle,
   Bell,
-  Package
+  Package,
+  FileText
 } from "lucide-react"
 
 // Grouped navigation structure
@@ -37,6 +38,7 @@ const settingsGroups = [
     items: [
       { title: "General", href: "/admin/settings/store", icon: Store },
       { title: "Locations", href: "/admin/settings/locations", icon: MapPin },
+      { title: "CMS Pages", href: "/admin/settings/cms", icon: FileText },
     ],
   },
   {

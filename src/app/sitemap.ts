@@ -1,6 +1,8 @@
 import { MetadataRoute } from 'next'
+import { createClient } from '@/lib/supabase/client'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const supabase = createClient()
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://dudemenswear.com'
 
   // Static pages
@@ -23,16 +25,54 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: route === '' ? 1 : 0.8,
   }))
 
-  // TODO: Add dynamic product and collection pages
-  // Fetch from custom API and add to sitemap
-  // Example:
-  // const products = await getProducts()
-  // const productPages = products.map(product => ({
-  //   url: `${baseUrl}/products/${product.handle}`,
-  //   lastModified: product.updated_at,
-  //   changeFrequency: 'weekly',
-  //   priority: 0.7,
-  // }))
+  // Fetch products from Supabase
+  const { data: products } = await supabase
+    .from('products')
+    .select('slug, updated_at')
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
 
-  return [...staticPages]
+  const productPages = (products || []).map((product) => ({
+    url: `${baseUrl}/products/${product.slug}`,
+    lastModified: product.updated_at ? new Date(product.updated_at) : new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }))
+
+  // Fetch categories
+  const { data: categories } = await supabase
+    .from('categories')
+    .select('slug, updated_at')
+
+  const categoryPages = (categories || []).map((category) => ({
+    url: `${baseUrl}/categories/${category.slug}`,
+    lastModified: category.updated_at ? new Date(category.updated_at) : new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }))
+
+  // Fetch collections
+  const { data: collections } = await supabase
+    .from('collections')
+    .select('slug, updated_at')
+
+  const collectionPages = (collections || []).map((collection) => ({
+    url: `${baseUrl}/collections/${collection.slug}`,
+    lastModified: collection.updated_at ? new Date(collection.updated_at) : new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }))
+
+  return [
+    ...staticPages,
+    {
+      url: `${baseUrl}/products`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.9,
+    },
+    ...productPages,
+    ...categoryPages,
+    ...collectionPages,
+  ]
 }
