@@ -140,7 +140,7 @@ export async function createOrder(input: CreateOrderInput): Promise<{ success: b
       try {
         console.log(`[Stock Reduction] Processing variant ${item.variantId}, quantity: ${item.quantity}`)
         
-        // Get current stock
+        // Get current stock from product_variants
         const { data: variant, error: variantError } = await supabaseAdmin
           .from('product_variants')
           .select('stock')
@@ -158,16 +158,47 @@ export async function createOrder(input: CreateOrderInput): Promise<{ success: b
           
           console.log(`[Stock Reduction] Variant ${item.variantId}: ${currentStock} -> ${newStock}`)
           
-          // Update stock
+          // Update stock in product_variants table
           const { error: updateError } = await supabaseAdmin
             .from('product_variants')
             .update({ stock: newStock })
             .eq('id', item.variantId)
           
           if (updateError) {
-            console.error(`[Stock Reduction] Error updating stock for variant ${item.variantId}:`, updateError)
+            console.error(`[Stock Reduction] Error updating product_variants stock for variant ${item.variantId}:`, updateError)
           } else {
-            console.log(`[Stock Reduction] Successfully updated stock for variant ${item.variantId}`)
+            console.log(`[Stock Reduction] Successfully updated product_variants stock for variant ${item.variantId}`)
+          }
+          
+          // Also update inventory_items table if it exists for this variant
+          const { data: inventoryItem, error: invFetchError } = await supabaseAdmin
+            .from('inventory_items')
+            .select('id, quantity, available_quantity, reserved_quantity')
+            .eq('variant_id', item.variantId)
+            .single()
+          
+          if (!invFetchError && inventoryItem) {
+            const currentInvQty = inventoryItem.quantity || 0
+            const currentAvailable = inventoryItem.available_quantity || 0
+            const newInvQty = Math.max(0, currentInvQty - item.quantity)
+            const newAvailable = Math.max(0, currentAvailable - item.quantity)
+            
+            console.log(`[Stock Reduction] Inventory item ${inventoryItem.id}: quantity ${currentInvQty} -> ${newInvQty}`)
+            
+            const { error: invUpdateError } = await supabaseAdmin
+              .from('inventory_items')
+              .update({ 
+                quantity: newInvQty,
+                available_quantity: newAvailable,
+                updated_at: new Date().toISOString()
+              })
+              .eq('variant_id', item.variantId)
+            
+            if (invUpdateError) {
+              console.error(`[Stock Reduction] Error updating inventory_items for variant ${item.variantId}:`, invUpdateError)
+            } else {
+              console.log(`[Stock Reduction] Successfully updated inventory_items for variant ${item.variantId}`)
+            }
           }
         }
       } catch (stockError) {
