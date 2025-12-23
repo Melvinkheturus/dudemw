@@ -81,13 +81,14 @@ export class OrderStatusService {
   static async cancelOrder(orderId: string, reason?: string) {
     try {
       // First, get the order items to restore stock
+      console.log(`[Stock Restoration] Fetching order items for order ${orderId}`)
       const { data: orderItems, error: itemsError } = await supabaseAdmin
         .from('order_items')
         .select('variant_id, quantity')
         .eq('order_id', orderId)
 
       if (itemsError) {
-        console.error('Error fetching order items:', itemsError)
+        console.error('[Stock Restoration] Error fetching order items:', itemsError)
       }
 
       // Update order status to cancelled
@@ -105,8 +106,11 @@ export class OrderStatusService {
 
       // Restore stock for each item
       if (orderItems && orderItems.length > 0) {
+        console.log(`[Stock Restoration] Restoring stock for ${orderItems.length} items`)
         for (const item of orderItems) {
           try {
+            console.log(`[Stock Restoration] Processing variant ${item.variant_id}, quantity: ${item.quantity}`)
+            
             // Get current stock
             const { data: variant, error: variantError } = await supabaseAdmin
               .from('product_variants')
@@ -114,20 +118,36 @@ export class OrderStatusService {
               .eq('id', item.variant_id)
               .single()
 
-            if (!variantError && variant) {
-              const newStock = variant.stock + item.quantity
+            if (variantError) {
+              console.error(`[Stock Restoration] Error fetching variant ${item.variant_id}:`, variantError)
+              continue
+            }
+
+            if (variant) {
+              const currentStock = variant.stock || 0
+              const newStock = currentStock + item.quantity
+              
+              console.log(`[Stock Restoration] Variant ${item.variant_id}: ${currentStock} -> ${newStock}`)
               
               // Update stock
-              await supabaseAdmin
+              const { error: updateError } = await supabaseAdmin
                 .from('product_variants')
                 .update({ stock: newStock })
                 .eq('id', item.variant_id)
+              
+              if (updateError) {
+                console.error(`[Stock Restoration] Error updating stock for variant ${item.variant_id}:`, updateError)
+              } else {
+                console.log(`[Stock Restoration] Successfully restored stock for variant ${item.variant_id}`)
+              }
             }
           } catch (stockError) {
-            console.error(`Error restoring stock for variant ${item.variant_id}:`, stockError)
+            console.error(`[Stock Restoration] Exception for variant ${item.variant_id}:`, stockError)
             // Continue with other items even if one fails
           }
         }
+      } else {
+        console.log('[Stock Restoration] No order items found to restore')
       }
 
       revalidatePath('/admin/orders')
