@@ -32,6 +32,12 @@ export interface ProductVariant {
   image_url?: string | null
   created_at?: string | null
   updated_at?: string | null
+  variant_images?: Array<{
+    id: string
+    image_url: string
+    alt_text?: string | null
+    position?: number | null
+  }> | null
 }
 
 export interface ProductOptionValue {

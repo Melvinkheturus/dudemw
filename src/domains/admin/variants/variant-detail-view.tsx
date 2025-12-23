@@ -96,9 +96,13 @@ export function VariantDetailView({ product, variant }: VariantDetailViewProps) 
     taxable: variant.taxable ?? true,
   })
 
-  // Variant images state
+  // Variant images state - map from DB response format
   const [variantImages, setVariantImages] = useState<Array<{ id: string; url: string; alt: string }>>(
-    variant.variant_images || []
+    (variant.variant_images || []).map((img: any) => ({
+      id: img.id,
+      url: img.image_url,
+      alt: img.alt_text || ''
+    }))
   )
 
   // Check if variant has orders (would need to be passed from backend)
@@ -201,7 +205,10 @@ export function VariantDetailView({ product, variant }: VariantDetailViewProps) 
             url: publicUrl,
             alt: file.name
           }])
-          toast.success(`${file.name} uploaded`)
+          toast.success(`${file.name} uploaded successfully`)
+        } else if (dbError) {
+          console.error('Database insert error:', dbError)
+          toast.error(`Failed to save ${file.name}: ${dbError.message}`)
         }
       }
     } catch (error) {
@@ -681,8 +688,8 @@ export function VariantDetailView({ product, variant }: VariantDetailViewProps) 
               DISPLAY VARIANT TOGGLE
           ═══════════════════════════════════════════════════════════════════ */}
           <Card className={`border-2 shadow-sm transition-all ${isDisplayVariant
-              ? 'border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50'
-              : 'border-gray-200 bg-gradient-to-br from-white to-gray-50/50'
+            ? 'border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50'
+            : 'border-gray-200 bg-gradient-to-br from-white to-gray-50/50'
             }`}>
             <CardHeader className="pb-3">
               <CardTitle className="text-gray-900 flex items-center">
@@ -716,8 +723,8 @@ export function VariantDetailView({ product, variant }: VariantDetailViewProps) 
                 onClick={handleSetDisplayVariant}
                 disabled={isSettingDisplay}
                 className={`w-full ${isDisplayVariant
-                    ? 'bg-gray-600 hover:bg-gray-700 text-white'
-                    : 'bg-amber-600 hover:bg-amber-700 text-white'
+                  ? 'bg-gray-600 hover:bg-gray-700 text-white'
+                  : 'bg-amber-600 hover:bg-amber-700 text-white'
                   }`}
               >
                 {isSettingDisplay ? (

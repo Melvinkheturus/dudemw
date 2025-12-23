@@ -85,9 +85,30 @@ export default function MobileProductView({ product }: MobileProductViewProps) {
 
   // Update main image when color or image selection changes
   useEffect(() => {
-    const selectedImg = product.images && product.images[selectedImage]
-    setCurrentImage(getProductImage(null, selectedImg ? [selectedImg] : product.images))
-  }, [selectedColor, selectedImage, product.images])
+    // Find the matching variant based on selected size and color
+    const matchingVariant = product.product_variants?.find((variant: any) => {
+      const variantOptions = variant.variant_option_values || []
+      const hasSize = !selectedSize || variantOptions.some((vo: any) =>
+        vo.product_option_values?.name === selectedSize
+      )
+      const hasColor = variantOptions.some((vo: any) =>
+        vo.product_option_values?.name === selectedColor.name
+      )
+      return hasSize && hasColor
+    })
+
+    // Use variant images if available, otherwise fallback to product images
+    if (matchingVariant?.variant_images && matchingVariant.variant_images.length > 0) {
+      const variantImageUrls = matchingVariant.variant_images
+        .sort((a: any, b: any) => (a.position || 0) - (b.position || 0))
+        .map((img: any) => img.image_url)
+      const selectedImg = variantImageUrls[selectedImage] || variantImageUrls[0]
+      setCurrentImage(selectedImg)
+    } else {
+      const selectedImg = product.images && product.images[selectedImage]
+      setCurrentImage(getProductImage(null, selectedImg ? [selectedImg] : product.images))
+    }
+  }, [selectedColor, selectedImage, selectedSize, product.images, product.product_variants])
 
   const handleColorSelect = (color: { name: string; hex: string; image: string }) => {
     setSelectedColor(color)

@@ -52,16 +52,29 @@ export default function ProductCard({ product, badge, badgeColor = "red" }: Prod
   const variantLabel = defaultVariant?.name ? ` • ${defaultVariant.name}` : ""
   const shortDesc = product.description?.slice(0, 40) + variantLabel || "Premium quality • Multiple sizes available"
 
-  // Use variant image or product images with fallback
-  const imageUrl = defaultVariant?.image_url || getProductImage(null, product.images)
+  // Use variant images (from variant_images table) or fallback to variant image_url or product images
+  const getVariantImageUrl = () => {
+    // First priority: variant_images array from the default variant
+    if (defaultVariant?.variant_images && defaultVariant.variant_images.length > 0) {
+      return defaultVariant.variant_images[0].image_url
+    }
+    // Second priority: variant's image_url field
+    if (defaultVariant?.image_url) {
+      return defaultVariant.image_url
+    }
+    // Fallback to product images
+    return getProductImage(null, product.images)
+  }
+
+  const imageUrl = getVariantImageUrl()
 
   // Extract size and color from variant name (e.g., "M / Black" or "Large-Red")
   const extractVariantAttributes = (variantName: string | undefined) => {
     if (!variantName) return { size: undefined, color: undefined }
-    
+
     // Try to parse common formats: "M / Black", "M-Black", "Medium / Dark Grey", etc.
     const parts = variantName.split(/[\s/\-]+/).map(p => p.trim()).filter(Boolean)
-    
+
     if (parts.length >= 2) {
       return {
         size: parts[0], // First part is usually size
@@ -71,11 +84,11 @@ export default function ProductCard({ product, badge, badgeColor = "red" }: Prod
       // Single value - could be size or color, default to size
       return { size: parts[0], color: undefined }
     }
-    
+
     return { size: undefined, color: undefined }
   }
 
-  const { size: variantSize, color: variantColor } = extractVariantAttributes(defaultVariant?.name)
+  const { size: variantSize, color: variantColor } = extractVariantAttributes(defaultVariant?.name ?? undefined)
 
   // Handle add to cart - use variant data
   const handleAddToCart = () => {

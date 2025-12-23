@@ -261,6 +261,12 @@ export class ProductService {
               track_quantity,
               allow_backorders,
               low_stock_threshold
+            ),
+            variant_images (
+              id,
+              image_url,
+              alt_text,
+              position
             )
           ),
           product_categories (
