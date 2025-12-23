@@ -34,15 +34,6 @@ export class OrderService {
                 slug
               )
             )
-          ),
-          shipping_address:addresses!shipping_address_id (
-            id,
-            address_line1,
-            city,
-            state,
-            pincode,
-            name,
-            phone
           )
         `, { count: 'exact' })
 
