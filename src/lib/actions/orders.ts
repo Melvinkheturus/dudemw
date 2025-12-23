@@ -135,6 +135,30 @@ export async function createOrder(input: CreateOrderInput): Promise<{ success: b
       // Don't fail the whole order, items error is logged
     }
 
+    // Reduce stock for each ordered item
+    for (const item of input.items) {
+      try {
+        // Get current stock
+        const { data: variant, error: variantError } = await supabaseAdmin
+          .from('product_variants')
+          .select('stock')
+          .eq('id', item.variantId)
+          .single()
+
+        if (!variantError && variant) {
+          const newStock = Math.max(0, variant.stock - item.quantity)
+          
+          // Update stock
+          await supabaseAdmin
+            .from('product_variants')
+            .update({ stock: newStock })
+            .eq('id', item.variantId)
+        }
+      } catch (stockError) {
+        console.error(`Error reducing stock for variant ${item.variantId}:`, stockError)
+        // Continue with other items even if one fails
+      }
+    }
 
     return { success: true, orderId: order.id }
   } catch (error: any) {
