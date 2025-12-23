@@ -1,0 +1,18 @@
+# Hostinger Configuration File
+# This file helps Hostinger's auto-detection identify the project correctly
+
+# Framework
+FRAMEWORK=nextjs
+
+# Node.js Version
+NODE_VERSION=20.11.0
+
+# Build Configuration
+BUILD_COMMAND=npm install && npm run build
+START_COMMAND=npm start
+
+# Port
+PORT=3000
+
+# Environment
+NODE_ENV=production
