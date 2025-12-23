@@ -23,7 +23,7 @@ export default function RelatedSearches({ query }: RelatedSearchesProps) {
           {relatedSearches.map((search) => (
             <Link
               key={search}
-              href={`/collections/all?q=${encodeURIComponent(search)}`}
+              href={`/products?q=${encodeURIComponent(search)}`}
               className="rounded-full border border-gray-300 bg-white px-4 py-2 font-body text-sm transition-colors hover:border-red-600 hover:text-red-600"
             >
               {search}

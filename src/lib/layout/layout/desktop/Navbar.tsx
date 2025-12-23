@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import MegaMenu from "../megamenu/MegaMenu"
 import { useCart } from "@/domains/cart"
 import { useOfferBar } from "@/contexts/OfferBarContext"
@@ -14,6 +15,15 @@ export default function Navbar() {
   const [placeholderIndex, setPlaceholderIndex] = useState(0)
   const { itemCount } = useCart()
   const { isOfferBarVisible } = useOfferBar()
+  const router = useRouter()
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/products?q=${encodeURIComponent(searchQuery.trim())}`)
+      setSearchQuery("")
+    }
+  }
 
   const placeholders = [
     "Search for t-shirts...",
@@ -78,8 +88,8 @@ export default function Navbar() {
                 Home
               </Link>
               <Link
-                href="/collections/new-drop"
-                className="font-body text-sm font-medium uppercase tracking-wide text-red-600 transition-colors hover:text-red-700"
+                href="/products#new-drops"
+                className="font-body text-sm font-medium uppercase tracking-wide transition-colors hover:text-red-600"
               >
                 New Drop
               </Link>
@@ -109,7 +119,7 @@ export default function Navbar() {
 
             {/* Search Bar - Right Side */}
             <div className="hidden w-80 lg:block">
-              <div className="relative">
+              <form onSubmit={handleSearch} className="relative">
                 <input
                   type="text"
                   placeholder={placeholderText}
@@ -118,7 +128,10 @@ export default function Navbar() {
                   className="w-full rounded-full border border-gray-300 bg-gray-50 px-4 py-1.5 pr-11 font-body text-sm focus:border-red-600"
                   style={{ outline: 'none', boxShadow: 'none' }}
                 />
-                <button className="absolute right-1 top-1/2 flex h-[calc(100%-8px)] w-[calc(100%-8px)] max-w-[26px] -translate-y-1/2 items-center justify-center rounded-full bg-red-600 transition-colors hover:bg-red-700">
+                <button
+                  type="submit"
+                  className="absolute right-1 top-1/2 flex h-[calc(100%-8px)] w-[calc(100%-8px)] max-w-[26px] -translate-y-1/2 items-center justify-center rounded-full bg-red-600 transition-colors hover:bg-red-700"
+                >
                   <svg
                     className="h-3.5 w-3.5 text-white"
                     fill="none"
@@ -133,7 +146,7 @@ export default function Navbar() {
                     />
                   </svg>
                 </button>
-              </div>
+              </form>
             </div>
 
             {/* Actions */}

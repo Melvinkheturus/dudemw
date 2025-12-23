@@ -153,7 +153,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                       categories.map((category) => (
                         <Link
                           key={category.id}
-                          href={`/collections/${category.slug}`}
+                          href={`/products?category=${category.slug}`}
                           onClick={onClose}
                           className="block rounded-lg px-4 py-2 font-body text-sm transition-colors hover:bg-gray-100"
                         >
@@ -170,7 +170,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               </div>
 
               <Link
-                href="/collections/new-drop"
+                href="/products#new-drops"
                 onClick={onClose}
                 className="flex items-center gap-3 rounded-lg px-4 py-3 font-body font-medium text-red-600 transition-colors hover:bg-red-50"
               >

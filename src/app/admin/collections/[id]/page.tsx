@@ -204,7 +204,7 @@ export default function CollectionDetailPage() {
 
                 <div className="flex items-center space-x-2">
                     <Button variant="outline" className="border-gray-200 hover:border-red-200 hover:bg-red-50" asChild>
-                        <Link href={`/collections/${collection.slug}`}>
+                        <Link href={`/products?collection=${collection.id}`}>
                             <ExternalLink className="w-4 h-4 mr-2" />
                             View Storefront
                         </Link>

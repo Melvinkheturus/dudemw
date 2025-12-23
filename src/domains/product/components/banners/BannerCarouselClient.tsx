@@ -27,11 +27,11 @@ interface CarouselSlide {
 
 // Helper to generate link from action type and target
 function generateLink(actionType?: string, actionTarget?: string): string {
-  if (!actionType || !actionTarget) return "/collections/all"
+  if (!actionType || !actionTarget) return "/products"
 
   switch (actionType) {
     case 'collection':
-      return `/collections/${actionTarget}`
+      return `/products#${actionTarget}`
     case 'category':
       return `/categories/${actionTarget}`
     case 'product':
@@ -39,7 +39,7 @@ function generateLink(actionType?: string, actionTarget?: string): string {
     case 'external':
       return actionTarget
     default:
-      return "/collections/all"
+      return "/products"
   }
 }
 

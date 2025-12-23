@@ -142,7 +142,7 @@ export default function OrdersSection() {
             {activeTab === 'cancelled' && "You don't have any cancelled orders"}
           </p>
           <a
-            href="/collections/all"
+            href="/products"
             className="inline-block bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
           >
             Start Shopping

@@ -56,8 +56,8 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
-        source: '/collections/all',
-        destination: '/products',
+        source: '/profile',
+        destination: '/account',
         permanent: true,
       },
     ]

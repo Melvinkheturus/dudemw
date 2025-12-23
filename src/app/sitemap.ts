@@ -51,17 +51,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
-  // Fetch collections
-  const { data: collections } = await supabase
-    .from('collections')
-    .select('slug, updated_at')
 
-  const collectionPages = (collections || []).map((collection) => ({
-    url: `${baseUrl}/collections/${collection.slug}`,
-    lastModified: collection.updated_at ? new Date(collection.updated_at) : new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: 0.7,
-  }))
 
   return [
     ...staticPages,
@@ -73,6 +63,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     ...productPages,
     ...categoryPages,
-    ...collectionPages,
+
   ]
 }

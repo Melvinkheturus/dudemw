@@ -234,6 +234,7 @@ export default function ProductsPage({ searchParams, category }: ProductsPagePro
               collections.map((col, index) => (
                 <HorizontalProductScroll
                   key={col.slug}
+                  id={col.slug}
                   title={col.title}
                   products={col.products}
                   badge={index === 0 ? 'NEW' : undefined}

@@ -256,9 +256,9 @@ export default function CustomerDetailPage() {
             <CardTitle>Saved Addresses</CardTitle>
           </CardHeader>
           <CardContent>
-            {customer.addresses.length > 0 ? (
+            {(customer.addresses?.length ?? 0) > 0 ? (
               <div className="space-y-4">
-                {customer.addresses.map((address) => (
+                {(customer.addresses ?? []).map((address) => (
                   <div
                     key={address.id}
                     className="p-3 rounded-lg border bg-muted/50"
@@ -294,7 +294,7 @@ export default function CustomerDetailPage() {
           <CardTitle>Order History</CardTitle>
         </CardHeader>
         <CardContent>
-          {customer.orders.length > 0 ? (
+          {(customer.orders?.length ?? 0) > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -307,7 +307,7 @@ export default function CustomerDetailPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {customer.orders.map((order) => (
+                {(customer.orders ?? []).map((order) => (
                   <TableRow
                     key={order.id}
                     className="cursor-pointer hover:bg-muted/50"
@@ -319,7 +319,7 @@ export default function CustomerDetailPage() {
                     <TableCell>
                       {new Date(order.created_at).toLocaleDateString()}
                     </TableCell>
-                    <TableCell>{order.order_items.length} items</TableCell>
+                    <TableCell>{order.order_items?.length ?? 0} items</TableCell>
                     <TableCell>{getOrderStatusBadge(order.order_status)}</TableCell>
                     <TableCell>
                       {getOrderStatusBadge(order.payment_status)}

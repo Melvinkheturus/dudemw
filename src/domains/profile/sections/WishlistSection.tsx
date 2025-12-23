@@ -29,7 +29,7 @@ export default function WishlistSection() {
         <h3 className="text-xl font-semibold mb-2">Your Wishlist is Empty</h3>
         <p className="text-gray-600 mb-6">Save your favorite items here</p>
         <Link
-          href="/collections/all"
+          href="/products"
           className="inline-block bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
         >
           Explore Products
@@ -41,7 +41,7 @@ export default function WishlistSection() {
   return (
     <div>
       <h2 className="text-2xl font-bold mb-6">My Wishlist ({wishlistItems.length})</h2>
-      
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {wishlistItems.map((item) => (
           <div key={item.id} className="border border-gray-200 rounded-lg overflow-hidden hover:border-black transition-colors group">
@@ -50,7 +50,7 @@ export default function WishlistSection() {
                 {/* Product image placeholder */}
               </div>
             </Link>
-            
+
             <div className="p-4">
               <Link href={`/products/${item.slug}`}>
                 <h3 className="font-medium mb-2 hover:text-red-600 transition-colors line-clamp-2">
@@ -58,7 +58,7 @@ export default function WishlistSection() {
                 </h3>
               </Link>
               <p className="font-bold text-lg mb-3">₹{item.price}</p>
-              
+
               <div className="flex gap-2">
                 <button className="flex-1 flex items-center justify-center gap-2 bg-black text-white px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm">
                   <ShoppingCart className="w-4 h-4" />

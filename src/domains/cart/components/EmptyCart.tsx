@@ -18,17 +18,17 @@ export default function EmptyCart() {
             <ShoppingBag className="w-16 h-16 text-gray-400" />
           </div>
         </div>
-        
+
         <h1 className="text-3xl font-heading font-bold text-gray-900 mb-3">
           Your Cart is Empty
         </h1>
-        
+
         <p className="text-gray-600 mb-8">
           Looks like you haven't added anything to your cart yet. Start shopping and find something you love!
         </p>
-        
+
         <Link
-          href="/collections/all"
+          href="/products"
           className="inline-block bg-black text-white px-8 py-4 rounded-lg font-medium hover:bg-gray-800 transition-all"
         >
           Continue Shopping

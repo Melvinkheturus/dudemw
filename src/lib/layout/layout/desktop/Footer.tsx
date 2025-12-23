@@ -24,7 +24,7 @@ export default function Footer() {
         setCategories([])
       }
     }
-    
+
     fetchCategories()
   }, [])
   return (
@@ -71,13 +71,13 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2 font-body text-sm">
               <li>
-                <Link href="/collections/all" className="hover:text-red-600">
+                <Link href="/products" className="hover:text-red-600">
                   Shop All
                 </Link>
               </li>
               {categories.map((category) => (
                 <li key={category.id}>
-                  <Link href={`/collections/${category.slug}`} className="hover:text-red-600">
+                  <Link href={`/products?category=${category.slug}`} className="hover:text-red-600">
                     {category.name}
                   </Link>
                 </li>
@@ -171,7 +171,7 @@ export default function Footer() {
               className="h-auto w-60"
             />
           </div>
-          
+
           {/* Copyright and Payment */}
           <div className="flex items-center justify-between">
             <p className="flex items-center gap-1 font-body text-sm text-gray-600">

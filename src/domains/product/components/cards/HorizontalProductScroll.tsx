@@ -5,6 +5,7 @@ import { ProductCard } from "@/domains/product"
 import { Product } from "@/domains/product"
 
 interface HorizontalProductScrollProps {
+  id?: string
   title: string
   description?: string | null
   products: Product[]
@@ -15,6 +16,7 @@ interface HorizontalProductScrollProps {
 }
 
 export default function HorizontalProductScroll({
+  id,
   title,
   description,
   products,
@@ -24,7 +26,7 @@ export default function HorizontalProductScroll({
   centerHeader = false,
 }: HorizontalProductScrollProps) {
   return (
-    <section className="mb-8 md:mb-12">
+    <section id={id} className="mb-8 md:mb-12 scroll-mt-24">
       {centerHeader ? (
         <div className="mb-8 text-center">
           <h2 className="font-heading text-4xl tracking-wider text-black md:text-5xl uppercase">

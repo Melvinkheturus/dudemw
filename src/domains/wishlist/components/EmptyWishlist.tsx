@@ -18,17 +18,17 @@ export default function EmptyWishlist() {
             <Heart className="w-16 h-16 text-gray-400" />
           </div>
         </div>
-        
+
         <h1 className="text-3xl font-heading font-bold text-gray-900 mb-3">
           Your Wishlist is Empty
         </h1>
-        
+
         <p className="text-gray-600 mb-8">
           Save your favorite items here and never lose track of what you love!
         </p>
-        
+
         <Link
-          href="/collections/all"
+          href="/products"
           className="inline-block bg-black text-white px-8 py-4 rounded-lg font-medium hover:bg-gray-800 transition-all"
         >
           Discover Products

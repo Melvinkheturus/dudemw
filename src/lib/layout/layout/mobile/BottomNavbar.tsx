@@ -28,7 +28,7 @@ export default function BottomNavbar() {
     },
     {
       name: "Explore",
-      href: "/collections/all",
+      href: "/products",
       icon: (
         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
