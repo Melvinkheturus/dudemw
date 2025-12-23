@@ -80,6 +80,17 @@ export class OrderStatusService {
   // Cancel order
   static async cancelOrder(orderId: string, reason?: string) {
     try {
+      // First, get the order items to restore stock
+      const { data: orderItems, error: itemsError } = await supabaseAdmin
+        .from('order_items')
+        .select('variant_id, quantity')
+        .eq('order_id', orderId)
+
+      if (itemsError) {
+        console.error('Error fetching order items:', itemsError)
+      }
+
+      // Update order status to cancelled
       const { data, error } = await supabaseAdmin
         .from('orders')
         .update({ 
@@ -91,6 +102,33 @@ export class OrderStatusService {
         .single()
 
       if (error) throw error
+
+      // Restore stock for each item
+      if (orderItems && orderItems.length > 0) {
+        for (const item of orderItems) {
+          try {
+            // Get current stock
+            const { data: variant, error: variantError } = await supabaseAdmin
+              .from('product_variants')
+              .select('stock')
+              .eq('id', item.variant_id)
+              .single()
+
+            if (!variantError && variant) {
+              const newStock = variant.stock + item.quantity
+              
+              // Update stock
+              await supabaseAdmin
+                .from('product_variants')
+                .update({ stock: newStock })
+                .eq('id', item.variant_id)
+            }
+          } catch (stockError) {
+            console.error(`Error restoring stock for variant ${item.variant_id}:`, stockError)
+            // Continue with other items even if one fails
+          }
+        }
+      }
 
       revalidatePath('/admin/orders')
       revalidatePath(`/admin/orders/${orderId}`)
