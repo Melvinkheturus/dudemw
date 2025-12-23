@@ -16,7 +16,7 @@
       ]
     },
     {
-      "source": "/(.*)\\.js",
+      "source": "/:path*.js",
       "headers": [
         {
           "key": "Cache-Control",
@@ -25,7 +25,7 @@
       ]
     },
     {
-      "source": "/(.*)\\.css",
+      "source": "/:path*.css",
       "headers": [
         {
           "key": "Cache-Control",
@@ -34,7 +34,7 @@
       ]
     },
     {
-      "source": "/fonts/(.*)",
+      "source": "/fonts/:path*",
       "headers": [
         {
           "key": "Cache-Control",
@@ -43,7 +43,7 @@
       ]
     },
     {
-      "source": "/(.*)\\\\.(?:jpg|jpeg|png|gif|svg|webp|ico)",
+      "source": "/:path*.(jpg|jpeg|png|gif|svg|webp|ico)",
       "headers": [
         {
           "key": "Cache-Control",
