@@ -111,7 +111,7 @@ export class OrderStatusService {
           try {
             console.log(`[Stock Restoration] Processing variant ${item.variant_id}, quantity: ${item.quantity}`)
             
-            // Get current stock
+            // Get current stock from product_variants
             const { data: variant, error: variantError } = await supabaseAdmin
               .from('product_variants')
               .select('stock')
@@ -129,16 +129,47 @@ export class OrderStatusService {
               
               console.log(`[Stock Restoration] Variant ${item.variant_id}: ${currentStock} -> ${newStock}`)
               
-              // Update stock
+              // Update stock in product_variants table
               const { error: updateError } = await supabaseAdmin
                 .from('product_variants')
                 .update({ stock: newStock })
                 .eq('id', item.variant_id)
               
               if (updateError) {
-                console.error(`[Stock Restoration] Error updating stock for variant ${item.variant_id}:`, updateError)
+                console.error(`[Stock Restoration] Error updating product_variants stock for variant ${item.variant_id}:`, updateError)
               } else {
-                console.log(`[Stock Restoration] Successfully restored stock for variant ${item.variant_id}`)
+                console.log(`[Stock Restoration] Successfully restored product_variants stock for variant ${item.variant_id}`)
+              }
+              
+              // Also update inventory_items table if it exists for this variant
+              const { data: inventoryItem, error: invFetchError } = await supabaseAdmin
+                .from('inventory_items')
+                .select('id, quantity, available_quantity')
+                .eq('variant_id', item.variant_id)
+                .single()
+              
+              if (!invFetchError && inventoryItem) {
+                const currentInvQty = inventoryItem.quantity || 0
+                const currentAvailable = inventoryItem.available_quantity || 0
+                const newInvQty = currentInvQty + item.quantity
+                const newAvailable = currentAvailable + item.quantity
+                
+                console.log(`[Stock Restoration] Inventory item ${inventoryItem.id}: quantity ${currentInvQty} -> ${newInvQty}`)
+                
+                const { error: invUpdateError } = await supabaseAdmin
+                  .from('inventory_items')
+                  .update({ 
+                    quantity: newInvQty,
+                    available_quantity: newAvailable,
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('variant_id', item.variant_id)
+                
+                if (invUpdateError) {
+                  console.error(`[Stock Restoration] Error updating inventory_items for variant ${item.variant_id}:`, invUpdateError)
+                } else {
+                  console.log(`[Stock Restoration] Successfully restored inventory_items for variant ${item.variant_id}`)
+                }
               }
             }
           } catch (stockError) {
