@@ -15,4 +15,4 @@ export interface RelatedProductsProps {
 }
 
 // Re-export types for convenience
-export type { Product, Category } from './types/index'
+export type { Product, Category, ProductVariant } from './types/index'
