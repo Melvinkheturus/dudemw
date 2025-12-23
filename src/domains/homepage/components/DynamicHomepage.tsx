@@ -61,12 +61,9 @@ export default function DynamicHomepage() {
               *,
               product:products (
                 *,
-                product_images (
-                  id,
-                  image_url,
-                  alt_text,
-                  is_primary
-                )
+                product_images (*),
+                product_variants!product_variants_product_id_fkey(*),
+                default_variant:product_variants!products_default_variant_id_fkey(*)
               )
             `)
             .eq('collection_id', col.id)
