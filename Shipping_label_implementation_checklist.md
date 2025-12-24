@@ -151,15 +151,16 @@
 ## 📂 Files Created/Modified
 
 ### New Files
-- [ ] `/app/Shipping_label_implementation_checklist.md` ✅ (This file)
-- [ ] `/src/pdf/ShippingLabel.tsx`
-- [ ] `/src/app/api/admin/orders/[id]/label/route.ts`
-- [ ] `/src/app/api/admin/orders/bulk-labels/route.ts`
+- [x] `/app/Shipping_label_implementation_checklist.md` ✅ (This file)
+- [x] `/src/pdf/ShippingLabel.tsx`
+- [x] `/src/app/api/admin/orders/[id]/label/route.ts`
+- [x] `/src/app/api/admin/orders/bulk-labels/route.ts`
 
 ### Modified Files
-- [ ] `/app/package.json` (add dependencies)
-- [ ] `/src/app/admin/orders/page.tsx` (add bulk download + actions menu item)
-- [ ] `/src/app/admin/orders/[id]/page.tsx` (add download button)
+- [x] `/app/package.json` (add dependencies)
+- [x] `/src/app/admin/orders/page.tsx` (add bulk download + actions menu item)
+- [x] `/src/domains/admin/orders/orders-table.tsx` (add download label menu item)
+- [x] `/src/app/admin/orders/[id]/page.tsx` (add download button)
 
 ---
 
