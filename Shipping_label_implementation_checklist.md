@@ -60,23 +60,23 @@
 ### Phase 4: UI Integration - Orders List Page
 **File:** `/src/app/admin/orders/page.tsx`
 
-- [ ] **Location 1:** Add "Download Bulk Labels" button at top (near Export button)
-  - [ ] Add button with icon
-  - [ ] Implement selection logic for bulk download
-  - [ ] Add `data-testid="bulk-download-labels-btn"`
-  - [ ] Handle API call to bulk-labels endpoint
-  - [ ] Show loading state during generation
-  - [ ] Handle success/error states
+- [x] **Location 1:** Add "Download Bulk Labels" button at top (near Export button)
+  - [x] Add button with icon
+  - [x] Implement selection logic for bulk download
+  - [x] Add `data-testid="bulk-download-labels-btn"`
+  - [x] Handle API call to bulk-labels endpoint
+  - [x] Show loading state during generation
+  - [x] Handle success/error states
 
-- [ ] **Location 2:** Add "Download Label" option in actions menu (three dots)
-  - [ ] Update actions dropdown menu
-  - [ ] Add menu item with icon
-  - [ ] Add `data-testid="download-label-menu-item"`
-  - [ ] Handle single order label download
-  - [ ] Open PDF in new tab or trigger download
+- [x] **Location 2:** Add "Download Label" option in actions menu (three dots)
+  - [x] Update actions dropdown menu
+  - [x] Add menu item with icon
+  - [x] Add `data-testid="download-label-menu-item"`
+  - [x] Handle single order label download
+  - [x] Open PDF in new tab or trigger download
 
-**Status:** ⏳ Not Started  
-**Last Updated:** -
+**Status:** ✅ Complete  
+**Last Updated:** December 24, 2025
 
 ---
 
