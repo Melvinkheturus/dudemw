@@ -57,6 +57,31 @@ const nextConfig = {
   // Turbopack configuration (empty config to acknowledge Turbopack awareness)
   turbopack: {},
 
+  // Headers for admin subdomain security
+  async headers() {
+    return [
+      {
+        // Security headers for admin subdomain
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+        ],
+        // Only apply to admin subdomain (checked in middleware)
+      },
+    ];
+  },
+
   // Redirects
   async redirects() {
     return [
@@ -65,6 +90,8 @@ const nextConfig = {
         destination: '/profile',
         permanent: true,
       },
+      // Block direct /admin access on main domain (middleware will handle subdomain)
+      // Note: This is a fallback; middleware handles the primary routing
     ]
   },
 

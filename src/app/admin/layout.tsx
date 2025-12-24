@@ -37,11 +37,13 @@ export default function AdminLayout({
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
 
   // Auth routes that don't need the admin layout
-  const authRoutes = ['/admin/login', '/admin/setup', '/admin/recover', '/admin/pending', '/admin/logout']
+  // Support both subdomain routing (/login) and path routing (/admin/login)
+  const authRoutes = ['/login', '/setup', '/recover', '/pending', '/logout', '/admin/login', '/admin/setup', '/admin/recover', '/admin/pending', '/admin/logout']
   const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
-  
+
   // Settings routes that have their own complete layout
-  const isSettingsRoute = pathname.startsWith('/admin/settings')
+  const isSettingsRoute = pathname.startsWith('/admin/settings') || pathname.startsWith('/settings')
+
 
   // Client-side auth verification (backup to middleware)
   useEffect(() => {
@@ -54,7 +56,7 @@ export default function AdminLayout({
 
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user) {
         router.push('/admin/login')
         return
@@ -64,14 +66,14 @@ export default function AdminLayout({
     }
 
     checkAuth()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
 
   // Render auth routes without layout
   if (isAuthRoute) {
     return <>{children}</>
   }
-  
+
   // Render settings routes without admin layout wrapper (has its own layout)
   if (isSettingsRoute) {
     return isCheckingAuth ? <LoadingScreen /> : <>{children}</>
@@ -102,8 +104,8 @@ export default function AdminLayout({
 
       <div className="flex-1 flex flex-col overflow-hidden p-1 lg:p-2">
         <div className="flex-1 flex flex-col bg-white rounded-xl lg:rounded-2xl shadow-lg border border-red-100/50 backdrop-blur-sm overflow-hidden">
-          <Header 
-            sidebarCollapsed={sidebarCollapsed} 
+          <Header
+            sidebarCollapsed={sidebarCollapsed}
             onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
             mobileMenuOpen={mobileMenuOpen}
             onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}

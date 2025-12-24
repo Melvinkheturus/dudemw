@@ -16,3 +16,10 @@ PORT=3000
 
 # Environment
 NODE_ENV=production
+
+# ===== ADMIN SUBDOMAIN CONFIGURATION =====
+# Note: Set these environment variables in Hostinger hPanel:
+# NEXT_PUBLIC_COOKIE_DOMAIN=.yourdomain.com (with leading dot)
+# NEXT_PUBLIC_ADMIN_SUBDOMAIN=admin
+# NEXT_PUBLIC_MAIN_DOMAIN=yourdomain.com
+# NEXT_PUBLIC_ADMIN_URL=https://admin.yourdomain.com
