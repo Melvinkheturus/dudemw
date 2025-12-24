@@ -75,31 +75,39 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ## 📚 Documentation
 
-- **[Quick Start Guide](./QUICKSTART.md)** - Get started in 5 minutes
-- **[Deployment Guide](./DEPLOYMENT.md)** - Complete deployment instructions for Vercel & Hostinger
-- **[Production Checklist](./PRODUCTION_CHECKLIST.md)** - Pre-launch checklist
+- **[Hostinger Quick Start](./HOSTINGER_QUICKSTART.md)** - Deploy to Hostinger in 10 minutes ⚡
+- **[Hostinger Deployment Guide](./HOSTINGER_DEPLOY.md)** - Complete Hostinger deployment documentation
 - **[Project Structure](./docs/PROJECT_STRUCTURE.md)** - Detailed project architecture
 - **[Admin Dashboard Guide](./docs/ADMIN_DASHBOARD.md)** - Admin panel documentation
 
 ## 🌐 Deployment
 
-### Deploy to Vercel (Recommended)
+### Deploy to Hostinger (Optimized for Auto-Git Integration)
 
-1. Push code to GitHub
-2. Import project in [Vercel](https://vercel.com)
-3. Add environment variables
-4. Deploy!
+**Quick Start (10 minutes):**
+```bash
+# 1. SSH into server
+ssh username@yourdomain.com -p 65002
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md#vercel-deployment) for detailed instructions.
+# 2. Clone and setup
+cd ~/domains/yourdomain.com/public_html
+git clone https://github.com/Melvinkheturus/dudemw.git .
 
-### Deploy to Hostinger
+# 3. Configure
+cp .env.example .env.production
+nano .env.production  # Add your credentials
 
-1. Build: `npm run build`
-2. Upload via SSH/SFTP
-3. Configure environment variables
-4. Run with PM2: `pm2 start ecosystem.config.js`
+# 4. Build and deploy
+npm install --production
+npm run build
+mkdir -p logs
+pm2 start ecosystem.config.js
+pm2 save
+```
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md#hostinger-deployment) for detailed instructions.
+**📖 See [HOSTINGER_QUICKSTART.md](./HOSTINGER_QUICKSTART.md) for step-by-step guide**
+
+**📚 See [HOSTINGER_DEPLOY.md](./HOSTINGER_DEPLOY.md) for complete documentation**
 
 ## ⚙️ Environment Variables
 
