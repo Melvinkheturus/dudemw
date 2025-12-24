@@ -112,8 +112,8 @@ const styles = StyleSheet.create({
 interface ShippingLabelProps {
   order: {
     id: string;
-    order_number?: string;
-    created_at: string;
+    order_number?: string | null;
+    created_at: string | null;
     customer_name_snapshot: string | null;
     customer_phone_snapshot: string | null;
     shipping_address: {
