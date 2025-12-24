@@ -94,13 +94,13 @@ export async function GET(
 
     // 5. Generate PDF
     const pdfStream = await renderToStream(
-      React.createElement(ShippingLabel, { order, qrCodeDataUrl })
+      React.createElement(ShippingLabel, { order: order as any, qrCodeDataUrl }) as any
     );
 
     // 6. Convert stream to buffer
-    const chunks: Uint8Array[] = [];
+    const chunks: Buffer[] = [];
     for await (const chunk of pdfStream) {
-      chunks.push(chunk);
+      chunks.push(Buffer.from(chunk));
     }
     const pdfBuffer = Buffer.concat(chunks);
 

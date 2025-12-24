@@ -1,7 +1,6 @@
 'use client'
 
 import { createContext, useContext, ReactNode } from 'react'
-import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'sonner'
 
 interface ToastContextType {
@@ -28,7 +27,6 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <Toaster position="top-right" />
     </ToastContext.Provider>
   )
 }

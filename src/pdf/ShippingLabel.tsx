@@ -11,101 +11,156 @@ import {
 // A6 size: 105mm x 148mm = 297.6pt x 419.5pt
 const styles = StyleSheet.create({
   page: {
-    padding: 20,
-    fontSize: 10,
+    padding: 12,
+    fontSize: 8,
     fontFamily: 'Helvetica',
     backgroundColor: '#FFFFFF',
   },
   header: {
-    marginBottom: 15,
+    marginBottom: 6,
+    paddingBottom: 5,
     borderBottom: 2,
     borderBottomColor: '#000000',
-    paddingBottom: 10,
   },
   storeName: {
-    fontSize: 18,
+    fontSize: 13,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 3,
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 0.8,
+    color: '#000000',
   },
-  orderInfo: {
+  orderInfoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 5,
+    alignItems: 'center',
   },
-  orderText: {
-    fontSize: 9,
-    color: '#333333',
+  orderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  orderNumber: {
+    fontSize: 8,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  paymentBadge: {
+    fontSize: 6,
+    fontWeight: 'bold',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 2,
+  },
+  codBadge: {
+    backgroundColor: '#000000',
+    color: '#FFFFFF',
+  },
+  prepaidBadge: {
+    border: 1,
+    borderColor: '#000000',
+    color: '#000000',
+  },
+  orderDate: {
+    fontSize: 7,
+    color: '#666666',
   },
   section: {
-    marginBottom: 12,
+    marginTop: 6,
+    paddingBottom: 5,
+    borderBottom: 1,
+    borderBottomColor: '#E0E0E0',
   },
   sectionTitle: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    marginBottom: 6,
-    textTransform: 'uppercase',
-    color: '#000000',
-    borderBottom: 1,
-    borderBottomColor: '#CCCCCC',
-    paddingBottom: 3,
-  },
-  addressBlock: {
-    fontSize: 11,
-    lineHeight: 1.5,
-  },
-  addressName: {
-    fontSize: 12,
+    fontSize: 6,
     fontWeight: 'bold',
     marginBottom: 4,
+    textTransform: 'uppercase',
+    color: '#666666',
+    letterSpacing: 0.3,
   },
-  addressLine: {
-    marginBottom: 2,
+  addressBlock: {
+    fontSize: 9,
+    lineHeight: 1.4,
+  },
+  addressName: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    marginBottom: 3,
     color: '#000000',
   },
-  phone: {
-    fontSize: 12,
+  addressLine: {
+    marginBottom: 1,
+    color: '#000000',
+    fontSize: 8,
+  },
+  pincodeLine: {
+    marginTop: 1,
+    marginBottom: 3,
     fontWeight: 'bold',
-    marginTop: 4,
+    fontSize: 9,
+    color: '#000000',
+  },
+  phoneLabel: {
+    fontSize: 7,
+    color: '#666666',
+    marginBottom: 1,
+  },
+  phoneNumber: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#000000',
+    letterSpacing: 0.6,
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 5,
-    fontSize: 10,
+    marginBottom: 3,
+    fontSize: 8,
   },
   summaryLabel: {
-    color: '#555555',
+    color: '#666666',
+    fontSize: 7,
   },
   summaryValue: {
     fontWeight: 'bold',
     color: '#000000',
+    fontSize: 8,
   },
-  qrCodeContainer: {
-    alignItems: 'center',
-    marginTop: 10,
-    paddingTop: 10,
+  qrSection: {
+    marginTop: 6,
+    paddingTop: 5,
     borderTop: 1,
-    borderTopColor: '#CCCCCC',
+    borderTopColor: '#E0E0E0',
+    alignItems: 'center',
   },
   qrCode: {
-    width: 80,
-    height: 80,
+    width: 50,
+    height: 50,
   },
   qrText: {
-    fontSize: 8,
+    fontSize: 5,
+    marginTop: 2,
+    color: '#999999',
+    textAlign: 'center',
+  },
+  returnAddress: {
     marginTop: 5,
+    paddingTop: 4,
+    borderTop: 1,
+    borderTopColor: '#E0E0E0',
+    fontSize: 5,
     color: '#666666',
   },
-  footer: {
-    marginTop: 'auto',
-    paddingTop: 10,
-    borderTop: 1,
-    borderTopColor: '#CCCCCC',
-    fontSize: 7,
-    color: '#888888',
-    textAlign: 'center',
+  returnTitle: {
+    fontWeight: 'bold',
+    marginBottom: 1,
+    fontSize: 5,
+    color: '#000000',
+  },
+  returnLine: {
+    marginBottom: 0.5,
+    fontSize: 5,
   },
 });
 
@@ -129,6 +184,7 @@ interface ShippingLabelProps {
       quantity: number;
     }>;
     payment_method: string | null;
+    total_amount?: number | null;
   };
   qrCodeDataUrl?: string;
 }
@@ -140,10 +196,10 @@ export const ShippingLabel: React.FC<ShippingLabelProps> = ({ order, qrCodeDataU
   // Format date
   const orderDate = order.created_at
     ? new Date(order.created_at).toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      })
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    })
     : 'N/A';
 
   // Get customer name
@@ -153,33 +209,43 @@ export const ShippingLabel: React.FC<ShippingLabelProps> = ({ order, qrCodeDataU
       ? `${order.shipping_address.firstName} ${order.shipping_address.lastName}`
       : 'N/A');
 
-  // Get phone number
-  const phoneNumber =
-    order.customer_phone_snapshot || order.shipping_address?.phone || 'N/A';
+  // Get phone number and format it with spacing
+  const rawPhone = order.customer_phone_snapshot || order.shipping_address?.phone || 'N/A';
+  const phoneNumber = rawPhone !== 'N/A' && rawPhone.length === 10
+    ? `${rawPhone.slice(0, 5)} ${rawPhone.slice(5)}`
+    : rawPhone;
 
-  // Format payment method
-  const paymentMethod = order.payment_method
-    ? order.payment_method.toUpperCase().replace('_', ' ')
-    : 'N/A';
+  // Payment method
+  const paymentMethod = order.payment_method || 'N/A';
+  const isCOD = paymentMethod.toLowerCase().includes('cod');
+  const paymentDisplay = isCOD ? 'COD' : 'PREPAID';
 
   // Order display number
   const orderNumber = order.order_number || `#${order.id.substring(0, 8).toUpperCase()}`;
+
+  // QR Code data: ORDER_ID|PHONE|PINCODE
+  const qrData = `${order.id}|${rawPhone}|${order.shipping_address?.postalCode || ''}`;
 
   return (
     <Document>
       <Page size="A6" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.storeName}>Dude Men's Wear</Text>
-          <View style={styles.orderInfo}>
-            <Text style={styles.orderText}>Order: {orderNumber}</Text>
-            <Text style={styles.orderText}>Date: {orderDate}</Text>
+          <Text style={styles.storeName}>DUDE MEN'S WEAR</Text>
+          <View style={styles.orderInfoRow}>
+            <View style={styles.orderLeft}>
+              <Text style={styles.orderNumber}>Order {orderNumber}</Text>
+              <Text style={[styles.paymentBadge, isCOD ? styles.codBadge : styles.prepaidBadge]}>
+                {paymentDisplay}
+              </Text>
+            </View>
+            <Text style={styles.orderDate}>{orderDate}</Text>
           </View>
         </View>
 
         {/* Shipping Address Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ship To</Text>
+          <Text style={styles.sectionTitle}>SHIP TO</Text>
           <View style={styles.addressBlock}>
             <Text style={styles.addressName}>{customerName}</Text>
             {order.shipping_address?.address && (
@@ -193,36 +259,47 @@ export const ShippingLabel: React.FC<ShippingLabelProps> = ({ order, qrCodeDataU
               </Text>
             )}
             {order.shipping_address?.postalCode && (
-              <Text style={styles.addressLine}>PIN: {order.shipping_address.postalCode}</Text>
+              <Text style={styles.pincodeLine}>
+                PIN: {order.shipping_address.postalCode}
+              </Text>
             )}
-            <Text style={styles.phone}>📞 {phoneNumber}</Text>
+            <Text style={styles.phoneLabel}>Phone:</Text>
+            <Text style={styles.phoneNumber}>{phoneNumber}</Text>
           </View>
         </View>
 
         {/* Order Summary Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Order Summary</Text>
+          <Text style={styles.sectionTitle}>ORDER SUMMARY</Text>
+
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Total Items:</Text>
             <Text style={styles.summaryValue}>{totalItems}</Text>
           </View>
           <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Total Amount:</Text>
+            <Text style={styles.summaryValue}>₹{order.total_amount?.toFixed(2) || '0.00'}</Text>
+          </View>
+          <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Payment:</Text>
-            <Text style={styles.summaryValue}>{paymentMethod}</Text>
+            <Text style={styles.summaryValue}>{paymentDisplay}</Text>
           </View>
         </View>
 
         {/* QR Code Section */}
         {qrCodeDataUrl && (
-          <View style={styles.qrCodeContainer}>
+          <View style={styles.qrSection}>
             <Image src={qrCodeDataUrl} style={styles.qrCode} />
-            <Text style={styles.qrText}>Scan for order details</Text>
+            <Text style={styles.qrText}>Scan for Order Details</Text>
           </View>
         )}
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text>Thank you for shopping with Dude Men's Wear</Text>
+        {/* Return Address */}
+        <View style={styles.returnAddress}>
+          <Text style={styles.returnTitle}>Return To:</Text>
+          <Text style={styles.returnLine}>DUDE MEN'S WEAR</Text>
+          <Text style={styles.returnLine}>Chennai, Tamil Nadu</Text>
+          <Text style={styles.returnLine}>Support: +91 XXXXX XXXXX</Text>
         </View>
       </Page>
     </Document>

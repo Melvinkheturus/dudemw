@@ -33,16 +33,16 @@ export default function OrdersPage() {
   const [isDownloadingLabels, setIsDownloadingLabels] = useState(false)
 
   // React Query hooks
-  const { 
-    data: orders = [], 
+  const {
+    data: orders = [],
     isLoading,
-    refetch: refetchOrders 
+    refetch: refetchOrders
   } = useOrders(filters)
-  
-  const { 
+
+  const {
     data: stats,
     isLoading: isLoadingStats,
-    refetch: refetchStats 
+    refetch: refetchStats
   } = useOrderStats()
 
   const handleFilterChange = (newFilters: OrderFilters) => {
@@ -124,31 +124,37 @@ export default function OrdersPage() {
         </div>
         <div className="flex items-center space-x-3">
           {hasOrders && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleRefresh}
-              disabled={isLoading || isLoadingStats}
-              className="border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300"
-              data-testid="refresh-orders-button"
-            >
-              <RefreshCw className={`mr-2 h-4 w-4 ${(isLoading || isLoadingStats) ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={isLoading || isLoadingStats}
+                className="border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300"
+                data-testid="refresh-orders-button"
+              >
+                <RefreshCw className={`mr-2 h-4 w-4 ${(isLoading || isLoadingStats) ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300"
+                onClick={handleBulkDownloadLabels}
+                disabled={isDownloadingLabels || selectedOrders.length === 0}
+                data-testid="bulk-download-labels-btn"
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                {isDownloadingLabels
+                  ? 'Generating...'
+                  : selectedOrders.length > 0
+                    ? `Bulk Labels (${selectedOrders.length})`
+                    : 'Bulk Labels'
+                }
+              </Button>
+            </>
           )}
-          {selectedOrders.length > 0 && (
-            <Button 
-              variant="outline"
-              className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300"
-              onClick={handleBulkDownloadLabels}
-              disabled={isDownloadingLabels}
-              data-testid="bulk-download-labels-btn"
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              {isDownloadingLabels ? 'Generating...' : `Download Labels (${selectedOrders.length})`}
-            </Button>
-          )}
-          <Button 
+          <Button
             variant="outline"
             className="border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300"
             onClick={handleExport}
@@ -156,7 +162,7 @@ export default function OrdersPage() {
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
-          <Button 
+          <Button
             className="bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/25"
             onClick={handleCreateOrder}
           >
@@ -232,12 +238,12 @@ export default function OrdersPage() {
         </div>
       ) : hasOrders ? (
         <>
-          <OrdersFilters 
+          <OrdersFilters
             filters={filters}
             onFiltersChange={handleFilterChange}
             totalOrders={orders.length}
           />
-          <OrdersTable 
+          <OrdersTable
             orders={orders}
             onRefresh={refetchOrders}
             selectedOrders={selectedOrders}
