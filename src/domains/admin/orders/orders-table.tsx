@@ -25,7 +25,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Eye, MoreHorizontal, Package, Truck, X, Edit, ShoppingCart } from "lucide-react"
+import { Eye, MoreHorizontal, Package, Truck, X, Edit, ShoppingCart, FileText } from "lucide-react"
 import {
   OrderWithDetails,
   updateOrderStatus,
