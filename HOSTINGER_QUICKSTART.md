@@ -10,9 +10,16 @@ Before you begin, have these ready:
 
 - [ ] Hostinger Business Plan with Node.js 20 enabled
 - [ ] SSH credentials from Hostinger hPanel
+- [ ] Domain configured: `dudemw.com` (main) and `admin.dudemw.com` (subdomain)
+- [ ] SSL certificates for both domains
 - [ ] Supabase credentials (URL, Anon Key, Service Role Key)
 - [ ] Razorpay test keys (or live keys if ready)
-- [ ] Your domain name with SSL configured
+
+**🌐 Subdomain Setup Required:**
+- Main Store: `dudemw.com`
+- Admin Dashboard: `admin.dudemw.com`
+
+📖 **See [SUBDOMAIN_SETUP.md](./SUBDOMAIN_SETUP.md) for complete subdomain configuration**
 
 ---
 
@@ -125,10 +132,12 @@ curl http://localhost:3000
 
 ### Create Admin Account
 
-1. Visit: `https://yourdomain.com/admin/setup`
+1. Visit: `https://admin.dudemw.com/setup`
 2. Enter your `ADMIN_SETUP_KEY`
 3. Create admin account
-4. Login at: `https://yourdomain.com/admin/login`
+4. Login at: `https://admin.dudemw.com/login`
+
+**Note:** Admin dashboard is on subdomain `admin.dudemw.com`, not `/admin` path.
 
 ---
 
