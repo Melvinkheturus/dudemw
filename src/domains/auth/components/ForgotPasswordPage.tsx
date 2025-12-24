@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
             Enter Reset Code
           </button>
           <button
-            onClick={() => router.push('/login')}
+            onClick={() => router.push('/auth/login')}
             className="w-full mt-3 border-2 border-red-600 text-red-600 py-3 rounded-lg font-heading font-semibold tracking-wide hover:bg-red-600 hover:text-white transition-colors"
           >
             Back to Login
