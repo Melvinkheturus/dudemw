@@ -11,6 +11,9 @@ try {
 }
 
 const nextConfig = {
+  // Standalone output for better Hostinger compatibility
+  output: 'standalone',
+  
   serverExternalPackages: ['@supabase/supabase-js'],
 
   // Ignore TypeScript errors during build (Hostinger workaround)
