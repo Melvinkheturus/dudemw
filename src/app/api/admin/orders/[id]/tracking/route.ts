@@ -8,15 +8,15 @@ import {
 import { EmailService } from '@/lib/services/resend';
 
 /**
- * POST /api/admin/orders/[orderId]/tracking
+ * POST /api/admin/orders/[id]/tracking
  * Update order with tracking information (Admin only)
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ orderId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { orderId } = await params;
+    const { id: orderId } = await params;
     const body = await request.json();
     const { awbNumber, shippedDate } = body;
 
