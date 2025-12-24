@@ -84,18 +84,22 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ### Deploy to Hostinger (Optimized for Auto-Git Integration)
 
+**Architecture:**
+- Main Store: `dudemw.com`
+- Admin Dashboard: `admin.dudemw.com` (subdomain)
+
 **Quick Start (10 minutes):**
 ```bash
 # 1. SSH into server
-ssh username@yourdomain.com -p 65002
+ssh username@dudemw.com -p 65002
 
 # 2. Clone and setup
-cd ~/domains/yourdomain.com/public_html
+cd ~/domains/dudemw.com/public_html
 git clone https://github.com/Melvinkheturus/dudemw.git .
 
-# 3. Configure
+# 3. Configure (including subdomain settings)
 cp .env.example .env.production
-nano .env.production  # Add your credentials
+nano .env.production  # Add your credentials + subdomain config
 
 # 4. Build and deploy
 npm install --production
@@ -105,9 +109,10 @@ pm2 start ecosystem.config.js
 pm2 save
 ```
 
-**📖 See [HOSTINGER_QUICKSTART.md](./HOSTINGER_QUICKSTART.md) for step-by-step guide**
-
-**📚 See [HOSTINGER_DEPLOY.md](./HOSTINGER_DEPLOY.md) for complete documentation**
+**📖 Guides:**
+- [HOSTINGER_QUICKSTART.md](./HOSTINGER_QUICKSTART.md) - 10-minute deployment
+- [HOSTINGER_DEPLOY.md](./HOSTINGER_DEPLOY.md) - Complete documentation
+- [SUBDOMAIN_SETUP.md](./SUBDOMAIN_SETUP.md) - Admin subdomain configuration
 
 ## ⚙️ Environment Variables
 
