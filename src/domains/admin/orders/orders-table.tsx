@@ -48,6 +48,8 @@ import Link from "next/link"
 interface OrdersTableProps {
   orders: OrderWithDetails[]
   onRefresh: () => void
+  selectedOrders?: string[]
+  onSelectionChange?: (selected: string[]) => void
 }
 
 export function OrdersTable({ orders, onRefresh }: OrdersTableProps) {
