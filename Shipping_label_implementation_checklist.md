@@ -37,23 +37,23 @@
 ---
 
 ### Phase 3: API Routes Development
-- [ ] Create single label API: `/src/app/api/admin/orders/[id]/label/route.ts`
-  - [ ] Add admin authentication middleware
-  - [ ] Add role-based authorization (admin/manager only)
-  - [ ] Fetch order data from database
-  - [ ] Generate PDF server-side
-  - [ ] Return downloadable PDF response
-  - [ ] Error handling & validation
+- [x] Create single label API: `/src/app/api/admin/orders/[id]/label/route.ts`
+  - [x] Add admin authentication middleware
+  - [x] Add role-based authorization (admin/manager only)
+  - [x] Fetch order data from database
+  - [x] Generate PDF server-side
+  - [x] Return downloadable PDF response
+  - [x] Error handling & validation
 
-- [ ] Create bulk labels API: `/src/app/api/admin/orders/bulk-labels/route.ts`
-  - [ ] Add admin authentication
-  - [ ] Accept array of order IDs
-  - [ ] Generate multiple PDFs
-  - [ ] Combine into ZIP file or single PDF
-  - [ ] Return downloadable response
+- [x] Create bulk labels API: `/src/app/api/admin/orders/bulk-labels/route.ts`
+  - [x] Add admin authentication
+  - [x] Accept array of order IDs
+  - [x] Generate multiple PDFs
+  - [x] Combine into single merged PDF using pdf-lib
+  - [x] Return downloadable response
 
-**Status:** ⏳ Not Started  
-**Last Updated:** -
+**Status:** ✅ Complete  
+**Last Updated:** December 24, 2025
 
 ---
 
