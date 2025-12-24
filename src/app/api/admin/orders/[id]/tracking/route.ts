@@ -112,15 +112,15 @@ export async function POST(
 }
 
 /**
- * GET /api/admin/orders/[orderId]/tracking
+ * GET /api/admin/orders/[id]/tracking
  * Get tracking information for an order
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ orderId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { orderId } = await params;
+    const { id: orderId } = await params;
 
     const { data: order, error } = await supabaseAdmin
       .from('orders')
