@@ -447,7 +447,10 @@ export async function getCustomerStatsActionLegacy(): Promise<{
     const now = new Date()
     const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
 
-    const newThisMonth = authData.users.filter((u) => new Date(u.created_at) >= firstOfMonth)
+    type AuthUser = { id: string; created_at: string }
+    const typedUsers = authData.users as AuthUser[]
+
+    const newThisMonth = typedUsers.filter((u) => new Date(u.created_at) >= firstOfMonth)
       .length
 
     const totalRevenue = orders?.reduce((sum, o) => sum + (o.total_amount || 0), 0) || 0
@@ -456,7 +459,7 @@ export async function getCustomerStatsActionLegacy(): Promise<{
     let activeCount = 0
     let inactiveCount = 0
 
-    authData.users.forEach((user) => {
+    typedUsers.forEach((user) => {
       const customerOrders = orders?.filter((o) => o.user_id === user.id) || []
 
       if (customerOrders.length > 0) {

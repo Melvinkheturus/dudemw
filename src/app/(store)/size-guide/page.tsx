@@ -53,31 +53,28 @@ export default function SizeGuidePage() {
         >
           <button
             onClick={() => setActiveCategory('tshirts')}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
-              activeCategory === 'tshirts'
+            className={`px-6 py-3 rounded-lg font-semibold transition-all ${activeCategory === 'tshirts'
                 ? 'bg-red-600 text-white shadow-lg'
                 : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
+              }`}
           >
             T-Shirts
           </button>
           <button
             onClick={() => setActiveCategory('pants')}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
-              activeCategory === 'pants'
+            className={`px-6 py-3 rounded-lg font-semibold transition-all ${activeCategory === 'pants'
                 ? 'bg-red-600 text-white shadow-lg'
                 : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
+              }`}
           >
             Pants
           </button>
           <button
             onClick={() => setActiveCategory('shirts')}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
-              activeCategory === 'shirts'
+            className={`px-6 py-3 rounded-lg font-semibold transition-all ${activeCategory === 'shirts'
                 ? 'bg-red-600 text-white shadow-lg'
                 : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
+              }`}
           >
             Shirts
           </button>
@@ -130,7 +127,7 @@ export default function SizeGuidePage() {
                   >
                     <td className="px-6 py-4 font-bold text-red-600">{row.size}</td>
                     {Object.entries(row).slice(1).map(([key, value]) => (
-                      <td key={key} className="px-6 py-4 text-gray-700">{value}</td>
+                      <td key={key} className="px-6 py-4 text-gray-700">{String(value)}</td>
                     ))}
                   </motion.tr>
                 ))}

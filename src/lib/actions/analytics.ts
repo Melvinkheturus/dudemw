@@ -563,12 +563,12 @@ export async function getCustomerGrowthChart(days: number = 30) {
     // Group by date
     const chartData: { [key: string]: number } = {}
 
-    authUsers?.users
-      .filter(user => new Date(user.created_at) >= startDate)
-      .forEach(user => {
-        const date = new Date(user.created_at).toISOString().split('T')[0]
-        chartData[date] = (chartData[date] || 0) + 1
-      })
+      ; (authUsers?.users as Array<{ created_at: string }> | undefined)
+        ?.filter(user => new Date(user.created_at) >= startDate)
+        .forEach(user => {
+          const date = new Date(user.created_at).toISOString().split('T')[0]
+          chartData[date] = (chartData[date] || 0) + 1
+        })
 
     // Calculate cumulative growth
     let cumulative = 0

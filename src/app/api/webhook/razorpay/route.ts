@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.text();
     const signature = req.headers.get('x-razorpay-signature');
-    
+
     if (!signature) {
       return NextResponse.json(
         { error: 'Missing signature' },
@@ -29,22 +29,22 @@ export async function POST(req: NextRequest) {
     }
 
     const event = JSON.parse(body);
-    
+
     // Handle different webhook events
     switch (event.event) {
       case 'payment.authorized':
       case 'payment.captured':
         await handlePaymentSuccess(event.payload.payment.entity);
         break;
-        
+
       case 'payment.failed':
         await handlePaymentFailed(event.payload.payment.entity);
         break;
-        
+
       case 'order.paid':
         await handleOrderPaid(event.payload.order.entity);
         break;
-        
+
       default:
         console.log('Unhandled webhook event:', event.event);
     }
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error('Webhook error:', error);
-    
+
     return NextResponse.json(
       { error: 'Webhook processing failed' },
       { status: 500 }
@@ -63,15 +63,16 @@ export async function POST(req: NextRequest) {
 async function handlePaymentSuccess(payment: any) {
   try {
     // Update order payment status and move to processing
-    const { error } = await supabaseAdmin
-      .from('orders')
-      .update({
-        status: 'processing',
-        payment_status: 'paid',
-        razorpay_payment_id: payment.id,
-        payment_method: payment.method,
-        updated_at: new Date().toISOString(),
-      })
+    const updateData = {
+      status: 'processing' as const,
+      payment_status: 'paid' as const,
+      razorpay_payment_id: payment.id,
+      payment_method: payment.method,
+      updated_at: new Date().toISOString(),
+    }
+    const { error } = await (supabaseAdmin
+      .from('orders') as any)
+      .update(updateData)
       .eq('razorpay_order_id', payment.order_id);
 
     if (error) {
@@ -79,7 +80,7 @@ async function handlePaymentSuccess(payment: any) {
     }
 
     console.log('Payment success processed:', payment.id);
-    
+
     // TODO: Send order confirmation email
     // TODO: Update inventory reserves
   } catch (error) {
@@ -90,8 +91,8 @@ async function handlePaymentSuccess(payment: any) {
 async function handlePaymentFailed(payment: any) {
   try {
     // Update order payment status in database
-    const { error } = await supabaseAdmin
-      .from('orders')
+    const { error } = await (supabaseAdmin
+      .from('orders') as any)
       .update({
         payment_status: 'failed',
         razorpay_payment_id: payment.id,
@@ -112,8 +113,8 @@ async function handlePaymentFailed(payment: any) {
 async function handleOrderPaid(order: any) {
   try {
     // Update order status to processing when fully paid
-    const { error } = await supabaseAdmin
-      .from('orders')
+    const { error } = await (supabaseAdmin
+      .from('orders') as any)
       .update({
         status: 'processing',
         payment_status: 'paid',
@@ -126,7 +127,7 @@ async function handleOrderPaid(order: any) {
     }
 
     console.log('Order paid processed:', order.id);
-    
+
     // TODO: Trigger fulfillment workflow
   } catch (error) {
     console.error('Failed to process order paid:', error);

@@ -11,11 +11,11 @@ export default function TrackOrderSection() {
 
   const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     try {
       // Fetch order from Supabase
-      const { data: orderData, error } = await supabase
-        .from('orders')
+      const { data: orderData, error } = await (supabase
+        .from('orders') as any)
         .select('*')
         .eq('id', orderNumber.trim())
         .eq('email', email.trim())
@@ -88,7 +88,7 @@ export default function TrackOrderSection() {
             <h2 className="text-2xl font-bold text-black mb-6">
               Track Your Order
             </h2>
-            
+
             <form onSubmit={handleTrack} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-black mb-2">
@@ -133,7 +133,7 @@ export default function TrackOrderSection() {
             {!tracking ? (
               <>
                 {/* Background Image */}
-                <div 
+                <div
                   className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                   style={{
                     backgroundImage: "url('/illustration/track_order.png')"
@@ -156,11 +156,10 @@ export default function TrackOrderSection() {
                     <div key={index} className="flex gap-4">
                       <div className="flex flex-col items-center">
                         <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                            item.completed
+                          className={`w-10 h-10 rounded-full flex items-center justify-center ${item.completed
                               ? 'bg-green-100 text-green-600'
                               : 'bg-gray-100 text-gray-400'
-                          }`}
+                            }`}
                         >
                           {item.completed ? (
                             <CheckCircle className="w-5 h-5" />
@@ -170,17 +169,15 @@ export default function TrackOrderSection() {
                         </div>
                         {index < tracking.timeline.length - 1 && (
                           <div
-                            className={`w-0.5 h-12 ${
-                              item.completed ? 'bg-green-300' : 'bg-gray-200'
-                            }`}
+                            className={`w-0.5 h-12 ${item.completed ? 'bg-green-300' : 'bg-gray-200'
+                              }`}
                           ></div>
                         )}
                       </div>
                       <div className="flex-1 pb-4">
                         <h4
-                          className={`font-medium ${
-                            item.completed ? 'text-black' : 'text-gray-400'
-                          }`}
+                          className={`font-medium ${item.completed ? 'text-black' : 'text-gray-400'
+                            }`}
                         >
                           {item.status}
                         </h4>

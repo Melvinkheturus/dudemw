@@ -58,7 +58,8 @@ export interface FilterOptions {
 export async function filterProducts(params: FilterParams): Promise<FilterResult> {
     const supabase = createClient()
 
-    const { data, error } = await supabase.rpc("filter_products", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.rpc as any)("filter_products", {
         p_category_slug: params.categorySlug || null,
         p_collection_slug: params.collectionSlug || null,
         p_min_price: params.minPrice || null,
@@ -88,7 +89,8 @@ export async function getFilterOptions(
 ): Promise<FilterOptions> {
     const supabase = createClient()
 
-    const { data, error } = await supabase.rpc("get_filter_options", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.rpc as any)("get_filter_options", {
         p_category_slug: categorySlug || null,
         p_collection_slug: collectionSlug || null,
     })
