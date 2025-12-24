@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node -e \"const fs = require('fs'); try { fs.rmSync('.next', {recursive: true, force: true}); fs.unlinkSync('tsconfig.tsbuildinfo'); } catch(e) {}\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
