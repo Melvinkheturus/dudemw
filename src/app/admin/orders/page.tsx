@@ -29,6 +29,8 @@ export default function OrdersPage() {
     dateTo: '',
     customer: ''
   })
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([])
+  const [isDownloadingLabels, setIsDownloadingLabels] = useState(false)
 
   // React Query hooks
   const { 
@@ -60,6 +62,48 @@ export default function OrdersPage() {
     } catch (error) {
       console.error('Error exporting orders:', error)
       toast.error('Failed to export orders')
+    }
+  }
+
+  const handleBulkDownloadLabels = async () => {
+    if (selectedOrders.length === 0) {
+      toast.error('Please select at least one order')
+      return
+    }
+
+    setIsDownloadingLabels(true)
+    try {
+      const response = await fetch('/api/admin/orders/bulk-labels', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orderIds: selectedOrders }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to generate labels')
+      }
+
+      // Download the PDF
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `shipping-labels-bulk-${new Date().toISOString().split('T')[0]}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast.success(`Downloaded ${selectedOrders.length} shipping label(s)`)
+      setSelectedOrders([])
+    } catch (error) {
+      console.error('Bulk download labels error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to download labels')
+    } finally {
+      setIsDownloadingLabels(false)
     }
   }
 
