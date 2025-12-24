@@ -20,7 +20,8 @@ import {
   X,
   CheckCircle,
   Clock,
-  AlertCircle
+  AlertCircle,
+  FileText
 } from "lucide-react"
 import { getOrder, updateOrderStatus, addTrackingInfo, cancelOrder, OrderWithDetails } from "@/lib/actions/orders"
 import { getCustomerName, getOrderNumber, getProductTitle, getVariantName, formatAddress, getStatusColor, getPaymentStatusColor } from "@/lib/utils/order-helpers"
