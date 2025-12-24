@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase/supabase';
 import { getCurrentAdmin } from '@/lib/admin-auth';
 import QRCode from 'qrcode';
 import { PDFDocument } from 'pdf-lib';
+import React from 'react';
 
 /**
  * POST /api/admin/orders/bulk-labels
