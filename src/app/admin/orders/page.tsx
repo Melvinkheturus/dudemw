@@ -240,6 +240,8 @@ export default function OrdersPage() {
           <OrdersTable 
             orders={orders}
             onRefresh={refetchOrders}
+            selectedOrders={selectedOrders}
+            onSelectionChange={setSelectedOrders}
           />
         </>
       ) : (
