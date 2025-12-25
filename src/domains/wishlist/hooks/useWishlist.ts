@@ -39,39 +39,23 @@ export function useWishlist() {
             const product = item.products
             const variantImage = variant?.variant_images?.[0]?.image_url || variant?.image_url
 
-            // Price calculations - Ensure numbers
-            // Priority: variant prices > product prices
-            let currentPrice: number = 0
-            let originalPrice: number = 0
-
-            if (variant) {
-              // Variant exists - use variant pricing
-              if (variant.discount_price && Number(variant.discount_price) > 0) {
-                // Variant has discount price (sale price)
-                currentPrice = Number(variant.discount_price)
-                originalPrice = Number(variant.price || 0)
-              } else if (variant.price && Number(variant.price) > 0) {
-                // Variant has regular price only
-                currentPrice = Number(variant.price)
-                // Check if product has original_price to show as MRP
-                originalPrice = Number(product?.original_price || 0)
-              }
-            } else if (product) {
-              // No variant - use product-level pricing
-              currentPrice = Number(product.price || 0)
-              originalPrice = Number(product.original_price || 0)
-            }
-
-            // Calculate discount percentage
-            const discount = originalPrice && originalPrice > currentPrice && currentPrice > 0
-              ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100)
+            // Price calculations - Match ProductCard logic
+            // Current price: Use variant price (or product price as fallback)
+            const currentPrice = Number(variant?.price || product?.price || 0)
+            
+            // MRP/Original price: Use product compare_price OR original_price
+            const mrp = Number(product?.compare_price || product?.original_price || 0)
+            
+            // Calculate discount only if MRP exists and is higher than current price
+            const discount = mrp && mrp > currentPrice && currentPrice > 0
+              ? Math.round(((mrp - currentPrice) / mrp) * 100)
               : 0
 
             return {
               id: item.product_id,
               name: product?.title || 'Product',
               price: currentPrice,
-              originalPrice: discount > 0 ? originalPrice : undefined,
+              originalPrice: discount > 0 ? mrp : undefined,
               discount: discount > 0 ? discount : undefined,
               image: variantImage || product?.images?.[0] || '/images/placeholder-product.jpg',
               slug: product?.slug || '',
