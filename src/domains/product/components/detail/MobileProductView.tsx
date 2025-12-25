@@ -258,8 +258,8 @@ export default function MobileProductView({ product }: MobileProductViewProps) {
         <ProductOptions
           sizes={getSizesFromProduct(product)}
           colors={productColors}
-          rating={4.5}
-          reviews={128}
+          rating={product.average_rating || undefined}
+          reviews={product.review_count || undefined}
           selectedSize={selectedSize}
           selectedColor={selectedColor}
           onSizeSelect={setSelectedSize}

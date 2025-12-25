@@ -223,10 +223,10 @@ export default function ProductCard({ product, badge, badgeColor = "red", select
           </p>
 
           {/* Star Rating - Only show if reviews exist */}
-          {product.review_count && product.review_count > 0 && (
+          {product.review_count != null && product.review_count > 0 && product.average_rating != null && product.average_rating > 0 && (
             <div className="mt-1.5">
               <StarRating
-                rating={product.average_rating || 0}
+                rating={product.average_rating}
                 reviewCount={product.review_count}
                 size="sm"
                 showCount={true}

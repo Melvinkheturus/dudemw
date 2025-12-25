@@ -223,8 +223,8 @@ export default function DesktopProductView({ product }: DesktopProductViewProps)
                     <ProductOptions
                       sizes={getSizesFromProduct(product)}
                       colors={getColorsFromProduct(product).map(color => ({ name: color, hex: getColorHexFromOptions(color, product), image: (product.images && product.images[0]) || '' }))}
-                      rating={4.5}
-                      reviews={128}
+                      rating={product.average_rating || undefined}
+                      reviews={product.review_count || undefined}
                       selectedSize={selectedSize}
                       selectedColor={{ name: selectedColor, hex: '#000000', image: (product.images && product.images[0]) || '' }}
                       onSizeSelect={setSelectedSize}
