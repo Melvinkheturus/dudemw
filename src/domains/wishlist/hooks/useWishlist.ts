@@ -42,6 +42,9 @@ export function useWishlist() {
         const response = await fetch('/api/wishlist')
         if (response.ok) {
           const { items } = await response.json()
+          console.log('📦 Wishlist API returned items:', items.length)
+          console.log('📦 Raw items from API:', items)
+          
           const formattedItems = items.map((item: any) => {
             const variant = item.product_variants
             const product = item.products
@@ -74,15 +77,20 @@ export function useWishlist() {
               color: variant?.name?.split('/')[1]?.trim(),
             }
           })
+          console.log('✅ Formatted wishlist items:', formattedItems.length)
+          console.log('✅ Formatted items:', formattedItems)
           setWishlist(formattedItems)
           // Update local storage for offline access
           saveToLocalStorage(formattedItems)
+        } else {
+          console.error('❌ Wishlist API error:', response.status, response.statusText)
         }
       } else {
         // Guest user - load from local storage
         const stored = localStorage.getItem(WISHLIST_KEY)
         if (stored) {
           const parsed = JSON.parse(stored)
+          console.log('📦 Guest wishlist from localStorage:', parsed.length, parsed)
           setWishlist(parsed)
         }
       }
