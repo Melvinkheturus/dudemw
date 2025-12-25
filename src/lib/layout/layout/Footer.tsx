@@ -1,6 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 import DesktopFooter from "./desktop/Footer"
 import FooterLite from "./mobile/FooterLite"
 
@@ -9,9 +10,16 @@ const authRoutes = ['/auth/login', '/auth/signup', '/auth/forgot-password', '/au
 
 export default function Footer() {
   const pathname = usePathname()
+  const [isAdminSubdomain, setIsAdminSubdomain] = useState(false)
 
-  // Don't render footer on admin pages
-  if (pathname?.startsWith('/admin')) {
+  // Check if we're on admin subdomain via data attribute
+  useEffect(() => {
+    const isAdmin = document.body.getAttribute('data-admin-subdomain') === 'true'
+    setIsAdminSubdomain(isAdmin)
+  }, [])
+
+  // Don't render footer on admin pages or admin subdomain
+  if (pathname?.startsWith('/admin') || isAdminSubdomain) {
     return null
   }
 

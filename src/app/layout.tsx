@@ -114,11 +114,17 @@ export const metadata: Metadata = {
   manifest: '/site.webmanifest',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Detect admin subdomain from headers (server-side)
+  const { headers } = await import('next/headers');
+  const headersList = await headers();
+  const hostname = headersList.get('host') || '';
+  const isAdminSubdomain = hostname.startsWith('admin.');
+
   return (
     <QueryProvider>
       <AuthProvider>
@@ -128,13 +134,14 @@ export default function RootLayout({
             <OfferBarProvider>
               <html lang="en">
                 <body
-                  className={`${satoshi.variable} ${manrope.variable} antialiased flex flex-col min-h-screen`}
+                  className={`${satoshi.variable} ${manrope.variable} antialiased flex flex-col min-h-screen ${isAdminSubdomain ? 'admin-subdomain' : ''}`}
+                  data-admin-subdomain={isAdminSubdomain ? 'true' : 'false'}
                 >
-                  <ConditionalNavbar />
-                  <main className="flex-1 pt-[52px] lg:pt-[60px] [.pdp-page_&]:pt-0 [.pdp-page_&]:lg:pt-[60px] [.admin-page_&]:pt-0">
+                  {!isAdminSubdomain && <ConditionalNavbar />}
+                  <main className={isAdminSubdomain ? "flex-1" : "flex-1 pt-[52px] lg:pt-[60px] [.pdp-page_&]:pt-0 [.pdp-page_&]:lg:pt-[60px] [.admin-page_&]:pt-0"}>
                     <PageTransition>{children}</PageTransition>
                   </main>
-                  <Footer />
+                  {!isAdminSubdomain && <Footer />}
                   <Toaster position="top-right" />
                 </body>
               </html>

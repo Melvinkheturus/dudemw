@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import Navbar from "./Navbar"
 
 // Auth routes where navbar should be hidden
@@ -9,9 +9,16 @@ const authRoutes = ['/auth/login', '/auth/signup', '/auth/forgot-password', '/au
 
 export default function ConditionalNavbar() {
   const pathname = usePathname()
+  const [isAdminSubdomain, setIsAdminSubdomain] = useState(false)
 
-  // Hide navbar completely on admin pages
-  const isAdminPage = pathname?.startsWith('/admin')
+  // Check if we're on admin subdomain via data attribute
+  useEffect(() => {
+    const isAdmin = document.body.getAttribute('data-admin-subdomain') === 'true'
+    setIsAdminSubdomain(isAdmin)
+  }, [])
+
+  // Hide navbar completely on admin pages or admin subdomain
+  const isAdminPage = pathname?.startsWith('/admin') || isAdminSubdomain
 
   // Hide navbar on auth pages
   const isAuthPage = authRoutes.some(route => pathname?.startsWith(route))
