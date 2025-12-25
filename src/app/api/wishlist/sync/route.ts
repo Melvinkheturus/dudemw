@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase/server'
-import { getGuestIdFromCookie, clearGuestId } from '@/lib/utils/guest'
+import { clearGuestId } from '@/lib/utils/guest'
 import { cookies } from 'next/headers'
 
 /**
