@@ -14,6 +14,14 @@ export function useWishlist() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSyncing, setIsSyncing] = useState(false)
 
+  // Initialize guest ID early (before any API calls)
+  useEffect(() => {
+    if (!user && typeof window !== 'undefined') {
+      // Ensure guest ID is created and cookie is set
+      getOrCreateGuestId()
+    }
+  }, [user])
+
   // Load wishlist on mount
   useEffect(() => {
     loadWishlist()
