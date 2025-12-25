@@ -3,22 +3,30 @@
 import { useCart, type CartItem } from '@/domains/cart'
 import Image from 'next/image'
 import { useState } from 'react'
+import PromoCode from './PromoCode'
 
 interface OrderSummaryProps {
   shippingOverride?: number
   taxOverride?: number
   totalOverride?: number
   taxDetails?: any
+  showShipping?: boolean
+  discountAmount?: number
+  couponCode?: string
+  onCouponApplied?: (discount: { code: string; amount: number } | null) => void
 }
 
 export default function OrderSummary({
   shippingOverride,
   taxOverride,
   totalOverride,
-  taxDetails
+  taxDetails,
+  showShipping = true,
+  discountAmount = 0,
+  couponCode,
+  onCouponApplied
 }: OrderSummaryProps) {
   const { cartItems, totalPrice, itemCount } = useCart()
-  const [discount, setDiscount] = useState<{ code: string; amount: number } | null>(null)
 
   const formatPrice = (amount: number) => {
     return `₹${amount.toFixed(2)}`
@@ -28,7 +36,6 @@ export default function OrderSummary({
   // Use override if provided, otherwise default logic
   const shippingCost = shippingOverride !== undefined ? shippingOverride : (subtotal >= 999 ? 0 : 99)
   const taxAmount = taxOverride || 0
-  const discountAmount = discount ? discount.amount : 0
 
   const finalTotal = totalOverride !== undefined
     ? totalOverride
@@ -74,14 +81,15 @@ export default function OrderSummary({
         ))}
       </div>
 
-      {/* Promo Code Input - Placeholder for now */}
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Enter promo code"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-        />
-      </div>
+      {/* Promo Code Input */}
+      {onCouponApplied && (
+        <div className="mb-6">
+          <PromoCode
+            cartTotal={subtotal}
+            onApplied={onCouponApplied}
+          />
+        </div>
+      )}
 
       {/* Price Breakdown */}
       <div className="border-t pt-4 space-y-2">
@@ -90,10 +98,12 @@ export default function OrderSummary({
           <span>{formatPrice(subtotal)}</span>
         </div>
 
-        <div className="flex justify-between text-sm">
-          <span>Shipping</span>
-          <span>{shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}</span>
-        </div>
+        {showShipping && (
+          <div className="flex justify-between text-sm">
+            <span>Shipping</span>
+            <span>{shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}</span>
+          </div>
+        )}
 
         {taxDetails && (
           <div className="space-y-1">
@@ -121,9 +131,9 @@ export default function OrderSummary({
           </div>
         )}
 
-        {discount && (
+        {discountAmount > 0 && (
           <div className="flex justify-between text-sm text-green-600">
-            <span>Discount ({discount.code})</span>
+            <span>Discount Added {couponCode ? `(${couponCode})` : ''}</span>
             <span>-{formatPrice(discountAmount)}</span>
           </div>
         )}

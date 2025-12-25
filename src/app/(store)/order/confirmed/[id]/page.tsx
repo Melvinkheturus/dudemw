@@ -52,6 +52,8 @@ export default function OrderConfirmedPage() {
           subtotal: orderData.subtotal_amount,
           shipping: orderData.shipping_amount,
           tax: orderData.tax_amount,
+          discount: orderData.discount_amount || 0,
+          coupon_code: orderData.coupon_code || null,
           total: orderData.total_amount, // Already in rupees
           shipping_address: shippingAddress ? {
             first_name: shippingAddress.firstName || '',
@@ -166,6 +168,12 @@ export default function OrderConfirmedPage() {
               <div className="flex justify-between text-sm">
                 <span>Tax (GST)</span>
                 <span>₹{Number(order.tax).toFixed(2)}</span>
+              </div>
+            )}
+            {order.discount > 0 && (
+              <div className="flex justify-between text-sm text-green-600">
+                <span>Discount {order.coupon_code ? `(${order.coupon_code})` : ''}</span>
+                <span>-₹{Number(order.discount).toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between font-bold text-lg pt-2 border-t">

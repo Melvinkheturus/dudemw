@@ -2,13 +2,14 @@
 
 import { useState } from 'react'
 import { useToast } from '@/lib/layout/feedback/ToastContext'
-import { supabase } from '@/lib/supabase/client'
+import { validateCoupon } from '@/app/actions/coupons'
 
 interface PromoCodeProps {
     onApplied?: (discount: { code: string; amount: number } | null) => void
+    cartTotal: number
 }
 
-export default function PromoCode({ onApplied }: PromoCodeProps) {
+export default function PromoCode({ onApplied, cartTotal }: PromoCodeProps) {
     const [code, setCode] = useState('')
     const [isApplying, setIsApplying] = useState(false)
     const [appliedCode, setAppliedCode] = useState<string | null>(null)
@@ -23,38 +24,23 @@ export default function PromoCode({ onApplied }: PromoCodeProps) {
         setIsApplying(true)
 
         try {
-            // Check if coupon exists and is valid in Supabase
-            const { data: coupon, error } = await supabase
-                .from('coupons')
-                .select('*')
-                .eq('code', code.toUpperCase())
-                .eq('is_active', true)
-                .single()
+            const result = await validateCoupon(code, cartTotal)
 
-            if (error || !coupon) {
-                throw new Error('Invalid or expired promo code')
+            if (!result.isValid || !result.coupon) {
+                throw new Error(result.error || 'Invalid promo code')
             }
 
-            // Check if coupon is still valid (not expired, usage limits, etc.)
-            const now = new Date()
-            if (coupon.end_date && new Date(coupon.end_date) < now) {
-                throw new Error('This promo code has expired')
-            }
-
-            if (coupon.max_uses && coupon.current_uses && coupon.current_uses >= coupon.max_uses) {
-                throw new Error('This promo code has reached its usage limit')
-            }
-
-            setAppliedCode(code.toUpperCase())
+            setAppliedCode(result.coupon.code)
             setCode('')
             showToast('Promo code applied successfully!', 'success')
             onApplied?.({
-                code: code.toUpperCase(),
-                amount: coupon.type === 'percentage' ? coupon.value : coupon.value
+                code: result.coupon.code,
+                amount: result.coupon.discountAmount
             })
         } catch (error: any) {
             console.error('Failed to apply promo code:', error)
             showToast(error.message || 'Invalid promo code', 'error')
+            onApplied?.(null)
         } finally {
             setIsApplying(false)
         }
@@ -78,7 +64,7 @@ export default function PromoCode({ onApplied }: PromoCodeProps) {
     }
 
     return (
-        <div className="border rounded-lg p-4">
+        <div className="border rounded-lg p-4 bg-white">
             <h3 className="font-semibold mb-3">Promo Code</h3>
 
             {appliedCode ? (
@@ -102,17 +88,28 @@ export default function PromoCode({ onApplied }: PromoCodeProps) {
                         value={code}
                         onChange={(e) => setCode(e.target.value.toUpperCase())}
                         placeholder="Enter code"
-                        className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                        className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black uppercase placeholder:normal-case"
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault()
+                                handleApply()
+                            }
+                        }}
                     />
                     <button
                         onClick={handleApply}
                         disabled={isApplying || !code.trim()}
-                        className="px-4 py-2 bg-black text-white rounded-lg font-medium hover:bg-gray-800 disabled:bg-gray-400"
+                        className="min-w-[100px] px-4 py-2 bg-black text-white rounded-lg font-medium hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center transition-all bg-black"
                     >
-                        {isApplying ? 'Applying...' : 'Apply'}
+                        {isApplying ? (
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                            'Apply'
+                        )}
                     </button>
                 </div>
             )}
         </div>
     )
 }
+

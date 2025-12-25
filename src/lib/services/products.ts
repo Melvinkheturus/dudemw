@@ -91,6 +91,8 @@ export class ProductService {
         .from('products')
         .select(`
           *,
+          average_rating,
+          review_count,
           product_images (
             id,
             image_url,
@@ -221,6 +223,8 @@ export class ProductService {
         .from('products')
         .select(`
           *,
+          average_rating,
+          review_count,
           product_images (
             id,
             image_url,
@@ -326,6 +330,8 @@ export class ProductService {
         .from('products')
         .select(`
           *,
+          average_rating,
+          review_count,
           product_images (
             id,
             image_url,
@@ -376,6 +382,8 @@ export class ProductService {
         .from('products')
         .select(`
           *,
+          average_rating,
+          review_count,
           product_images (
             id,
             image_url,
@@ -470,6 +478,8 @@ export class ProductService {
         .from('products')
         .select(`
           *,
+          average_rating,
+          review_count,
           product_images (
             id,
             image_url,

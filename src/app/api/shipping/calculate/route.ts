@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Calculate shipping
-    const result = calculateShipping({
+    const result = await calculateShipping({
       postalCode,
       state,
       totalQuantity
@@ -43,9 +43,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Shipping calculation error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to calculate shipping' 
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to calculate shipping'
       },
       { status: 500 }
     );
@@ -70,7 +70,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const result = calculateShipping({
+    // Calculate shipping
+    const result = await calculateShipping({
       postalCode,
       state: state || undefined,
       totalQuantity: parseInt(totalQuantity, 10)
@@ -87,9 +88,9 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Shipping calculation error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to calculate shipping' 
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to calculate shipping'
       },
       { status: 500 }
     );

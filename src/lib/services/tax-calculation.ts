@@ -20,6 +20,7 @@ export interface TaxCalculationInput {
   }>;
   customerState: string;
   isPriceInclusive?: boolean; // whether price includes tax
+  defaultGstRate?: number;
 }
 
 export interface TaxCalculationResult {
@@ -52,9 +53,9 @@ function normalizeStateName(state: string): string {
 export function getTaxType(customerState: string): TaxType {
   const normalizedCustomerState = normalizeStateName(customerState);
   const normalizedStoreState = normalizeStateName(STORE_STATE);
-  
-  return normalizedCustomerState === normalizedStoreState 
-    ? 'intra-state' 
+
+  return normalizedCustomerState === normalizedStoreState
+    ? 'intra-state'
     : 'inter-state';
 }
 
@@ -64,14 +65,15 @@ export function getTaxType(customerState: string): TaxType {
 function calculateItemTax(
   item: TaxCalculationInput['items'][0],
   taxType: TaxType,
-  isPriceInclusive: boolean
+  isPriceInclusive: boolean,
+  defaultGstRate: number
 ): ItemTaxBreakdown {
-  const gstRate = item.gstRate || DEFAULT_GST_RATE;
+  const gstRate = item.gstRate || defaultGstRate;
   const itemTotal = item.price * item.quantity;
-  
+
   let taxableAmount: number;
   let totalTax: number;
-  
+
   if (isPriceInclusive) {
     // Price includes tax - extract tax amount
     // Formula: Taxable Amount = Total / (1 + GST Rate/100)
@@ -82,11 +84,11 @@ function calculateItemTax(
     taxableAmount = itemTotal;
     totalTax = (taxableAmount * gstRate) / 100;
   }
-  
+
   let cgst = 0;
   let sgst = 0;
   let igst = 0;
-  
+
   if (taxType === 'intra-state') {
     // Intra-state: Split equally between CGST and SGST
     cgst = totalTax / 2;
@@ -95,7 +97,7 @@ function calculateItemTax(
     // Inter-state: Full amount as IGST
     igst = totalTax;
   }
-  
+
   return {
     variantId: item.id,
     productId: item.productId,
@@ -114,8 +116,8 @@ function calculateItemTax(
  */
 export function calculateTax(input: TaxCalculationInput): TaxCalculationResult {
   try {
-    const { items, customerState, isPriceInclusive = false } = input;
-    
+    const { items, customerState, isPriceInclusive = false, defaultGstRate = DEFAULT_GST_RATE } = input;
+
     // Validate inputs
     if (!items || items.length === 0) {
       return {
@@ -124,7 +126,7 @@ export function calculateTax(input: TaxCalculationInput): TaxCalculationResult {
         error: 'No items provided for tax calculation'
       };
     }
-    
+
     if (!customerState || customerState.trim() === '') {
       return {
         success: false,
@@ -132,15 +134,15 @@ export function calculateTax(input: TaxCalculationInput): TaxCalculationResult {
         error: 'Customer state is required for tax calculation'
       };
     }
-    
+
     // Determine tax type
     const taxType = getTaxType(customerState);
-    
+
     // Calculate tax for each item
-    const itemTaxBreakdowns = items.map(item => 
-      calculateItemTax(item, taxType, isPriceInclusive)
+    const itemTaxBreakdowns = items.map(item =>
+      calculateItemTax(item, taxType, isPriceInclusive, defaultGstRate)
     );
-    
+
     // Aggregate totals
     const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const taxableAmount = itemTaxBreakdowns.reduce((sum, item) => sum + item.taxableAmount, 0);
@@ -148,9 +150,9 @@ export function calculateTax(input: TaxCalculationInput): TaxCalculationResult {
     const sgst = itemTaxBreakdowns.reduce((sum, item) => sum + item.sgst, 0);
     const igst = itemTaxBreakdowns.reduce((sum, item) => sum + item.igst, 0);
     const totalTax = itemTaxBreakdowns.reduce((sum, item) => sum + item.totalTax, 0);
-    
+
     const grandTotal = isPriceInclusive ? subtotal : (taxableAmount + totalTax);
-    
+
     const taxBreakdown: OrderTaxBreakdown = {
       subtotal: Math.round(subtotal * 100) / 100,
       taxableAmount: Math.round(taxableAmount * 100) / 100,
@@ -165,7 +167,7 @@ export function calculateTax(input: TaxCalculationInput): TaxCalculationResult {
       isPriceInclusive,
       items: itemTaxBreakdowns
     };
-    
+
     return {
       success: true,
       taxBreakdown
@@ -185,12 +187,12 @@ export function calculateTax(input: TaxCalculationInput): TaxCalculationResult {
  */
 export function getTaxDisplayLines(taxBreakdown: OrderTaxBreakdown) {
   const lines = [];
-  
+
   if (taxBreakdown.taxType === 'intra-state') {
     // Show CGST and SGST
     const rate = taxBreakdown.items[0]?.gstRate || DEFAULT_GST_RATE;
     const halfRate = rate / 2;
-    
+
     if (taxBreakdown.cgst > 0) {
       lines.push({
         label: `CGST (${halfRate}%)`,
@@ -198,7 +200,7 @@ export function getTaxDisplayLines(taxBreakdown: OrderTaxBreakdown) {
         amount: taxBreakdown.cgst
       });
     }
-    
+
     if (taxBreakdown.sgst > 0) {
       lines.push({
         label: `SGST (${halfRate}%)`,
@@ -209,7 +211,7 @@ export function getTaxDisplayLines(taxBreakdown: OrderTaxBreakdown) {
   } else {
     // Show IGST
     const rate = taxBreakdown.items[0]?.gstRate || DEFAULT_GST_RATE;
-    
+
     if (taxBreakdown.igst > 0) {
       lines.push({
         label: `IGST (${rate}%)`,
@@ -218,7 +220,7 @@ export function getTaxDisplayLines(taxBreakdown: OrderTaxBreakdown) {
       });
     }
   }
-  
+
   return lines;
 }
 
@@ -239,13 +241,13 @@ export function generateGSTInvoiceNumber(
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();
-  
+
   // Financial year in India: April to March
   const fyStart = month >= 3 ? year : year - 1;
   const fyEnd = (fyStart + 1).toString().slice(-2);
   const fy = `${fyStart}-${fyEnd}`;
-  
+
   const sequence = sequenceNumber.toString().padStart(6, '0');
-  
+
   return `${gstin}/${fy}/${sequence}`;
 }

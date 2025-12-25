@@ -222,19 +222,38 @@ export async function getOrCreateGuestCustomer(
   }
 ): Promise<{ success: boolean; data?: Customer; error?: string }> {
   try {
-    if (!email) {
-      return { success: false, error: 'Email is required for guest customers' }
+    if (!email && !userData?.phone) {
+      return { success: false, error: 'Either email or phone is required for guest customers' }
     }
 
-    // Try to find existing guest by email
-    const { data: existingGuest, error: findError } = await supabaseAdmin
-      .from('customers')
-      .select('*')
-      .eq('email', email)
-      .eq('customer_type', 'guest')
-      .single()
+    let existingGuest = null
+    let findError = null
 
-    if (existingGuest && !findError) {
+    if (email) {
+      // Try to find existing guest by email
+      const result = await supabaseAdmin
+        .from('customers')
+        .select('*')
+        .eq('email', email)
+        .eq('customer_type', 'guest')
+        .single()
+
+      existingGuest = result.data
+      findError = result.error
+    } else if (userData?.phone) {
+      // Try to find existing guest by phone
+      const result = await supabaseAdmin
+        .from('customers')
+        .select('*')
+        .eq('phone', userData.phone)
+        .eq('customer_type', 'guest')
+        .single()
+
+      existingGuest = result.data
+      findError = result.error
+    }
+
+    if (existingGuest) {
       // Update last order time and any new info
       const { data: updatedGuest, error: updateError } = await supabaseAdmin
         .from('customers')
@@ -243,6 +262,8 @@ export async function getOrCreateGuestCustomer(
           phone: userData?.phone || existingGuest.phone,
           first_name: userData?.first_name || existingGuest.first_name,
           last_name: userData?.last_name || existingGuest.last_name,
+          // Only update email if it was previously null and now provided
+          email: existingGuest.email || email,
           updated_at: new Date().toISOString(),
         })
         .eq('id', existingGuest.id)
@@ -260,7 +281,7 @@ export async function getOrCreateGuestCustomer(
     const { data: newGuest, error: createError } = await supabaseAdmin
       .from('customers')
       .insert({
-        email,
+        email: email || null,
         phone: userData?.phone,
         first_name: userData?.first_name,
         last_name: userData?.last_name,

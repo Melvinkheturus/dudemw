@@ -21,17 +21,16 @@ export async function GET() {
     // If no settings exist, create default
     if (!data) {
       const defaultSettings = {
-        tax_name: 'GST',
-        tax_rate: 18,
-        is_inclusive: true,
-        apply_to_shipping: false,
-        tax_id_required: false,
-        region_specific_rates: {},
+        tax_enabled: true,
+        default_gst_rate: 18,
+        price_includes_tax: true,
+        store_state: 'Tamil Nadu',
+        gstin: null,
       }
 
       const { data: newData, error: insertError } = await supabaseAdmin
         .from('tax_settings')
-        .insert(defaultSettings)
+        .insert(defaultSettings as any)
         .select()
         .single()
 

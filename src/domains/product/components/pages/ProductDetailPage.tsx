@@ -64,7 +64,11 @@ export default function ProductDetailPage({ product, relatedProducts }: ProductD
       <TrustBadges />
 
       {/* Product Reviews */}
-      <ProductReviews productId={product.id} />
+      <ProductReviews
+        productId={product.id}
+        rating={product.average_rating || undefined}
+        totalReviews={product.review_count || undefined}
+      />
 
       {/* Related Products */}
       <RelatedProducts

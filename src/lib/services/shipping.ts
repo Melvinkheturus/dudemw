@@ -78,9 +78,9 @@ export function isTamilNaduPinCode(pinCode: string): boolean {
  */
 export function isTamilNaduState(state: string): boolean {
   const normalizedState = state.trim().toLowerCase();
-  return normalizedState === 'tamil nadu' || 
-         normalizedState === 'tamilnadu' || 
-         normalizedState === 'tn';
+  return normalizedState === 'tamil nadu' ||
+    normalizedState === 'tamilnadu' ||
+    normalizedState === 'tn';
 }
 
 /**
@@ -92,23 +92,65 @@ export function calculateEstimatedDelivery(): string {
   const today = new Date();
   const minDays = 4; // 1 processing + 3 delivery
   const maxDays = 9; // 2 processing + 7 delivery
-  
+
   const estimatedDate = new Date(today);
   estimatedDate.setDate(today.getDate() + maxDays);
-  
-  const options: Intl.DateTimeFormatOptions = { 
-    month: 'short', 
+
+  const options: Intl.DateTimeFormatOptions = {
+    month: 'short',
     day: 'numeric',
     year: 'numeric'
   };
-  
+
   return estimatedDate.toLocaleDateString('en-IN', options);
 }
 
 /**
  * Main shipping calculation function
  */
-export function calculateShipping(input: ShippingCalculationInput): ShippingCalculationResult {
+import { supabaseAdmin } from '@/lib/supabase/supabase';
+import { ShippingRule } from '@/lib/types/settings';
+
+/**
+ * Valid states for Indian zones
+ */
+const SOUTH_INDIA_STATES = [
+  'andhra pradesh', 'karnataka', 'kerala', 'telangana', 'puducherry', 'lakshadweep'
+];
+
+const NORTH_INDIA_STATES = [
+  'delhi', 'punjab', 'haryana', 'uttar pradesh', 'himachal pradesh',
+  'jammu and kashmir', 'uttarakhand', 'ladakh', 'rajasthan', 'madhya pradesh', 'chandigarh'
+];
+
+const EAST_INDIA_STATES = [
+  'west bengal', 'odisha', 'bihar', 'jharkhand', 'assam', 'sikkim',
+  'nagaland', 'manipur', 'mizoram', 'tripura', 'meghalaya', 'arunachal pradesh', 'andaman and nicobar islands'
+];
+
+const WEST_INDIA_STATES = [
+  'maharashtra', 'gujarat', 'goa', 'dadra and nagar haveli and daman and diu', 'chhattisgarh'
+];
+
+/**
+ * Determine zone from state
+ */
+export function getZoneFromState(state: string): ShippingRule['zone'] {
+  const normState = state.toLowerCase().trim();
+
+  if (isTamilNaduState(normState)) return 'tamil_nadu';
+  if (SOUTH_INDIA_STATES.includes(normState)) return 'south_india';
+  if (NORTH_INDIA_STATES.includes(normState)) return 'north_india';
+  if (EAST_INDIA_STATES.includes(normState)) return 'east_india';
+  if (WEST_INDIA_STATES.includes(normState)) return 'west_india';
+
+  return 'all_india';
+}
+
+/**
+ * Main shipping calculation function
+ */
+export async function calculateShipping(input: ShippingCalculationInput): Promise<ShippingCalculationResult> {
   const { postalCode, state, totalQuantity } = input;
 
   // Validate PIN code format
@@ -124,38 +166,97 @@ export function calculateShipping(input: ShippingCalculationInput): ShippingCalc
     };
   }
 
-  // Determine if shipping to Tamil Nadu
-  const isTN = state 
-    ? isTamilNaduState(state) 
-    : isTamilNaduPinCode(postalCode);
+  try {
+    // 1. Check for free shipping preference
+    const { data: prefs } = await supabaseAdmin
+      .from('system_preferences')
+      .select('free_shipping_enabled, free_shipping_threshold')
+      .single();
 
-  // Calculate shipping cost based on location and quantity
-  let shippingAmount: number;
-  let tierDescription: string;
+    // Note: We can't apply free shipping here easily because we don't have the cart total, 
+    // only quantity. For now, we'll let the frontend handle free shipping logic based 
+    // on cart total if needed, or we rely on rules.
 
-  if (totalQuantity <= 4) {
-    shippingAmount = isTN ? SHIPPING_RATES.TAMIL_NADU.LOW : SHIPPING_RATES.OUTSIDE_TN.LOW;
-    tierDescription = '1-4 items';
-  } else {
-    shippingAmount = isTN ? SHIPPING_RATES.TAMIL_NADU.HIGH : SHIPPING_RATES.OUTSIDE_TN.HIGH;
-    tierDescription = '5+ items';
+    // 2. Determine Zone
+    // If state is provided, use it. If not, default to 'all_india' or try to infer (hard with just PIN)
+    const zone = state ? getZoneFromState(state) : 'all_india';
+
+    // 3. Fetch applicable rule
+    // We look for a rule that matches the zone and quantity
+    // Priority: Specific Zone > All India
+    // Matches: min_quantity <= totalQuantity AND (max_quantity >= totalQuantity OR max_quantity IS NULL)
+
+    // Fetch rules for specific zone AND all_india
+    const { data: rules, error } = await supabaseAdmin
+      .from('shipping_rules')
+      .select('*')
+      .in('zone', [zone, 'all_india'])
+      .eq('is_enabled', true)
+      .lte('min_quantity', totalQuantity);
+
+    if (error) throw error;
+
+    // Filter rules that match the max_quantity criteria (in-memory filtering because of NULL handling)
+    const validRules = rules?.filter(rule =>
+      rule.max_quantity === null || rule.max_quantity >= totalQuantity
+    ) || [];
+
+    // Find best match:
+    // 1. Prefer specific zone over 'all_india'
+    // 2. Prefer higher min_quantity (more specific tier)
+    validRules.sort((a, b) => {
+      // Priority 1: Zone specificity
+      if (a.zone === zone && b.zone !== zone) return -1;
+      if (a.zone !== zone && b.zone === zone) return 1;
+
+      // Priority 2: Higher min_quantity is more specific
+      return b.min_quantity - a.min_quantity;
+    });
+
+    const matchedRule = validRules[0];
+
+    if (!matchedRule) {
+      console.warn(`No shipping rule found for Zone: ${zone}, Qty: ${totalQuantity}`);
+      return {
+        success: false,
+        amount: 0,
+        optionName: 'Shipping Unavailable',
+        description: 'No shipping rule configured for this location/quantity',
+        isTamilNadu: zone === 'tamil_nadu',
+        estimatedDelivery: '',
+        error: 'Shipping calculation failed: No matching rule found.'
+      };
+    }
+
+    // Convert to paise
+    const amountInPaise = matchedRule.rate * 100;
+
+    // Generate description
+    const isTN = zone === 'tamil_nadu';
+    const locationText = isTN ? 'Tamil Nadu' : 'Standard';
+    const description = `${locationText} Delivery (${totalQuantity} item${totalQuantity > 1 ? 's' : ''})`;
+
+    return {
+      success: true,
+      amount: amountInPaise,
+      optionName: 'ST Courier Standard Delivery',
+      description,
+      isTamilNadu: isTN,
+      estimatedDelivery: calculateEstimatedDelivery()
+    };
+
+  } catch (err) {
+    console.error('Database shipping calculation failed:', err);
+    // Fallback logic
+    return {
+      success: true,
+      amount: 15000, // ₹150 fallback
+      optionName: 'Standard Delivery',
+      description: 'Standard Delivery (Fallback)',
+      isTamilNadu: false,
+      estimatedDelivery: calculateEstimatedDelivery()
+    };
   }
-
-  // Convert to paise
-  const amountInPaise = shippingAmount * 100;
-
-  // Generate description
-  const locationText = isTN ? 'Tamil Nadu' : 'Pan India';
-  const description = `${locationText} Delivery (${tierDescription})`;
-
-  return {
-    success: true,
-    amount: amountInPaise,
-    optionName: 'ST Courier Standard Delivery',
-    description,
-    isTamilNadu: isTN,
-    estimatedDelivery: calculateEstimatedDelivery()
-  };
 }
 
 /**

@@ -26,6 +26,7 @@ import { RangeCalendar } from "@/components/application/date-picker/range-calend
 import { RangePresetButton } from "@/components/application/date-picker/range-preset";
 import { cx } from "@/lib/utils/cx";
 import { formatCurrency } from "@/lib/utils";
+import { deleteCoupon, createCoupon, updateCoupon } from "@/app/actions/coupons";
 
 const now = today(getLocalTimeZone());
 
@@ -35,8 +36,8 @@ interface Coupon {
   discount_type: string
   discount_value: number
   usage_limit: number | null
-  usage_count: number
-  is_active: boolean
+  usage_count: number | null
+  is_active: boolean | null
   expires_at: string | null
   created_at: string
   updated_at: string
@@ -253,39 +254,36 @@ export function CouponDialog({ mode: initialMode, coupon, onSuccess, trigger, op
     try {
       const couponData = {
         code: formData.code.toUpperCase().trim(),
-        type: formData.discount_type,
-        value: parseFloat(formData.discount_value),
-        max_uses: formData.usage_limit ? parseInt(formData.usage_limit) : null,
+        discount_type: formData.discount_type,
+        discount_value: parseFloat(formData.discount_value),
+        usage_limit: formData.usage_limit ? parseInt(formData.usage_limit) : null,
         is_active: formData.is_active,
-        end_date: expiryDateRange ? expiryDateRange.end.toDate(getLocalTimeZone()).toISOString() : null,
+        expires_at: expiryDateRange ? expiryDateRange.end.toDate(getLocalTimeZone()).toISOString() : null,
         updated_at: new Date().toISOString(),
       }
 
       if (mode === 'create') {
-        const { error } = await supabase
-          .from('coupons')
-          .insert([{ ...couponData }])
+        const result = await createCoupon(couponData)
 
-        if (error) {
-          if (error.code === '23505') {
+        if (!result.success) {
+          if (result.error?.includes('already exists')) {
             toast.error('A coupon with this code already exists')
           } else {
-            throw error
+            console.error(result.error)
+            toast.error('Failed to create coupon')
           }
           return
         }
         toast.success('Coupon created successfully!')
       } else if (mode === 'edit' && coupon) {
-        const { error } = await supabase
-          .from('coupons')
-          .update(couponData)
-          .eq('id', coupon.id)
+        const result = await updateCoupon(coupon.id, couponData)
 
-        if (error) {
-          if (error.code === '23505') {
+        if (!result.success) {
+          if (result.error?.includes('already exists')) {
             toast.error('A coupon with this code already exists')
           } else {
-            throw error
+            console.error(result.error)
+            toast.error('Failed to update coupon')
           }
           return
         }
@@ -312,12 +310,9 @@ export function CouponDialog({ mode: initialMode, coupon, onSuccess, trigger, op
     setIsDeleting(true)
 
     try {
-      const { error } = await supabase
-        .from('coupons')
-        .delete()
-        .eq('id', coupon.id)
+      const result = await deleteCoupon(coupon.id)
 
-      if (error) throw error
+      if (!result.success) throw new Error(result.error)
 
       toast.success('Coupon deleted successfully')
       setOpen(false)

@@ -9,11 +9,12 @@ import { useWishlist } from "@/domains/wishlist"
 import { toast } from 'sonner'
 import { Product } from "@/domains/product"
 import { getProductImage } from "@/domains/product/utils/getProductImage"
+import StarRating from "@/domains/product/components/ui/StarRating"
 
 interface ProductCardProps {
   product: Product
   badge?: "NEW" | "BESTSELLER" | "SALE" | string
-  badgeColor?: "red" | "black"
+  badgeColor?: "red" | "black" | "gold" | "green" | "blue"
   selectedColor?: string  // Pass from filter to show matching variant
   selectedSize?: string   // Pass from filter to show matching variant
 }
@@ -173,7 +174,11 @@ export default function ProductCard({ product, badge, badgeColor = "red", select
 
           {/* Badge - Top Left */}
           {badge && (
-            <span className={`absolute left-2 top-2 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white md:left-3 md:top-3 md:px-2.5 md:py-1 md:text-xs ${badgeColor === "red" ? "bg-red-600" : "bg-black"
+            <span className={`absolute left-2 top-2 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white md:left-3 md:top-3 md:px-2.5 md:py-1 md:text-xs ${badgeColor === "red" ? "bg-red-600" :
+              badgeColor === "gold" ? "bg-yellow-500" :
+                badgeColor === "green" ? "bg-green-600" :
+                  badgeColor === "blue" ? "bg-blue-600" :
+                    "bg-black"
               }`}>
               {badge}
             </span>
@@ -217,19 +222,17 @@ export default function ProductCard({ product, badge, badgeColor = "red", select
             {shortDesc}
           </p>
 
-          {/* Star Rating */}
-          <div className="mt-1.5 flex items-center gap-0.5">
-            {[...Array(5)].map((_, i) => (
-              <svg
-                key={i}
-                className="h-3 w-3 fill-yellow-400 text-yellow-400"
-                viewBox="0 0 20 20"
-              >
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
-            ))}
-            <span className="ml-1 text-xs text-gray-500">(4.5)</span>
-          </div>
+          {/* Star Rating - Only show if reviews exist */}
+          {product.review_count && product.review_count > 0 && (
+            <div className="mt-1.5">
+              <StarRating
+                rating={product.average_rating || 0}
+                reviewCount={product.review_count}
+                size="sm"
+                showCount={true}
+              />
+            </div>
+          )}
 
           {/* Price with Cart Button */}
           <div className="mt-2 flex items-center justify-between gap-1">

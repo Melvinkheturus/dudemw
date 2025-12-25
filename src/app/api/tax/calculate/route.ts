@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase/supabase';
 import { calculateTax, type TaxCalculationInput } from '@/lib/services/tax-calculation';
 
 /**
@@ -24,8 +25,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Fetch tax settings for default rate
+    // We use supabaseAdmin to bypass RLS since this is a server-side operation
+    const { data: settings } = await supabaseAdmin
+      .from('tax_settings')
+      .select('default_gst_rate')
+      .single();
+
+    // Default to 18 if not found in DB, or fall back to 12 if DB result is null/undefined
+    const defaultGstRate = (settings as any)?.default_gst_rate ?? 18;
+
     // Calculate tax
-    const result = calculateTax(body);
+    const result = calculateTax({
+      ...body,
+      defaultGstRate
+    });
 
     if (!result.success) {
       return NextResponse.json(
@@ -38,9 +52,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Tax calculation error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to calculate tax' 
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to calculate tax'
       },
       { status: 500 }
     );

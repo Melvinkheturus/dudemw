@@ -171,12 +171,12 @@ export default function OrderDetailPage() {
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      
+
       // Get filename from Content-Disposition header if available
       const contentDisposition = response.headers.get('Content-Disposition')
       const filenameMatch = contentDisposition?.match(/filename="(.+)"/)
       const filename = filenameMatch ? filenameMatch[1] : `shipping-label-${order.id.substring(0, 8)}.pdf`
-      
+
       a.download = filename
       document.body.appendChild(a)
       a.click()
@@ -403,6 +403,20 @@ export default function OrderDetailPage() {
                   <span className="text-gray-600">Shipping:</span>
                   <span className="font-medium">₹{order.shipping_amount.toLocaleString()}</span>
                 </div>
+              )}
+              {(order as any).discount_amount && (order as any).discount_amount > 0 && (
+                <>
+                  <Separator />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-gray-700">Coupon Used</p>
+                    <div className="text-sm text-gray-600">
+                      <p><strong>Code:</strong> {(order as any).coupon_code || 'N/A'}</p>
+                      <p className="text-green-600 font-medium">
+                        <strong>Discount:</strong> -₹{(order as any).discount_amount.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </>
               )}
               <Separator />
               <div className="flex justify-between font-semibold">

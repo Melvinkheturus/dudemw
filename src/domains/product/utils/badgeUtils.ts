@@ -2,13 +2,13 @@ import { Product } from '../types'
 
 export interface ProductBadge {
   text: string
-  color: 'red' | 'black' | 'green' | 'blue'
+  color: 'red' | 'black' | 'green' | 'blue' | 'gold'
   priority: number // Higher number = higher priority
 }
 
 /**
  * Determines the appropriate badge for a product based on database fields
- * Priority order: Custom badge > Sale > New Drop > Bestseller > Featured
+ * Priority order: Custom badge > Sale > Top Rated > New Drop > Bestseller > Featured
  */
 export function getProductBadge(product: Product): ProductBadge | null {
   // 1. Custom badge from database (highest priority)
@@ -32,7 +32,17 @@ export function getProductBadge(product: Product): ProductBadge | null {
     }
   }
 
-  // 3. New drop badge
+  // 3. Top Rated badge (for products with excellent reviews)
+  if (product.average_rating && product.review_count &&
+    product.average_rating >= 4.5 && product.review_count >= 10) {
+    return {
+      text: 'TOP RATED',
+      color: 'gold',
+      priority: 3.5
+    }
+  }
+
+  // 4. New drop badge
   if (product.is_new_drop) {
     return {
       text: 'NEW',
@@ -41,7 +51,7 @@ export function getProductBadge(product: Product): ProductBadge | null {
     }
   }
 
-  // 4. Bestseller badge
+  // 5. Bestseller badge
   if (product.is_bestseller) {
     return {
       text: 'BESTSELLER',
@@ -50,7 +60,7 @@ export function getProductBadge(product: Product): ProductBadge | null {
     }
   }
 
-  // 5. Featured badge (lowest priority)
+  // 6. Featured badge (lowest priority)
   if (product.is_featured) {
     return {
       text: 'FEATURED',
@@ -86,6 +96,16 @@ export function getAllProductBadges(product: Product): ProductBadge[] {
       text: `${discountPercent}% OFF`,
       color: 'red',
       priority: 4
+    })
+  }
+
+  // Top Rated badge
+  if (product.average_rating && product.review_count &&
+    product.average_rating >= 4.5 && product.review_count >= 10) {
+    badges.push({
+      text: 'TOP RATED',
+      color: 'gold',
+      priority: 3.5
     })
   }
 

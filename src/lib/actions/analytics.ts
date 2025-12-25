@@ -263,7 +263,7 @@ export async function getLowStockItems(limit: number = 10): Promise<{ success: b
         product_variants (
           id,
           name,
-          products (
+          products!product_variants_product_id_fkey (
             id,
             title
           )

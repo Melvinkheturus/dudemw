@@ -13,6 +13,7 @@ import { getOrCreateGuestCustomer, getOrCreateCustomerForUser } from '@/lib/acti
 import { createOrder, updateOrderStatusDirect } from '@/lib/actions/orders'
 import { PaymentSettings } from '@/lib/types/settings'
 import OrderSummary from './OrderSummary'
+import PromoCode from './PromoCode'
 
 // Razorpay types
 declare global {
@@ -33,6 +34,7 @@ export default function CheckoutFormV2() {
   const [isLoadingShipping, setIsLoadingShipping] = useState(false)
   const [shippingCost, setShippingCost] = useState<any>(null)
   const [taxBreakdown, setTaxBreakdown] = useState<any>(null)
+  const [coupon, setCoupon] = useState<{ code: string; amount: number } | null>(null)
 
   // Payment settings and method selection
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null)
@@ -205,7 +207,9 @@ export default function CheckoutFormV2() {
       const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
       const shippingAmount = shippingCost ? shippingCost.amount / 100 : 0
       const taxAmount = taxBreakdown ? taxBreakdown.totalTax : 0
-      const totalAmount = subtotal + shippingAmount + taxAmount
+      // Calculate total with discount
+      const discountAmount = coupon ? coupon.amount : 0
+      const totalAmount = Math.max(0, subtotal + shippingAmount + taxAmount - discountAmount)
 
       // Create or get customer
       let customerId: string | null = null
@@ -262,6 +266,7 @@ export default function CheckoutFormV2() {
         },
         shippingMethod: shippingCost?.optionName || 'ST Courier',
         taxDetails: taxBreakdown,
+        couponCode: coupon?.code, // Pass coupon code to server action
         items: cartItems.map(item => ({
           variantId: item.id,
           quantity: item.quantity,
@@ -370,7 +375,8 @@ export default function CheckoutFormV2() {
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
   const shippingAmount = shippingCost ? shippingCost.amount / 100 : 0
   const taxAmount = taxBreakdown ? taxBreakdown.totalTax : 0
-  const total = subtotal + shippingAmount + taxAmount
+  const discountAmount = coupon ? coupon.amount : 0
+  const total = Math.max(0, subtotal + shippingAmount + taxAmount - discountAmount)
 
   // Check if COD is available for this order amount
   const isCodAvailable = paymentSettings?.cod_enabled &&
@@ -408,7 +414,7 @@ export default function CheckoutFormV2() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email (Optional)</label>
                   <input type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black" />
                 </div>
                 <div>
@@ -561,12 +567,16 @@ export default function CheckoutFormV2() {
 
       {/* Sidebar Order Summary */}
       <div className="lg:col-span-1">
-        <div className="sticky top-8">
+        <div className="sticky top-8 space-y-6">
           <OrderSummary
             shippingOverride={shippingCost ? shippingCost.amount / 100 : undefined}
             taxOverride={taxBreakdown ? taxBreakdown.totalTax : undefined}
             totalOverride={total}
             taxDetails={taxBreakdown}
+            showShipping={!!shippingCost}
+            discountAmount={discountAmount}
+            couponCode={coupon?.code}
+            onCouponApplied={(discount) => setCoupon(discount)}
           />
         </div>
       </div>

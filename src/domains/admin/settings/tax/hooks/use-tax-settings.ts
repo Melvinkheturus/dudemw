@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import type { TaxSettings, CategoryTaxRule, Category } from "../types"
+import { SettingsClientService } from "@/lib/services/settings-client"
 
 export function useTaxSettings() {
   const [isLoading, setIsLoading] = useState(false)
@@ -22,21 +23,18 @@ export function useTaxSettings() {
       try {
         const supabase = createClient()
 
-        // Fetch tax settings
-        const { data: settings } = await supabase
-          .from('tax_settings')
-          .select('*')
-          .limit(1)
-          .single()
+        // Fetch tax settings via API
+        const settingsResult = await SettingsClientService.getTaxSettings()
 
-        if (settings) {
+        if (settingsResult.success && settingsResult.data) {
+          const s = settingsResult.data
           setTaxSettings({
-            id: settings.id,
-            tax_enabled: true,
-            price_includes_tax: settings.is_inclusive ?? true,
-            default_gst_rate: settings.tax_rate ?? 18,
-            store_state: (settings as any).store_state ?? "Tamil Nadu", // Assuming store_state is now in DB
-            gstin: (settings as any).gstin ?? "" // Assuming gstin is now in DB
+            id: s.id,
+            tax_enabled: s.tax_enabled ?? true,
+            price_includes_tax: s.price_includes_tax ?? true,
+            default_gst_rate: s.default_gst_rate ?? 18,
+            store_state: s.store_state ?? "Tamil Nadu",
+            gstin: s.gstin ?? ""
           })
         }
 
@@ -81,24 +79,29 @@ export function useTaxSettings() {
   const saveTaxSettings = async () => {
     setIsLoading(true)
     try {
-      const supabase = createClient()
+      const payload: any = {
+        tax_enabled: taxSettings.tax_enabled,
+        default_gst_rate: taxSettings.default_gst_rate,
+        price_includes_tax: taxSettings.price_includes_tax,
+        store_state: taxSettings.store_state,
+        gstin: taxSettings.gstin,
+      }
 
-      const { error } = await supabase
-        .from('tax_settings')
-        .upsert({
-          id: taxSettings.id || crypto.randomUUID(),
-          tax_name: 'GST',
-          tax_rate: taxSettings.default_gst_rate,
-          is_inclusive: taxSettings.price_includes_tax,
-          apply_to_shipping: false,
-          updated_at: new Date().toISOString()
-        })
+      if (taxSettings.id) {
+        // Update existing
+        const result = await SettingsClientService.updateTaxSettings(taxSettings.id, payload)
+        if (!result.success) throw new Error(result.error)
+      } else {
+        // This case shouldn't happen often as GET usually creates default, 
+        // but if ID is missing we can't update via PUT easily without ID.
+        // For now, assume ID exists or handle create logic if needed.
+        throw new Error('Tax settings ID is missing')
+      }
 
-      if (error) throw error
       toast.success('Tax settings saved successfully')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save tax settings:', error)
-      toast.error('Failed to save tax settings')
+      toast.error(error.message || 'Failed to save tax settings')
     } finally {
       setIsLoading(false)
     }

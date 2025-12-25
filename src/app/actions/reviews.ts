@@ -29,7 +29,7 @@ export async function submitReview(formData: FormData) {
                 rating,
                 comment,
                 images,
-                status: 'approved', // Changed to approved so reviews show immediately
+                status: 'approved', // Auto-approve reviews
                 verified_purchase: false,
                 helpful_count: 0
             })
@@ -39,10 +39,12 @@ export async function submitReview(formData: FormData) {
             return { success: false, message: 'Failed to submit review. Please try again.' }
         }
 
-        // Revalidate the product page
-        revalidatePath(`/products/[slug]`)
+        // Revalidate all product-related pages
+        // The database trigger will automatically update average_rating and review_count
+        revalidatePath('/products', 'layout') // Revalidate all product pages
+        revalidatePath('/', 'layout') // Revalidate homepage (may show products)
 
-        return { success: true, message: 'Thank you for your review! It will be visible after moderation.' }
+        return { success: true, message: 'Thank you for your review!' }
     } catch (error) {
         console.error('Server action error:', error)
         return { success: false, message: 'An unexpected error occurred.' }

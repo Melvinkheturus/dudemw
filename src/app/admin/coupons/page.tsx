@@ -8,6 +8,7 @@ import { Percent, Users, Calendar, Copy, Edit, Trash2, Eye, EyeOff, RefreshCw } 
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import { CreateCouponDialog, ViewCouponDialog, EditCouponDialog } from "@/domains/admin/coupons/create-coupon-dialog"
+import { deleteCoupon } from "@/app/actions/coupons"
 
 interface Coupon {
   id: string
@@ -15,8 +16,8 @@ interface Coupon {
   discount_type: string
   discount_value: number
   usage_limit: number | null
-  usage_count: number
-  is_active: boolean
+  usage_count: number | null
+  is_active: boolean | null
   expires_at: string | null
   created_at: string
   updated_at: string
@@ -36,13 +37,7 @@ export default function CouponsPage() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setCoupons((data as any[] || []).map(c => ({
-        ...c,
-        usage_count: c.usage_count ?? 0,
-        is_active: c.is_active ?? true,
-        created_at: c.created_at ?? new Date().toISOString(),
-        updated_at: c.updated_at ?? new Date().toISOString(),
-      })))
+      setCoupons((data as unknown as Coupon[]) || [])
     } catch (error) {
       console.error('Error fetching coupons:', error)
       toast.error('Failed to load coupons')
@@ -90,12 +85,10 @@ export default function CouponsPage() {
     if (!confirm('Are you sure you want to delete this coupon?')) return
 
     try {
-      const { error } = await supabase
-        .from('coupons')
-        .delete()
-        .eq('id', couponId)
+      const result = await deleteCoupon(couponId)
 
-      if (error) throw error
+      if (!result.success) throw new Error(result.error)
+
       toast.success('Coupon deleted successfully')
       fetchCoupons()
     } catch (error) {
