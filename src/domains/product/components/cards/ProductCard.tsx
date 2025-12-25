@@ -4,8 +4,9 @@ import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Heart, ShoppingCart } from "lucide-react"
-import { useCart, useCartSound, type CartItem } from "@/domains/cart"
+import { useCart, type CartItem } from "@/domains/cart"
 import { useWishlist } from "@/domains/wishlist"
+import { toast } from 'sonner'
 import { Product } from "@/domains/product"
 import { getProductImage } from "@/domains/product/utils/getProductImage"
 
@@ -20,7 +21,7 @@ interface ProductCardProps {
 export default function ProductCard({ product, badge, badgeColor = "red", selectedColor, selectedSize }: ProductCardProps) {
   const [imageError, setImageError] = useState(false)
   const [isCartHovered, setIsCartHovered] = useState(false)
-  const playCartSound = useCartSound()
+  // Cart sound removed - only plays on final purchase
   const { isInWishlist, toggleWishlist } = useWishlist()
   const { cartItems, addToCart, getItemByVariant } = useCart()
 
@@ -71,14 +72,13 @@ export default function ProductCard({ product, badge, badgeColor = "red", select
   // Check if product is in cart
   const isInCart = getItemByVariant(variantKey) !== undefined
 
-  // Check if product is in wishlist
-  const isWishlisted = isInWishlist(product.id)
+  // Check if product is in wishlist - check by variant
+  const isWishlisted = isInWishlist(product.id, displayVariant?.id)
 
-  // Price calculations - use variant price for selling price, product original_price for MRP
-  // Selling price: variant's price (or fallback to product.price)
+  // Price calculations - use variant price for selling price, product compare_price for MRP
   const currentPrice = displayVariant?.price || product.price
-  // MRP: always from product level (original_price), NOT from variant
-  const originalPrice = product.original_price || null
+  // MRP: always from product level (compare_price), NOT from variant
+  const originalPrice = product.compare_price || null
   // Calculate discount only if MRP exists and is higher than selling price
   const discountPercent = originalPrice && originalPrice > currentPrice
     ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100)
@@ -130,7 +130,6 @@ export default function ProductCard({ product, badge, badgeColor = "red", select
 
   // Handle add to cart - use variant data
   const handleAddToCart = () => {
-    playCartSound()
     addToCart({
       id: variantKey, // Use variant ID as cart item ID
       title: displayVariant?.name ? `${product.title} - ${displayVariant.name}` : product.title,
@@ -150,7 +149,7 @@ export default function ProductCard({ product, badge, badgeColor = "red", select
           if (!product?.slug) {
             e.preventDefault()
             console.error('[ProductCard] Product missing slug:', product?.id, product?.title)
-            alert('Product information is incomplete. Please try again later.')
+            toast.error('Product information is incomplete. Please try again later.')
           }
         }}
         className="block transition-transform duration-300 ease-out active:scale-95"
@@ -189,7 +188,11 @@ export default function ProductCard({ product, badge, badgeColor = "red", select
                 name: product.title,
                 price: displayPrice,
                 image: imageUrl,
-                slug: product.id
+                slug: product.slug || product.id,
+                variantId: displayVariant?.id,
+                variantName: displayVariant?.name,
+                size: variantSize,
+                color: variantColor,
               })
             }}
             className={`absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur transition-all ${isWishlisted

@@ -322,36 +322,43 @@ export interface CartItemsTable {
 export interface WishlistTable {
     Row: {
         id: string
-        user_id: string
+        user_id: string | null
+        guest_id: string | null
         product_id: string
+        variant_id: string | null
         created_at: string | null
     }
     Insert: {
         id?: string
-        user_id: string
+        user_id?: string | null
+        guest_id?: string | null
         product_id: string
+        variant_id?: string | null
         created_at?: string | null
     }
     Update: {
         id?: string
-        user_id?: string
+        user_id?: string | null
+        guest_id?: string | null
         product_id?: string
+        variant_id?: string | null
         created_at?: string | null
     }
     Relationships: [
         {
-            foreignKeyName: "wishlist_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-        },
-        {
-            foreignKeyName: "wishlist_product_id_fkey"
+            foreignKeyName: "wishlist_items_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
         },
+        {
+            foreignKeyName: "wishlist_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+        },
     ]
 }
+

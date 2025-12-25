@@ -12,6 +12,7 @@ import { Product } from '@/domains/product'
 import { getProductImage } from '@/domains/product/utils/getProductImage'
 import { useCart } from '@/domains/cart'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 interface MobileProductViewProps {
   product: Product
@@ -225,6 +226,13 @@ export default function MobileProductView({ product }: MobileProductViewProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
       >
+        {/* Category Name */}
+        {product.product_categories?.[0]?.categories?.name && (
+          <p className="text-sm font-medium text-red-600 mb-1 uppercase tracking-wide">
+            {product.product_categories[0].categories.name.toUpperCase()}
+          </p>
+        )}
+
         <h1 className="text-2xl font-heading font-bold text-gray-900 mb-2">
           {product.title}
         </h1>
@@ -282,7 +290,7 @@ export default function MobileProductView({ product }: MobileProductViewProps) {
                 })
               } else {
                 navigator.clipboard.writeText(window.location.href)
-                alert('Link copied to clipboard!')
+                toast.success('Link copied to clipboard!')
               }
             }}
             className="w-14 h-14 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-all"

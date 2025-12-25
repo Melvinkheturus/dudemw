@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Plus, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { useCart, useCartSound, type CartItem } from '@/domains/cart'
+import { useCart, type CartItem } from '@/domains/cart'
 import { Product } from '@/domains/product'
 import { createClient } from '@/lib/supabase/client'
+import { toast } from 'sonner'
 
 interface ComboProduct {
   id: string
@@ -33,7 +34,7 @@ export default function FrequentlyBoughtTogether({
   const [products, setProducts] = useState<ComboProduct[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isAdded, setIsAdded] = useState(false)
-  const playCartSound = useCartSound()
+  // Cart sound removed - only plays on final purchase
   const { cartItems, addToCart } = useCart()
 
   // Fetch FBT products on mount
@@ -139,18 +140,15 @@ export default function FrequentlyBoughtTogether({
   const handleAddToCart = () => {
     // Prevent adding if already added
     if (hasFBTItems) {
-      alert('FBT items already added to cart')
+      toast.info('FBT items already added to cart')
       return
     }
 
     const selectedProducts = products.filter(p => p.selected)
     if (selectedProducts.length === 0) {
-      alert('Please select at least one product')
+      toast.error('Please select at least one product')
       return
     }
-
-    // Play cart sound
-    playCartSound()
 
     // Add selected products to cart context (skip first product as it's the main product)
     selectedProducts.slice(1).forEach(product => {

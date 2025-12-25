@@ -1,15 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/domains/auth/context'
+import { getOrCreateGuestId } from '@/lib/utils/guest'
 
-interface WishlistItem {
-  id: string
-  name: string
-  price: number
-  image: string
-  slug: string
-}
+import { WishlistItem } from '../types'
 
 const WISHLIST_KEY = 'dude_wishlist'
 
@@ -22,7 +17,7 @@ export function useWishlist() {
   // Load wishlist on mount
   useEffect(() => {
     loadWishlist()
-  }, [])
+  }, [user])
 
   // Sync to backend when user logs in
   useEffect(() => {
@@ -31,19 +26,85 @@ export function useWishlist() {
     }
   }, [user])
 
-  const loadWishlist = () => {
+  const loadWishlist = useCallback(async () => {
+    setIsLoading(true)
     try {
-      const stored = localStorage.getItem(WISHLIST_KEY)
-      if (stored) {
-        const parsed = JSON.parse(stored)
-        setWishlist(parsed)
+      if (user) {
+        // Authenticated user - fetch from database
+        const response = await fetch('/api/wishlist')
+        if (response.ok) {
+          const { items } = await response.json()
+          const formattedItems = items.map((item: any) => {
+            const variant = item.product_variants
+            const variantImage = variant?.variant_images?.[0]?.image_url || variant?.image_url
+
+            // Price calculations - Ensure numbers
+            // For variants: price = MRP/original, discount_price = sale price (if exists)
+            // For products: price = current price, original_price = MRP
+            let currentPrice: number
+            let originalPrice: number
+
+            if (variant) {
+              // Variant pricing: discount_price is sale price, price is MRP
+              if (variant.discount_price && variant.discount_price > 0) {
+                currentPrice = Number(variant.discount_price)
+                originalPrice = Number(variant.price || 0)
+              } else {
+                currentPrice = Number(variant.price || item.products?.price || 0)
+                originalPrice = Number(item.products?.original_price || 0)
+              }
+            } else {
+              // Product-level pricing
+              currentPrice = Number(item.products?.price || 0)
+              originalPrice = Number(item.products?.original_price || 0)
+            }
+
+            const discount = originalPrice && originalPrice > currentPrice
+              ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100)
+              : 0
+
+            return {
+              id: item.product_id,
+              name: item.products?.title || 'Product',
+              price: currentPrice,
+              originalPrice: discount > 0 ? originalPrice : undefined,
+              discount: discount > 0 ? discount : undefined,
+              image: variantImage || item.products?.images?.[0] || '/images/placeholder-product.jpg',
+              slug: item.products?.slug || '',
+              variantId: item.variant_id,
+              variantName: variant?.name,
+              // Try to extract size and color from variant name
+              size: variant?.name?.split('/')[0]?.trim(),
+              color: variant?.name?.split('/')[1]?.trim(),
+            }
+          })
+          setWishlist(formattedItems)
+          // Update local storage for offline access
+          saveToLocalStorage(formattedItems)
+        }
+      } else {
+        // Guest user - load from local storage
+        const stored = localStorage.getItem(WISHLIST_KEY)
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          setWishlist(parsed)
+        }
       }
     } catch (error) {
       console.error('Error loading wishlist:', error)
+      // Fallback to local storage
+      try {
+        const stored = localStorage.getItem(WISHLIST_KEY)
+        if (stored) {
+          setWishlist(JSON.parse(stored))
+        }
+      } catch (e) {
+        console.error('Error loading from localStorage:', e)
+      }
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user])
 
   const saveToLocalStorage = (items: WishlistItem[]) => {
     try {
@@ -58,15 +119,19 @@ export function useWishlist() {
 
     setIsSyncing(true)
     try {
-      // TODO: Integrate with custom backend
-      // await fetch('/api/wishlist/sync', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ items: wishlist })
-      // })
+      const response = await fetch('/api/wishlist/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: wishlist })
+      })
 
-      console.log('✅ Wishlist synced to backend for user:', user.email)
-      console.log('📦 Synced items:', wishlist.length)
+      if (response.ok) {
+        const { syncedCount, skippedCount } = await response.json()
+        console.log(`✅ Wishlist synced: ${syncedCount} added, ${skippedCount} skipped`)
+
+        // Reload from database to get the merged wishlist
+        await loadWishlist()
+      }
     } catch (error) {
       console.error('Error syncing wishlist:', error)
     } finally {
@@ -74,72 +139,112 @@ export function useWishlist() {
     }
   }
 
-  const addToWishlist = (item: WishlistItem) => {
-    const exists = wishlist.some(w => w.id === item.id)
-    if (!exists) {
-      const updated = [...wishlist, item]
-      setWishlist(updated)
-      saveToLocalStorage(updated)
 
-      // If logged in, sync to backend immediately
-      if (user) {
-        syncSingleItem(item, 'add')
-      }
+  const addToWishlist = async (item: WishlistItem) => {
+    // Check if this exact variant already exists
+    const exists = wishlist.some(w =>
+      w.id === item.id &&
+      (w.variantId === item.variantId || (!w.variantId && !item.variantId))
+    )
+    if (exists) return false
 
-      return true
-    }
-    return false
-  }
-
-  const removeFromWishlist = (id: string) => {
-    const updated = wishlist.filter(item => item.id !== id)
+    // Optimistically update UI
+    const updated = [...wishlist, item]
     setWishlist(updated)
     saveToLocalStorage(updated)
 
-    // If logged in, sync to backend immediately
-    if (user) {
-      syncSingleItem({ id } as WishlistItem, 'remove')
-    }
-  }
+    // Sync to backend
+    try {
+      if (user || !user) { // Always try to sync, even for guest users
+        const response = await fetch('/api/wishlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productId: item.id,
+            variantId: item.variantId
+          })
+        })
 
-  const isInWishlist = (id: string) => {
-    return wishlist.some(item => item.id === id)
-  }
-
-  const toggleWishlist = (item: WishlistItem) => {
-    if (isInWishlist(item.id)) {
-      removeFromWishlist(item.id)
-      return false
-    } else {
-      addToWishlist(item)
+        if (!response.ok) {
+          // Revert on error
+          setWishlist(wishlist)
+          saveToLocalStorage(wishlist)
+          return false
+        }
+      }
+      return true
+    } catch (error) {
+      console.error('Error adding to wishlist:', error)
+      // Keep the optimistic update even if sync fails
       return true
     }
   }
 
-  const clearWishlist = () => {
+  const removeFromWishlist = async (id: string, variantId?: string) => {
+    // Optimistically update UI - remove the specific variant
+    const updated = wishlist.filter(item => {
+      if (variantId) {
+        return !(item.id === id && item.variantId === variantId)
+      }
+      return !(item.id === id && !item.variantId)
+    })
+    setWishlist(updated)
+    saveToLocalStorage(updated)
+
+    // Sync to backend
+    try {
+      const url = variantId
+        ? `/api/wishlist?productId=${id}&variantId=${variantId}`
+        : `/api/wishlist?productId=${id}`
+
+      const response = await fetch(url, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        // Revert on error
+        setWishlist(wishlist)
+        saveToLocalStorage(wishlist)
+      }
+    } catch (error) {
+      console.error('Error removing from wishlist:', error)
+    }
+  }
+
+  const isInWishlist = (id: string, variantId?: string) => {
+    return wishlist.some(item => {
+      if (variantId) {
+        return item.id === id && item.variantId === variantId
+      }
+      return item.id === id && !item.variantId
+    })
+  }
+
+  const toggleWishlist = async (item: WishlistItem) => {
+    if (isInWishlist(item.id, item.variantId)) {
+      await removeFromWishlist(item.id, item.variantId)
+      return false
+    } else {
+      await addToWishlist(item)
+      return true
+    }
+  }
+
+  const clearWishlist = async () => {
     setWishlist([])
     localStorage.removeItem(WISHLIST_KEY)
 
     if (user) {
-      // TODO: Clear backend wishlist
-      console.log('🗑️ Wishlist cleared for user:', user.email)
-    }
-  }
-
-  const syncSingleItem = async (item: WishlistItem, action: 'add' | 'remove') => {
-    if (!user) return
-
-    try {
-      // TODO: Integrate with custom backend
-      // await fetch('/api/wishlist', {
-      //   method: action === 'add' ? 'POST' : 'DELETE',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ itemId: item.id })
-      // })
-
-      console.log(`✅ ${action === 'add' ? 'Added to' : 'Removed from'} backend wishlist:`, item.id)
-    } catch (error) {
-      console.error('Error syncing item:', error)
+      // Clear all user's wishlist items from database
+      try {
+        for (const item of wishlist) {
+          await fetch(`/api/wishlist?productId=${item.id}`, {
+            method: 'DELETE'
+          })
+        }
+      } catch (error) {
+        console.error('Error clearing wishlist from database:', error)
+      }
     }
   }
 
@@ -154,5 +259,6 @@ export function useWishlist() {
     isLoading,
     isSyncing,
     isGuest: !user,
+    reload: loadWishlist,
   }
 }

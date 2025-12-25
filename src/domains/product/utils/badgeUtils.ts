@@ -21,10 +21,10 @@ export function getProductBadge(product: Product): ProductBadge | null {
   }
 
   // 2. Sale badge (high priority)
-  if (product.is_on_sale && product.original_price && product.price < product.original_price) {
-    const discountPercent = product.discount_percentage || 
-      Math.round(((product.original_price - product.price) / product.original_price) * 100)
-    
+  if (product.is_on_sale && product.compare_price && product.price < product.compare_price) {
+    const discountPercent = product.discount_percentage ||
+      Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
+
     return {
       text: `${discountPercent}% OFF`,
       color: 'red',
@@ -78,10 +78,10 @@ export function getAllProductBadges(product: Product): ProductBadge[] {
   }
 
   // Sale badge
-  if (product.is_on_sale && product.original_price && product.price < product.original_price) {
-    const discountPercent = product.discount_percentage || 
-      Math.round(((product.original_price - product.price) / product.original_price) * 100)
-    
+  if (product.is_on_sale && product.compare_price && product.price < product.compare_price) {
+    const discountPercent = product.discount_percentage ||
+      Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
+
     badges.push({
       text: `${discountPercent}% OFF`,
       color: 'red',

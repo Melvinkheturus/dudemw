@@ -60,7 +60,7 @@ export interface Product {
   title: string
   description: string | null
   price: number
-  original_price?: number | null
+  compare_price?: number | null
   images: string[] | null
   category_id: string | null
   sizes: string[] | null

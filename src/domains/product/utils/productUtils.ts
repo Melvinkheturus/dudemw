@@ -66,7 +66,7 @@ export function transformProduct(rawProduct: any): Product {
     sizes: rawProduct.sizes || [],
     colors: rawProduct.colors || [],
     category_id: rawProduct.category_id || '',
-    original_price: rawProduct.original_price || rawProduct.compare_price || undefined,
+    original_price: rawProduct.compare_price || undefined,
     is_featured: rawProduct.is_featured || false,
     is_bestseller: rawProduct.is_bestseller || false,
     is_new_drop: rawProduct.is_new_drop || false,

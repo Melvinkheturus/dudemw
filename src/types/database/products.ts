@@ -9,10 +9,7 @@ export interface ProductsTable {
         slug: string | null
         url_handle: string | null
         price: number | null
-        original_price: number | null
         compare_price: number | null
-        cost: number | null
-        cost_per_item: number | null
         in_stock: boolean | null
         global_stock: number | null
         track_inventory: boolean | null
@@ -42,10 +39,7 @@ export interface ProductsTable {
         slug?: string | null
         url_handle?: string | null
         price?: number | null
-        original_price?: number | null
         compare_price?: number | null
-        cost?: number | null
-        cost_per_item?: number | null
         in_stock?: boolean | null
         global_stock?: number | null
         track_inventory?: boolean | null
@@ -75,10 +69,7 @@ export interface ProductsTable {
         slug?: string | null
         url_handle?: string | null
         price?: number | null
-        original_price?: number | null
         compare_price?: number | null
-        cost?: number | null
-        cost_per_item?: number | null
         in_stock?: boolean | null
         global_stock?: number | null
         track_inventory?: boolean | null

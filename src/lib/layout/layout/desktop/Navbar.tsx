@@ -5,12 +5,14 @@ import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import MegaMenu from "../megamenu/MegaMenu"
+import InstantSearch from "@/components/search/InstantSearch"
 import { useCart } from "@/domains/cart"
 import { useOfferBar } from "@/contexts/OfferBarContext"
 
 export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("")
   const [showMegaMenu, setShowMegaMenu] = useState(false)
+  const [showInstantSearch, setShowInstantSearch] = useState(false)
   const [placeholderText, setPlaceholderText] = useState("")
   const [placeholderIndex, setPlaceholderIndex] = useState(0)
   const { itemCount } = useCart()
@@ -118,13 +120,14 @@ export default function Navbar() {
             <div className="flex-1" />
 
             {/* Search Bar - Right Side */}
-            <div className="hidden w-80 lg:block">
+            <div className="hidden w-80 lg:block relative">
               <form onSubmit={handleSearch} className="relative">
                 <input
                   type="text"
                   placeholder={placeholderText}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setShowInstantSearch(true)}
                   className="w-full rounded-full border border-gray-300 bg-gray-50 px-4 py-1.5 pr-11 font-body text-sm focus:border-red-600"
                   style={{ outline: 'none', boxShadow: 'none' }}
                 />
@@ -147,6 +150,17 @@ export default function Navbar() {
                   </svg>
                 </button>
               </form>
+
+              {/* Instant Search Dropdown */}
+              {showInstantSearch && searchQuery && (
+                <InstantSearch
+                  query={searchQuery}
+                  onClose={() => {
+                    setShowInstantSearch(false)
+                    setSearchQuery("")
+                  }}
+                />
+              )}
             </div>
 
             {/* Actions */}
@@ -217,6 +231,14 @@ export default function Navbar() {
           </div>
         </div>
       </nav>
+
+      {/* Background Overlay when Mega Menu is open */}
+      {showMegaMenu && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 transition-opacity duration-300"
+          onClick={() => setShowMegaMenu(false)}
+        />
+      )}
 
       {/* Mega Menu - Full Width */}
       <div

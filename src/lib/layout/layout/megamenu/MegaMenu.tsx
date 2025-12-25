@@ -110,9 +110,17 @@ function CategorySection({ category }: CategorySectionProps) {
 
   return (
     <div id={category.slug} className="mb-12">
-      <h3 className="mb-6 font-heading text-2xl tracking-wider">
-        {category.name}
-      </h3>
+      <div className="mb-6 flex items-center justify-between">
+        <h3 className="font-heading text-2xl tracking-wider">
+          {category.name}
+        </h3>
+        <Link
+          href={`/categories/${category.slug}`}
+          className="font-body text-sm font-medium text-red-600 transition-colors hover:text-red-800 hover:underline"
+        >
+          View All →
+        </Link>
+      </div>
       {category.description && (
         <p className="mb-4 text-sm text-gray-600">{category.description}</p>
       )}
@@ -213,19 +221,40 @@ export default function MegaMenu({ onClose }: MegaMenuProps) {
     }
   }
 
+  // Track if user has reached the bottom for delayed close
+  const hasReachedBottomRef = useRef(false)
+  const lastScrollTopRef = useRef(0)
+  const bottomReachedTimeRef = useRef<number>(0)
+
   useEffect(() => {
     const handleScroll = () => {
       if (!rightRef.current || !leftRef.current || categories.length === 0) return
       const scrollTop = rightRef.current.scrollTop
       const scrollHeight = rightRef.current.scrollHeight
       const clientHeight = rightRef.current.clientHeight
-      const leftSidebar = leftRef.current
 
-      // Check if scrolled to bottom - auto close
-      if (scrollTop + clientHeight >= scrollHeight - 50) {
-        onClose?.()
-        return
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 50
+      const isScrollingDown = scrollTop > lastScrollTopRef.current
+      const now = Date.now()
+
+      // Check if scrolled to bottom - only close on additional scroll after reaching bottom with delay
+      if (isAtBottom) {
+        if (!hasReachedBottomRef.current) {
+          // First time reaching bottom - mark it and record the time
+          hasReachedBottomRef.current = true
+          bottomReachedTimeRef.current = now
+        } else if (isScrollingDown && now - bottomReachedTimeRef.current > 500) {
+          // User has already been at bottom for 500ms+ and is still scrolling down - close menu
+          onClose?.()
+          return
+        }
+      } else {
+        // User scrolled back up, reset the flag
+        hasReachedBottomRef.current = false
+        bottomReachedTimeRef.current = 0
       }
+
+      lastScrollTopRef.current = scrollTop
 
       let foundActive = false
       categories.forEach((category, index) => {

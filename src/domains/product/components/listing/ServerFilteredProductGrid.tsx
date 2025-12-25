@@ -82,25 +82,66 @@ export default function ServerFilteredProductGrid({
                 const minPrice = priceRange[0] !== MIN_PRICE ? priceRange[0] : null
                 const maxPrice = priceRange[1] !== MAX_PRICE ? priceRange[1] : null
 
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { data, error } = await (supabase.rpc as any)("filter_products", {
-                    p_category_slug: categorySlug || null,
-                    p_collection_slug: collectionSlug || null,
-                    p_min_price: minPrice,
-                    p_max_price: maxPrice,
-                    p_size: size,
-                    p_color: color,
-                    p_in_stock: null,
-                    p_sort_by: getSortParam(sortBy),
-                    p_limit: 24,
-                    p_offset: 0,
-                })
+                // Use search_products_full if query exists, otherwise use filter_products
+                if (query) {
+                    // Full-text search with filters
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const { data, error } = await (supabase.rpc as any)("search_products_full", {
+                        p_query: query,
+                        p_category: categorySlug || null,
+                        p_min_price: minPrice,
+                        p_max_price: maxPrice,
+                        p_size: size,
+                        p_color: color,
+                        p_sort_by: getSortParam(sortBy) === 'price_asc' ? 'price_asc' :
+                            getSortParam(sortBy) === 'price_desc' ? 'price_desc' : 'relevance',
+                        p_limit: 24,
+                        p_offset: 0,
+                    })
 
-                if (error) throw error
+                    if (error) throw error
 
-                const result = data as { products: FilteredProduct[]; total: number }
-                setProducts(result.products || [])
-                setTotal(result.total || 0)
+                    // Transform search results to match FilteredProduct format
+                    const searchResults = (data || []).map((item: any) => ({
+                        id: item.id,
+                        variant_id: item.id, // Use product id as variant for now
+                        title: item.title,
+                        slug: item.slug,
+                        description: item.description,
+                        price: item.price,
+                        mrp: item.original_price,
+                        stock: 10, // Default stock
+                        options: {},
+                        variant_image: item.primary_image,
+                        is_bestseller: item.is_bestseller,
+                        is_new_drop: item.is_new_drop,
+                        is_featured: item.is_featured,
+                    }))
+
+                    setProducts(searchResults)
+                    setTotal(data?.[0]?.total_count || searchResults.length)
+                } else {
+                    // Regular filter without search
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const { data, error } = await (supabase.rpc as any)("filter_products", {
+                        p_category_slug: categorySlug || null,
+                        p_collection_slug: collectionSlug || null,
+                        p_min_price: minPrice,
+                        p_max_price: maxPrice,
+                        p_size: size,
+                        p_color: color,
+                        p_in_stock: null,
+                        p_sort_by: getSortParam(sortBy),
+                        p_limit: 24,
+                        p_offset: 0,
+                    })
+
+                    if (error) throw error
+
+                    const result = data as { products: FilteredProduct[]; total: number }
+                    setProducts(result.products || [])
+                    setTotal(result.total || 0)
+                }
             } catch (err) {
                 console.error("Filter products error:", err)
                 setProducts([])
@@ -111,7 +152,7 @@ export default function ServerFilteredProductGrid({
         }
 
         fetchProducts()
-    }, [categorySlug, collectionSlug, selectedSizes, selectedColors, priceRange, sortBy])
+    }, [categorySlug, collectionSlug, query, selectedSizes, selectedColors, priceRange, sortBy])
 
     // Transform to Product format
     const transformedProducts = products.map(p => {

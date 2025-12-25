@@ -12,6 +12,7 @@ import { Product } from '@/domains/product'
 import { getProductImage } from '@/domains/product/utils/getProductImage'
 import { useCart } from '@/domains/cart'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 interface DesktopProductViewProps {
   product: Product
@@ -149,7 +150,12 @@ export default function DesktopProductView({ product }: DesktopProductViewProps)
                   {/* Left Side - Product Info */}
                   <div className="flex-1 flex flex-col justify-between max-w-xl h-full">
                     <div className="space-y-3">
-                      {/* Category - can be looked up from category_id if needed */}
+                      {/* Category Name */}
+                      {product.product_categories?.[0]?.categories?.name && (
+                        <p className="text-sm font-medium text-red-600 uppercase tracking-wide">
+                          {product.product_categories[0].categories.name.toUpperCase()}
+                        </p>
+                      )}
 
                       {/* Title */}
                       <h1 className="text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-gray-900 leading-tight">
@@ -205,7 +211,7 @@ export default function DesktopProductView({ product }: DesktopProductViewProps)
                           })
                         } else {
                           navigator.clipboard.writeText(window.location.href)
-                          alert('Link copied to clipboard!')
+                          toast.success('Link copied to clipboard!')
                         }
                       }}
                       className="absolute -top-2 -right-2 w-7 h-7 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-all shadow-sm"

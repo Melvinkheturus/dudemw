@@ -41,7 +41,7 @@ export default function Footer() {
         // Fetch primary active store location
         const { data: locationData } = await supabase
           .from('store_locations')
-          .select('address, city, state, pincode')
+          .select('address,city,state,pincode')
           .eq('is_active', true)
           .eq('is_primary', true)
           .single()

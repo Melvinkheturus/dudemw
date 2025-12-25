@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useCartSound, useCart, type CartItem } from '@/domains/cart'
+import { useCart, type CartItem } from '@/domains/cart'
 import { Plus, ShoppingCart } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 interface AddToCartButtonProps {
   productId: string
@@ -30,7 +31,7 @@ export default function AddToCartButton({
 }: AddToCartButtonProps) {
   const [quantity, setQuantity] = useState(1)
   const [isAdding, setIsAdding] = useState(false)
-  const playCartSound = useCartSound()
+  // Cart sound removed - only plays on final purchase
   const { addToCart, cartItems } = useCart()
   const router = useRouter()
 
@@ -56,11 +57,10 @@ export default function AddToCartButton({
         color: selectedColor.name,
         variantKey: `${productId}-${selectedSize}-${selectedColor.name}`,
       })
-      playCartSound()
     } catch (error) {
       console.error('Failed to add to cart:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      alert(`Failed to add item to cart: ${errorMessage}`)
+      toast.error(`Failed to add item to cart: ${errorMessage}`)
     } finally {
       setIsAdding(false)
     }

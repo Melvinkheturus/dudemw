@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { Star, ThumbsUp, Loader2 } from 'lucide-react'
+import { Star, ThumbsUp, Loader2, Upload, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
+import { submitReview } from '@/app/actions/reviews'
+import { toast } from 'sonner'
 
 interface Review {
   id: string
@@ -36,6 +38,110 @@ export default function ProductReviews({
   const [showAll, setShowAll] = useState(false)
   const [isLoading, setIsLoading] = useState(!initialReviews)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [userRating, setUserRating] = useState(0)
+  const [hoverRating, setHoverRating] = useState(0)
+  const [uploadedImages, setUploadedImages] = useState<File[]>([])
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    setUploadedImages(prev => [...prev, ...files].slice(0, 3)) // Max 3 images
+  }
+
+  const removeImage = (index: number) => {
+    setUploadedImages(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const refetchReviews = async () => {
+    try {
+      const supabase = createClient()
+      const { data: reviewsData } = await (supabase as any)
+        .from('product_reviews')
+        .select('*')
+        .eq('product_id', productId)
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false })
+
+      if (reviewsData && reviewsData.length > 0) {
+        const formattedReviews: Review[] = reviewsData.map((r: any) => ({
+          id: r.id,
+          name: r.reviewer_name || 'Anonymous',
+          rating: r.rating || 5,
+          date: new Date(r.created_at).toLocaleDateString('en-IN', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          }),
+          comment: r.comment || '',
+          verified: r.verified_purchase || false,
+          helpful: r.helpful_count || 0,
+          images: r.images || []
+        }))
+        setReviews(formattedReviews)
+        setTotalReviews(formattedReviews.length)
+        const avgRating = formattedReviews.reduce((sum, r) => sum + r.rating, 0) / formattedReviews.length
+        setRating(Math.round(avgRating * 10) / 10)
+      }
+    } catch (e) {
+      console.error('Error refetching reviews:', e)
+    }
+  }
+
+  const handleSubmitReview = async (formData: FormData) => {
+    // Validate rating
+    if (userRating === 0) {
+      toast.error('Please select a star rating')
+      return
+    }
+
+    setIsSubmitting(true)
+    // Append additional data
+    formData.append('productId', productId)
+    formData.append('rating', userRating.toString())
+
+    // Upload images to Supabase storage
+    const imageUrls: string[] = []
+    if (uploadedImages.length > 0) {
+      try {
+        const supabase = createClient()
+        for (const file of uploadedImages) {
+          const fileName = `review-${Date.now()}-${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`
+          const { data, error } = await supabase.storage
+            .from('reviews')
+            .upload(fileName, file)
+
+          if (!error && data) {
+            const { data: { publicUrl } } = supabase.storage
+              .from('reviews')
+              .getPublicUrl(fileName)
+            imageUrls.push(publicUrl)
+          }
+        }
+        formData.append('images', JSON.stringify(imageUrls))
+      } catch (e) {
+        console.error('Image upload error:', e)
+        toast.error('Failed to upload images')
+      }
+    }
+
+    try {
+      const result = await submitReview(formData)
+
+      if (result.success) {
+        toast.success(result.message || 'Review submitted successfully!')
+        setShowReviewForm(false)
+        setUserRating(0)
+        setUploadedImages([])
+        // Refetch reviews to show the new one
+        await refetchReviews()
+      } else {
+        toast.error(result.message || 'Failed to submit review')
+      }
+    } catch (e) {
+      toast.error('Something went wrong. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   // Fetch reviews from database
   useEffect(() => {
@@ -130,14 +236,7 @@ export default function ProductReviews({
               >
                 <div className="max-w-2xl mx-auto border-2 border-gray-200 rounded-2xl p-6 md:p-8 mt-8">
                   <h3 className="text-2xl md:text-3xl font-heading tracking-wider mb-6">WRITE A REVIEW</h3>
-                  <form onSubmit={(e) => {
-                    e.preventDefault()
-                    const formData = new FormData(e.currentTarget)
-                    console.log('Review submitted:', Object.fromEntries(formData))
-                    alert('Thank you for your review! It will be published after verification.')
-                    e.currentTarget.reset()
-                    setShowReviewForm(false)
-                  }}>
+                  <form action={handleSubmitReview}>
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-body font-medium mb-2">Your Name *</label>
@@ -151,14 +250,25 @@ export default function ProductReviews({
                       </div>
                       <div>
                         <label className="block text-sm font-body font-medium mb-2">Rating *</label>
-                        <div className="flex gap-2">
-                          {[1, 2, 3, 4, 5].map((rating) => (
-                            <label key={rating} className="cursor-pointer">
-                              <input type="radio" name="rating" value={rating} required className="sr-only peer" />
-                              <Star className="w-8 h-8 text-gray-300 peer-checked:fill-yellow-400 peer-checked:text-yellow-400 hover:text-yellow-400 transition-colors" />
-                            </label>
+                        <div className="flex gap-2" onMouseLeave={() => setHoverRating(0)}>
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              className="focus:outline-none transition-transform hover:scale-110"
+                              onMouseEnter={() => setHoverRating(star)}
+                              onClick={() => setUserRating(star)}
+                            >
+                              <Star
+                                className={`w-8 h-8 transition-colors ${star <= (hoverRating || userRating)
+                                  ? 'fill-yellow-400 text-yellow-400'
+                                  : 'text-gray-300'
+                                  }`}
+                              />
+                            </button>
                           ))}
                         </div>
+                        <input type="hidden" name="rating" value={userRating} />
                       </div>
                       <div>
                         <label className="block text-sm font-body font-medium mb-2">Your Review *</label>
@@ -170,11 +280,56 @@ export default function ProductReviews({
                           placeholder="Share your experience with this product..."
                         />
                       </div>
+
+                      {/* Image Upload */}
+                      <div>
+                        <label className="block text-sm font-body font-medium mb-2">Add Photos (Optional, Max 3)</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleImageUpload}
+                          className="hidden"
+                          id="review-images-empty"
+                        />
+                        <label
+                          htmlFor="review-images-empty"
+                          className="flex items-center gap-2 px-4 py-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-black transition-colors"
+                        >
+                          <Upload className="w-5 h-5" />
+                          <span className="font-body">Upload Images</span>
+                        </label>
+
+                        {/* Image Previews */}
+                        {uploadedImages.length > 0 && (
+                          <div className="flex gap-3 mt-3">
+                            {uploadedImages.map((file, idx) => (
+                              <div key={idx} className="relative w-20 h-20">
+                                <Image
+                                  src={URL.createObjectURL(file)}
+                                  fill
+                                  alt={`Upload ${idx + 1}`}
+                                  className="object-cover rounded-lg"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeImage(idx)}
+                                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
                       <button
                         type="submit"
-                        className="w-full md:w-auto px-8 py-3 bg-black text-white rounded-lg font-heading tracking-wider hover:bg-gray-800 transition-all"
+                        disabled={isSubmitting}
+                        className="w-full md:w-auto px-8 py-3 bg-black text-white rounded-lg font-heading tracking-wider hover:bg-gray-800 transition-all disabled:opacity-50"
                       >
-                        SUBMIT REVIEW
+                        {isSubmitting ? 'SUBMITTING...' : 'SUBMIT REVIEW'}
                       </button>
                     </div>
                   </form>
@@ -215,6 +370,119 @@ export default function ProductReviews({
             {showReviewForm ? 'CLOSE FORM' : 'WRITE A REVIEW'}
           </button>
         </div>
+
+        {/* Write Review Form - Accordion - NOW BEFORE REVIEWS */}
+        <AnimatePresence>
+          {showReviewForm && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div id="write-review-form" className="mb-12 border-2 border-gray-200 rounded-2xl p-6 md:p-8">
+                <h3 className="text-2xl md:text-3xl font-heading tracking-wider mb-6">WRITE A REVIEW</h3>
+                <form action={handleSubmitReview}>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-body font-medium mb-2">Your Name *</label>
+                      <input
+                        type="text"
+                        name="name"
+                        required
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-black focus:outline-none"
+                        placeholder="Enter your name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-body font-medium mb-2">Rating *</label>
+                      <div className="flex gap-2" onMouseLeave={() => setHoverRating(0)}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            className="focus:outline-none transition-transform hover:scale-110"
+                            onMouseEnter={() => setHoverRating(star)}
+                            onClick={() => setUserRating(star)}
+                          >
+                            <Star
+                              className={`w-8 h-8 transition-colors ${star <= (hoverRating || userRating)
+                                ? 'fill-yellow-400 text-yellow-400'
+                                : 'text-gray-300'
+                                }`}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                      <input type="hidden" name="rating" value={userRating} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-body font-medium mb-2">Your Review *</label>
+                      <textarea
+                        name="comment"
+                        required
+                        rows={4}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-black focus:outline-none resize-none"
+                        placeholder="Share your experience with this product..."
+                      />
+                    </div>
+
+                    {/* Image Upload */}
+                    <div>
+                      <label className="block text-sm font-body font-medium mb-2">Add Photos (Optional, Max 3)</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        id="review-images"
+                      />
+                      <label
+                        htmlFor="review-images"
+                        className="flex items-center gap-2 px-4 py-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-black transition-colors"
+                      >
+                        <Upload className="w-5 h-5" />
+                        <span className="font-body">Upload Images</span>
+                      </label>
+
+                      {/* Image Previews */}
+                      {uploadedImages.length > 0 && (
+                        <div className="flex gap-3 mt-3">
+                          {uploadedImages.map((file, idx) => (
+                            <div key={idx} className="relative w-20 h-20">
+                              <Image
+                                src={URL.createObjectURL(file)}
+                                fill
+                                alt={`Upload ${idx + 1}`}
+                                className="object-cover rounded-lg"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeImage(idx)}
+                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full md:w-auto px-8 py-3 bg-black text-white rounded-lg font-heading tracking-wider hover:bg-gray-800 transition-all disabled:opacity-50"
+                    >
+                      {isSubmitting ? 'SUBMITTING...' : 'SUBMIT REVIEW'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="space-y-6">
           {displayedReviews.map((review, index) => (
@@ -291,70 +559,6 @@ export default function ProductReviews({
             </button>
           </div>
         )}
-
-        {/* Write Review Form - Accordion */}
-        <AnimatePresence>
-          {showReviewForm && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
-            >
-              <div id="write-review-form" className="mt-12 border-2 border-gray-200 rounded-2xl p-6 md:p-8">
-                <h3 className="text-2xl md:text-3xl font-heading tracking-wider mb-6">WRITE A REVIEW</h3>
-                <form onSubmit={(e) => {
-                  e.preventDefault()
-                  const formData = new FormData(e.currentTarget)
-                  console.log('Review submitted:', Object.fromEntries(formData))
-                  alert('Thank you for your review! It will be published after verification.')
-                  e.currentTarget.reset()
-                  setShowReviewForm(false)
-                }}>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-2">Your Name *</label>
-                      <input
-                        type="text"
-                        name="name"
-                        required
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-black focus:outline-none"
-                        placeholder="Enter your name"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-2">Rating *</label>
-                      <div className="flex gap-2">
-                        {[1, 2, 3, 4, 5].map((rating) => (
-                          <label key={rating} className="cursor-pointer">
-                            <input type="radio" name="rating" value={rating} required className="sr-only peer" />
-                            <Star className="w-8 h-8 text-gray-300 peer-checked:fill-yellow-400 peer-checked:text-yellow-400 hover:text-yellow-400 transition-colors" />
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-2">Your Review *</label>
-                      <textarea
-                        name="comment"
-                        required
-                        rows={4}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-black focus:outline-none resize-none"
-                        placeholder="Share your experience with this product..."
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      className="w-full md:w-auto px-8 py-3 bg-black text-white rounded-lg font-heading tracking-wider hover:bg-gray-800 transition-all"
-                    >
-                      SUBMIT REVIEW
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </section>
   )

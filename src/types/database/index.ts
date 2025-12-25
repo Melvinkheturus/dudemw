@@ -107,7 +107,7 @@ export type Database = {
             addresses: AddressesTable
             coupons: CouponsTable
             cart_items: CartItemsTable
-            wishlist: WishlistTable
+            wishlist_items: WishlistTable
 
             // Users & Customers
             customers: CustomersTable
