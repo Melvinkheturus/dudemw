@@ -5,9 +5,8 @@
 -- when anonymous users try to access wishlist items
 -- ================================================
 
--- Drop and recreate the is_admin_user function with proper error handling
-DROP FUNCTION IF EXISTS is_admin_user();
-
+-- Update the is_admin_user function with proper error handling
+-- Using CREATE OR REPLACE to avoid breaking existing policy dependencies
 CREATE OR REPLACE FUNCTION is_admin_user()
 RETURNS BOOLEAN AS $$
 DECLARE
@@ -44,9 +43,8 @@ SET search_path = public, auth;
 COMMENT ON FUNCTION is_admin_user() IS 
 'Returns true if the current user has admin or owner role. Used in RLS policies to grant admin access. SECURITY DEFINER allows reading auth.users.';
 
--- Drop and recreate the is_owner_user function with proper error handling
-DROP FUNCTION IF EXISTS is_owner_user();
-
+-- Update the is_owner_user function with proper error handling
+-- Using CREATE OR REPLACE to avoid breaking existing policy dependencies
 CREATE OR REPLACE FUNCTION is_owner_user()
 RETURNS BOOLEAN AS $$
 DECLARE
