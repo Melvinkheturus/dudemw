@@ -23,7 +23,7 @@ export default function ProductCard({ product, badge, badgeColor = "red", select
   const [imageError, setImageError] = useState(false)
   const [isCartHovered, setIsCartHovered] = useState(false)
   // Cart sound removed - only plays on final purchase
-  const { isInWishlist, toggleWishlist } = useWishlist()
+  const { isWishlisted: isInWishlist, toggleWishlist } = useWishlist()
   const { cartItems, addToCart, getItemByVariant } = useCart()
 
   // Find variant matching the selected filter (combines color and size for best match)
@@ -73,8 +73,8 @@ export default function ProductCard({ product, badge, badgeColor = "red", select
   // Check if product is in cart
   const isInCart = getItemByVariant(variantKey) !== undefined
 
-  // Check if product is in wishlist - check by variant
-  const isWishlisted = isInWishlist(product.id, displayVariant?.id)
+  // Check if product is in wishlist - product level only
+  const isWishlisted = isInWishlist(product.id)
 
   // Price calculations - use variant price for selling price, product compare_price for MRP
   const currentPrice = displayVariant?.price || product.price
@@ -188,17 +188,7 @@ export default function ProductCard({ product, badge, badgeColor = "red", select
           <button
             onClick={(e) => {
               e.preventDefault()
-              toggleWishlist({
-                id: product.id,
-                name: product.title,
-                price: displayPrice,
-                image: imageUrl,
-                slug: product.slug || product.id,
-                variantId: displayVariant?.id,
-                variantName: displayVariant?.name,
-                size: variantSize,
-                color: variantColor,
-              })
+              toggleWishlist(product.id)
             }}
             className={`absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur transition-all ${isWishlisted
               ? "bg-red-600 text-white"

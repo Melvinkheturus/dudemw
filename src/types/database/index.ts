@@ -39,6 +39,8 @@ import {
     WishlistTable,
 } from './orders'
 
+import { WishlistsTable } from './wishlists'
+
 import {
     CustomersTable,
     ProfilesTable,
@@ -139,6 +141,9 @@ export type Database = {
             supplier_products: SupplierProductsTable
             inventory: InventoryTable
             category_tax_rules: CategoryTaxRulesTable
+
+            // Wishlists (product-level)
+            wishlists: WishlistsTable
         }
         Views: {
             [_ in never]: never
