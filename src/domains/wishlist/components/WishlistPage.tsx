@@ -39,7 +39,7 @@ export default function WishlistPage() {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
         {wishlist.map((item) => (
-          <div key={item.id} className="border border-gray-200 rounded-lg overflow-hidden hover:border-black transition-colors group relative">
+          <div key={`${item.id}-${item.variantId || 'no-variant'}`} className="border border-gray-200 rounded-lg overflow-hidden hover:border-black transition-colors group relative">
             <Link href={`/products/${item.slug}`} className="block">
               <div className="aspect-square bg-gray-100 relative">
                 <Image
