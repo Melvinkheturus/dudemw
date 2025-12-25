@@ -80,10 +80,20 @@ SET search_path = public, auth;
 COMMENT ON FUNCTION is_owner_user() IS 
 'Returns true if the current user has owner role (highest privilege). Used for sensitive operations. SECURITY DEFINER allows reading auth.users.';
 
+
 -- ================================================
 -- VERIFICATION
 -- ================================================
-SELECT 'Functions updated successfully!' as status;
-SELECT 'is_admin_user()' as function_name, prosecdef as is_security_definer 
+-- Verify the functions have SECURITY DEFINER set correctly
+SELECT 
+    'Functions updated successfully!' as status,
+    'Both is_admin_user() and is_owner_user() now have proper SECURITY DEFINER and search_path' as details;
+
+-- Check the security settings
+SELECT 
+    proname as function_name, 
+    prosecdef as is_security_definer,
+    proconfig as function_settings
 FROM pg_proc 
-WHERE proname = 'is_admin_user';
+WHERE proname IN ('is_admin_user', 'is_owner_user')
+ORDER BY proname;
