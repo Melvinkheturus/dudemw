@@ -109,12 +109,12 @@ export async function POST(request: NextRequest) {
         } else {
             // Get or create guest ID
             const cookieStore = await cookies()
-            const allCookies = cookieStore.getAll()
-            const cookieString = allCookies.map(c => `${c.name}=${c.value}`).join('; ')
-            let guestId = getGuestIdFromCookie(cookieString)
+            const guestIdCookie = cookieStore.get('guest_id')
+            let guestId = guestIdCookie?.value
 
             if (!guestId) {
                 guestId = getOrCreateGuestId()
+                // Note: Cookie will be set by client-side code
             }
 
             insertData.guest_id = guestId
