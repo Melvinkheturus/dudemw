@@ -7,25 +7,55 @@ import { useEffect, useState } from "react"
 import { Category } from "@/domains/product"
 import { createClient } from '@/lib/supabase/client'
 
+interface StoreLocation {
+  address: string | null
+  city: string | null
+  state: string | null
+  pincode: string | null
+}
+
+// Fallback store location
+const FALLBACK_LOCATION = {
+  address: 'Sankari Main Rd, Tharamangalam',
+  city: 'Salem',
+  state: 'Tamil Nadu',
+  pincode: '636502'
+}
+
 export default function Footer() {
   const [categories, setCategories] = useState<Category[]>([])
+  const [storeLocation, setStoreLocation] = useState<StoreLocation>(FALLBACK_LOCATION)
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
         const supabase = createClient()
-        const { data } = await supabase
+
+        // Fetch categories
+        const { data: categoriesData } = await supabase
           .from('categories')
           .select('*')
           .order('name')
-        setCategories((data || []).slice(0, 5)) // Limit to 5 categories for footer
+        setCategories((categoriesData || []).slice(0, 5)) // Limit to 5 categories for footer
+
+        // Fetch primary active store location
+        const { data: locationData } = await supabase
+          .from('store_locations')
+          .select('address, city, state, pincode')
+          .eq('is_active', true)
+          .eq('is_primary', true)
+          .single()
+
+        if (locationData) {
+          setStoreLocation(locationData)
+        }
       } catch (error) {
-        console.error('Failed to fetch categories:', error)
-        setCategories([])
+        console.error('Failed to fetch footer data:', error)
+        // Keep fallback location on error
       }
     }
 
-    fetchCategories()
+    fetchData()
   }, [])
   return (
     <footer className="hidden border-t-2 border-black bg-white lg:block">
@@ -43,9 +73,9 @@ export default function Footer() {
                 <div>
                   <p className="font-medium text-black">Store Location</p>
                   <p className="text-gray-700">
-                    123 Fashion Street<br />
-                    Mumbai, Maharashtra<br />
-                    India - 400001
+                    {storeLocation.address}<br />
+                    {storeLocation.city}, {storeLocation.state}<br />
+                    India - {storeLocation.pincode}
                   </p>
                 </div>
               </div>
