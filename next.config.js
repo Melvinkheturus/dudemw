@@ -16,11 +16,17 @@ const nextConfig = {
   // Output file tracing for better deployment
   output: 'standalone',
 
+  // Server-side environment variables (for Hostinger compatibility)
+  // These are explicitly passed to the server runtime
+  env: {
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    ADMIN_SETUP_KEY: process.env.ADMIN_SETUP_KEY,
+  },
+
   // Compiler optimizations
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production' ? {
-      exclude: ['error', 'warn'],
-    } : false,
+    // Temporarily disable console removal for debugging
+    removeConsole: false,
   },
 
   // External packages for server components

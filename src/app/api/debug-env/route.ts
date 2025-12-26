@@ -1,48 +1,34 @@
 import { NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 /**
- * Debug endpoint to check environment variables
- * IMPORTANT: Remove this after debugging!
+ * Simple debug endpoint - returns plain JSON
  */
 export async function GET() {
-    // Check if admin subdomain (only allow debugging from admin)
-    const envCheck = {
-        timestamp: new Date().toISOString(),
-        nodeEnv: process.env.NODE_ENV,
+    try {
+        const result = {
+            ok: true,
+            time: new Date().toISOString(),
+            env: {
+                NODE_ENV: process.env.NODE_ENV || 'NOT_SET',
+                SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'SET' : 'NOT_SET',
+                ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'SET' : 'NOT_SET',
+                SERVICE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT_SET',
+                SERVICE_KEY_LENGTH: process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0,
+                KEYS_DIFFERENT: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== process.env.SUPABASE_SERVICE_ROLE_KEY
+            }
+        }
 
-        // Supabase URL
-        hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-        supabaseUrlValue: process.env.NEXT_PUBLIC_SUPABASE_URL
-            ? process.env.NEXT_PUBLIC_SUPABASE_URL.substring(0, 40) + '...'
-            : 'NOT SET',
-
-        // Anon Key
-        hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        anonKeyLength: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.length || 0,
-        anonKeyPrefix: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-            ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.substring(0, 30) + '...'
-            : 'NOT SET',
-
-        // Service Role Key (the critical one!)
-        hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-        serviceRoleKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0,
-        serviceRoleKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY
-            ? process.env.SUPABASE_SERVICE_ROLE_KEY.substring(0, 30) + '...'
-            : 'NOT SET',
-        serviceRoleKeyLooksValid: process.env.SUPABASE_SERVICE_ROLE_KEY?.startsWith('eyJ') || false,
-
-        // Admin Setup Key
-        hasAdminSetupKey: !!process.env.ADMIN_SETUP_KEY,
-
-        // Check if keys are different (they should be!)
-        keysAreDifferent: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== process.env.SUPABASE_SERVICE_ROLE_KEY,
-
-        // Other env vars
-        hasAppUrl: !!process.env.NEXT_PUBLIC_APP_URL,
-        appUrl: process.env.NEXT_PUBLIC_APP_URL || 'NOT SET',
-        hasAdminUrl: !!process.env.NEXT_PUBLIC_ADMIN_URL,
-        adminUrl: process.env.NEXT_PUBLIC_ADMIN_URL || 'NOT SET',
+        return new Response(JSON.stringify(result, null, 2), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        })
+    } catch (e: any) {
+        return new Response(JSON.stringify({ error: e.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        })
     }
-
-    return NextResponse.json(envCheck)
 }
