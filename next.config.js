@@ -11,9 +11,19 @@ try {
 }
 
 const nextConfig = {
-  // Removed standalone output - causes issues on Hostinger shared hosting
-  // Use standard Next.js deployment instead
+  // Hostinger Cloud Hosting Optimizations
 
+  // Output file tracing for better deployment
+  output: 'standalone',
+
+  // Compiler optimizations
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'],
+    } : false,
+  },
+
+  // External packages for server components
   serverExternalPackages: ['@supabase/supabase-js'],
 
   // Re-enable TypeScript checking to catch errors during build
@@ -21,22 +31,25 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
 
-  // Disable source maps in development to avoid warnings
+  // Enable source maps only in development
   productionBrowserSourceMaps: false,
 
-  // Enable compression
+  // Enable compression for better performance
   compress: true,
 
+  // Power-saving mode for Hostinger shared resources
+  poweredByHeader: false,
+
   images: {
-    // Disable optimization to bypass private IP restriction
+    // Disable optimization to bypass private IP restriction on Hostinger
     unoptimized: true,
 
     // Device sizes for responsive images
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
 
-    // Reduced cache time for testing
-    minimumCacheTTL: 60,
+    // Optimized cache time for production
+    minimumCacheTTL: 3600, // 1 hour
 
     remotePatterns: [
       {
@@ -59,19 +72,25 @@ const nextConfig = {
       '@radix-ui/react-dropdown-menu',
       '@radix-ui/react-select',
       '@radix-ui/react-popover',
+      '@radix-ui/react-tabs',
+      '@radix-ui/react-accordion',
+      'recharts',
     ],
   },
 
-  // Turbopack configuration (empty config to acknowledge Turbopack awareness)
+  // Turbopack configuration (empty to acknowledge migration from webpack)
   turbopack: {},
 
-  // Headers for admin subdomain security
+  // Headers for security and performance
   async headers() {
     return [
       {
-        // Security headers for admin subdomain
         source: '/:path*',
         headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on'
+          },
           {
             key: 'X-Frame-Options',
             value: 'DENY',
@@ -84,8 +103,21 @@ const nextConfig = {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
           },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
         ],
-        // Only apply to admin subdomain (checked in middleware)
+      },
+      {
+        // Cache static assets aggressively
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
       },
     ];
   },
@@ -98,17 +130,47 @@ const nextConfig = {
         destination: '/profile',
         permanent: true,
       },
-      // Block direct /admin access on main domain (middleware will handle subdomain)
-      // Note: This is a fallback; middleware handles the primary routing
     ]
   },
 
-  // Webpack optimizations for bundle size (used when running with --webpack flag)
-  webpack: (config, { isServer }) => {
-    // Reduce bundle size by tree-shaking
-    if (!isServer) {
+  // Webpack optimizations for production builds
+  webpack: (config, { isServer, dev }) => {
+    // Production optimizations
+    if (!dev) {
+      // Tree shaking
       config.optimization.usedExports = true;
+
+      // Minimize bundle size
+      config.optimization.minimize = true;
+
+      // Split chunks for better caching
+      if (!isServer) {
+        config.optimization.splitChunks = {
+          chunks: 'all',
+          cacheGroups: {
+            default: false,
+            vendors: false,
+            // Vendor chunk
+            vendor: {
+              name: 'vendor',
+              chunks: 'all',
+              test: /node_modules/,
+              priority: 20
+            },
+            // Common chunk
+            common: {
+              name: 'common',
+              minChunks: 2,
+              chunks: 'all',
+              priority: 10,
+              reuseExistingChunk: true,
+              enforce: true
+            }
+          }
+        };
+      }
     }
+
     return config;
   },
 };
