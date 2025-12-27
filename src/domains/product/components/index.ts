@@ -1,5 +1,0 @@
-export { default as MobileProductView } from './detail/MobileProductView'
-export { default as DesktopProductView } from './detail/DesktopProductView'
-export { default as ProductOptions } from './detail/ProductOptions'
-export { default as AddToCartButton } from './detail/AddToCartButton'
-export { default as ProductImageGallery } from './detail/ProductImageGallery'
