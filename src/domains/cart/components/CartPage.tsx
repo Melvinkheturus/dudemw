@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useCart } from '@/domains/cart'
 import MobileCartView from './MobileCartView'
 import DesktopCartView from './DesktopCartView'
@@ -9,14 +8,9 @@ import { CartSkeleton } from './CartSkeleton'
 
 export default function CartPage() {
   const { cartItems, isLoading } = useCart()
-  const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Show loading state on server-side render or while fetching initial data
-  if (!mounted || isLoading) {
+  // Show loading state while fetching initial data from localStorage
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <CartSkeleton />
