@@ -6,14 +6,28 @@ let razorpayInstance: Razorpay | null = null;
 
 // Helper to get Razorpay key ID (supports both live and test keys)
 export const getRazorpayKeyId = (): string | null => {
-  return process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.trim() || 
+  const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.trim() || 
          process.env.RAZORPAY_KEY_ID?.trim() || 
          null;
+  
+  // Debug log for production troubleshooting (only logs existence, not value)
+  if (typeof window === 'undefined') {
+    console.log('[Razorpay Config] Key ID available:', !!keyId, keyId ? `(starts with: ${keyId.slice(0, 8)}...)` : '');
+  }
+  
+  return keyId;
 };
 
 // Helper to get Razorpay key secret
 export const getRazorpayKeySecret = (): string | null => {
-  return process.env.RAZORPAY_KEY_SECRET?.trim() || null;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET?.trim() || null;
+  
+  // Debug log for production troubleshooting (only logs existence, not value)
+  if (typeof window === 'undefined') {
+    console.log('[Razorpay Config] Key Secret available:', !!keySecret, keySecret ? `(length: ${keySecret.length})` : '');
+  }
+  
+  return keySecret;
 };
 
 // Check if Razorpay is properly configured
