@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useCart } from '@/domains/cart'
 import { useAuth } from '@/domains/auth/context'
 import CheckoutForm from './CheckoutFormV2'
@@ -9,14 +8,8 @@ import Link from 'next/link'
 export default function CheckoutPage() {
   const { cartItems, isLoading: isCartLoading } = useCart()
   const { isLoading: isAuthLoading } = useAuth()
-  const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Show loading state during initial mount or while loading
-  if (!mounted || isCartLoading || isAuthLoading) {
+  if (isCartLoading || isAuthLoading) {
     return (
       <div className="min-h-screen bg-white py-8">
         <div className="container mx-auto px-4">
