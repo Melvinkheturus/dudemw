@@ -1,3 +1,5 @@
+'use client'
+
 import dynamic from 'next/dynamic'
 
 const WishlistPage = dynamic(() => import('@/domains/wishlist').then(mod => ({ default: mod.WishlistPage })), {
