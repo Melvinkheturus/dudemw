@@ -309,8 +309,19 @@ export default function CheckoutFormV2() {
         })
 
         const paymentData = await paymentResponse.json()
+        
         if (!paymentData.success) {
-          throw new Error(paymentData.error || 'Failed to initiate payment')
+          console.error('Payment initiation failed:', paymentData);
+          // Provide more helpful error messages
+          let errorMessage = 'Failed to initiate payment. ';
+          if (paymentData.debug?.configError) {
+            errorMessage += 'Payment gateway configuration issue. Please contact support.';
+          } else if (paymentData.error?.includes('Order not found')) {
+            errorMessage += 'Order could not be found. Please try again.';
+          } else {
+            errorMessage += paymentData.error || 'Please try again or choose Cash on Delivery.';
+          }
+          throw new Error(errorMessage)
         }
 
         // Open Razorpay checkout
