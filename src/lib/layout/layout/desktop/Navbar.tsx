@@ -8,6 +8,7 @@ import MegaMenu from "../megamenu/MegaMenu"
 import InstantSearch from "@/components/search/InstantSearch"
 import { useCart } from "@/domains/cart"
 import { useOfferBar } from "@/contexts/OfferBarContext"
+import { useWishlist } from "@/domains/wishlist"
 
 export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -16,6 +17,7 @@ export default function Navbar() {
   const [placeholderText, setPlaceholderText] = useState("")
   const [placeholderIndex, setPlaceholderIndex] = useState(0)
   const { itemCount } = useCart()
+  const { count: wishlistCount } = useWishlist()
   const { isOfferBarVisible } = useOfferBar()
   const router = useRouter()
 
@@ -167,7 +169,7 @@ export default function Navbar() {
             <div className="flex items-center gap-2">
               <Link
                 href="/wishlist"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 transition-all hover:bg-gray-200 hover:text-red-600"
+                className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 transition-all hover:bg-gray-200 hover:text-red-600"
                 aria-label="Wishlist"
               >
                 <svg
@@ -183,6 +185,11 @@ export default function Navbar() {
                     d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
                   />
                 </svg>
+                {wishlistCount > 0 && (
+                  <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">
+                    {wishlistCount}
+                  </span>
+                )}
               </Link>
               <Link
                 href="/cart"

@@ -38,6 +38,7 @@ export interface CartContextType {
   getItemByVariant: (variantKey: string) => CartItem | undefined
   shippingAddress: ShippingAddress | null
   setShippingAddress: (address: ShippingAddress) => void
+  isLoading: boolean
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -45,12 +46,13 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   // Load cart from localStorage on mount
   useEffect(() => {
     const savedCart = localStorage.getItem('cart-items')
     const savedAddress = localStorage.getItem('shipping-address')
-    
+
     if (savedCart) {
       try {
         const parsedCart = JSON.parse(savedCart)
@@ -68,6 +70,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         console.error('Error parsing saved address:', error)
       }
     }
+
+    setIsLoading(false)
   }, [])
 
   // Save cart to localStorage whenever items change
@@ -143,7 +147,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     uniqueVariantCount,
     getItemByVariant,
     shippingAddress,
-    setShippingAddress
+    setShippingAddress,
+    isLoading
   }
 
   return (

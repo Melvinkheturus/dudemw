@@ -5,23 +5,21 @@ import { useCart } from '@/domains/cart'
 import MobileCartView from './MobileCartView'
 import DesktopCartView from './DesktopCartView'
 import EmptyCart from './EmptyCart'
+import { CartSkeleton } from './CartSkeleton'
 
 export default function CartPage() {
-  const { cartItems } = useCart()
+  const { cartItems, isLoading } = useCart()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // Show loading state on server-side render to prevent hydration mismatch
-  if (!mounted) {
+  // Show loading state on server-side render or while fetching initial data
+  if (!mounted || isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-red-600 border-r-transparent"></div>
-          <p className="mt-4 text-gray-600">Loading cart...</p>
-        </div>
+      <div className="container mx-auto px-4 py-8">
+        <CartSkeleton />
       </div>
     )
   }

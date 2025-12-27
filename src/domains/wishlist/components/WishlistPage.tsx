@@ -8,6 +8,8 @@ import { Heart, ShoppingCart } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { getProductsByIds } from '@/app/actions/wishlist'
 import { WishlistItem } from '../types'
+import { WishlistSkeleton } from './WishlistSkeleton'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function WishlistPage() {
   const { wishlist, wishlistIds, removeFromWishlist, isLoading, isGuest } = useWishlist()
@@ -62,16 +64,11 @@ export default function WishlistPage() {
   if (!mounted || isLoading || isFetchingGuest) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <div className="animate-pulse">
-            <div className="h-8 w-48 bg-gray-200 rounded mx-auto mb-4" />
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="aspect-square bg-gray-200 rounded" />
-              ))}
-            </div>
-          </div>
+        <div className="mb-6">
+          <Skeleton className="h-10 w-48 mb-2" />
+          <Skeleton className="h-6 w-24" />
         </div>
+        <WishlistSkeleton />
       </div>
     )
   }
