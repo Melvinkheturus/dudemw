@@ -1,3 +1,5 @@
+'use client'
+
 import dynamic from 'next/dynamic'
 
 const ProfilePage = dynamic(() => import('@/domains/profile').then(mod => ({ default: mod.ProfilePage })), {
@@ -15,11 +17,6 @@ const ProfilePage = dynamic(() => import('@/domains/profile').then(mod => ({ def
     </div>
   )
 })
-
-export const metadata = {
-  title: 'My Account - Dude Menswear',
-  description: 'Manage your account, orders, addresses, and preferences.',
-}
 
 export default function AccountPage() {
   return (
