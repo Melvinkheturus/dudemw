@@ -54,7 +54,6 @@ export default function WishlistPage() {
   // Determine which products to display
   const displayItems = isGuest ? guestProducts : wishlist.filter(item => item.title && item.slug)
 
-  // Show loading state while fetching data
   if (isLoading || isFetchingGuest) {
     return (
       <div className="container mx-auto px-4 py-8">
