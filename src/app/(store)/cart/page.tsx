@@ -1,3 +1,5 @@
+'use client'
+
 import dynamic from 'next/dynamic'
 
 const CartPage = dynamic(() => import('@/domains/cart').then(mod => ({ default: mod.CartPage })), {
